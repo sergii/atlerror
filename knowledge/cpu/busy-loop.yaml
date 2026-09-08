@@ -8,6 +8,12 @@ explanation:
   detailed: Busy loops often produce sustained user-space CPU in one or a few processes or threads, with a repeated hot stack and without a matching increase in external workload. They may be accidental infinite loops, retry loops without backoff, spin waits, or unexpectedly tight polling loops.
 
 predictions:
+  - observation: observation.cpu.utilization
+    expected: above_baseline
+    strength: strong
+  - observation: observation.cpu.user_share
+    expected: dominant
+    strength: strong
   - observation: observation.cpu.hot_stack_repetition
     expected: present
     strength: strong
@@ -21,6 +27,7 @@ falsifiers:
     effect: decrease
 
 tested_by:
+  - probe.cpu.inspect_user_vs_system
   - probe.cpu.capture_profile
 
 common_misconceptions:
