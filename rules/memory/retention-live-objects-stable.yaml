@@ -1,0 +1,11 @@
+id: rule.memory_retention.live_objects_return_to_baseline
+hypothesis: hypothesis.memory.retention
+
+when:
+  observation: observation.runtime.heap_live_objects
+  operator: returns_near_baseline_after_gc
+
+effect:
+  confidence: decrease
+
+explanation: If the runtime-managed live set returns near its comparable baseline after garbage collection, retained managed objects become a weaker explanation for elevated memory. RSS may still remain elevated for allocator or mapping reasons.
