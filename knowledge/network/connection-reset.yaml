@@ -1,0 +1,27 @@
+id: hypothesis.network.connection_reset
+kind: hypothesis
+title: TCP connection reset
+summary: A TCP connection is forcibly reset by the peer or an intermediary, causing the client transport stack to terminate the connection before normal application-protocol completion.
+predictions:
+  - observation: observation.network.connection_reset
+    expected: explicit_transport_reset_error_present
+    strength: strong
+falsifiers:
+  - observation: observation.network.connection_reset
+    condition: absent_when_connection_failure_occurs
+    effect: decrease
+tested_by:
+  - probe.network.inspect_connection_error
+related_to:
+  - symptom.database.connection_failed
+  - system_entity.application_service
+  - system_entity.external_dependency
+common_misconceptions:
+  - Every failed connection is a connection reset; refusal, timeout, DNS, TLS, authentication, and application-protocol errors are distinct mechanisms.
+  - A TCP reset proves the remote application intentionally rejected the request; kernels, proxies, load balancers, and other intermediaries can also originate resets.
+  - Retrying a reset is always safe regardless of whether the remote side processed application data before the reset.
+search_terms:
+  - ECONNRESET
+  - connection reset by peer
+  - tcp rst
+  - socket reset
