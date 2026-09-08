@@ -4,6 +4,7 @@ import platform
 import time
 
 import psycopg
+from psycopg import sql
 
 DB_HOST = os.environ.get("DB_HOST", "db")
 DB_PORT = os.environ.get("DB_PORT", "5432")
@@ -34,7 +35,11 @@ capacity = {}
 
 try:
     with admin.cursor() as cursor:
-        cursor.execute(f"CREATE ROLE {APP_USER} LOGIN PASSWORD %s", (APP_PASSWORD,))
+        cursor.execute(
+            sql.SQL("CREATE ROLE {} LOGIN PASSWORD {}").format(
+                sql.Identifier(APP_USER), sql.Literal(APP_PASSWORD)
+            )
+        )
         cursor.execute("SHOW max_connections")
         max_connections = int(cursor.fetchone()[0])
         cursor.execute("SHOW superuser_reserved_connections")
