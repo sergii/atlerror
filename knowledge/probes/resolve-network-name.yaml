@@ -1,0 +1,9 @@
+id: probe.network.resolve_name
+kind: probe
+title: Resolve endpoint name
+summary: Query the configured or selected DNS resolver for the endpoint name and capture answer records, negative responses, resolver errors, and timing before transport connection attempts.
+produces:
+  - observation.network.dns_resolution_error
+requires:
+  - capability.network.resolve_name
+risk: read_only
