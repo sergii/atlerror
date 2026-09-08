@@ -1,0 +1,18 @@
+id: claim.database.isolation_anomaly.repeatable_read_allows_write_skew
+kind: claim
+title: PostgreSQL Repeatable Read can allow write skew
+statement: When two PostgreSQL REPEATABLE READ transactions read the same cross-row invariant, update different rows based on that shared snapshot, and commit concurrently, both transactions can commit while violating the invariant; running the same concurrent pattern under SERIALIZABLE prevents the invalid committed state by aborting at least one participant with SQLSTATE 40001.
+hypothesis: hypothesis.database.isolation_anomaly.write_skew
+predictions:
+  - observation: observation.database.transaction_outcome
+    expected: repeatable_read_both_commit_but_serializable_aborts_at_least_one
+    strength: strong
+  - observation: observation.database.invariant_violation
+    expected: present_after_repeatable_read_and_absent_after_serializable
+    strength: strong
+system_entities:
+  - system_entity.database
+limitations:
+  - This validates one classic two-row write-skew pattern in PostgreSQL, not every isolation anomaly.
+  - The business invariant is synthetic: at least one doctor must remain on call.
+  - SERIALIZABLE protection can surface as SQLSTATE 40001 and still requires an application retry strategy where the operation should eventually succeed.
