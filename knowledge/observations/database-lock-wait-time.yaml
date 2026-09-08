@@ -1,0 +1,6 @@
+id: observation.database.lock_wait_time
+kind: observation
+title: Database lock wait time
+summary: Time a database operation spends blocked waiting for a conflicting lock compared with its normal baseline.
+explanation:
+  short: Separates time waiting for another transaction from ordinary query execution time.

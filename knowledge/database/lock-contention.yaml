@@ -1,0 +1,34 @@
+id: hypothesis.database.lock_contention
+kind: hypothesis
+title: Database lock contention
+summary: One database transaction is blocking another transaction that needs a conflicting lock, causing the waiting operation to spend material time in a lock wait.
+predictions:
+  - observation: observation.database.lock_wait_time
+    expected: above_baseline
+    strength: strong
+  - observation: observation.database.lock_wait_event
+    expected: present_during_blocked_operation
+    strength: strong
+  - observation: observation.http.request_latency
+    expected: above_baseline_when_blocked_database_operation_is_on_critical_path
+    strength: strong
+falsifiers:
+  - observation: observation.database.lock_wait_time
+    condition: not_above_baseline
+    effect: decrease
+tested_by:
+  - probe.database.inspect_lock_waits
+  - probe.http.measure_request_latency
+related_to:
+  - hypothesis.latency.database
+  - system_entity.application_service
+  - system_entity.database
+  - boundary.application.database
+common_misconceptions:
+  - A slow SQL statement is necessarily slow because of its execution plan rather than because it is waiting for another transaction.
+  - High database CPU is required for lock contention to cause high request latency.
+search_terms:
+  - postgres lock wait
+  - row lock contention
+  - blocked transaction
+  - pg_stat_activity wait_event_type Lock

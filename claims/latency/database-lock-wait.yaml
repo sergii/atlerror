@@ -1,0 +1,24 @@
+id: claim.database.lock_contention.row_lock_wait_propagates_upstream
+kind: claim
+title: PostgreSQL row lock wait propagates upstream
+statement: When a synchronous PostgreSQL operation on the request critical path waits for a row lock held by another transaction, database lock-wait time and upstream end-to-end request latency increase by similar amounts.
+hypothesis: hypothesis.database.lock_contention
+predictions:
+  - observation: observation.database.lock_wait_time
+    expected: materially_above_baseline
+    strength: strong
+  - observation: observation.database.lock_wait_event
+    expected: observed_while_waiter_is_blocked
+    strength: strong
+  - observation: observation.http.request_latency
+    expected: materially_above_baseline
+    strength: strong
+system_entities:
+  - system_entity.application_service
+  - system_entity.database
+boundaries:
+  - boundary.application.database
+limitations:
+  - This validates one PostgreSQL row-lock contention mechanism, not every lock type or deadlock scenario.
+  - The experiment uses a single row and two synthetic sessions; real systems can have multiple blockers, lock queues, retries, and transaction chains.
+  - Lock-wait observation can be sampling-sensitive when waits are very short.

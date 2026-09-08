@@ -1,0 +1,8 @@
+id: rule.database_lock_contention.lock_wait_normal
+hypothesis: hypothesis.database.lock_contention
+when:
+  observation: observation.database.lock_wait_time
+  operator: not_above_baseline
+effect:
+  confidence: decrease
+explanation: If database lock-wait time is not above its comparable baseline, lock contention becomes a weaker explanation for elevated request latency.
