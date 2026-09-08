@@ -1,0 +1,27 @@
+incident:
+  symptom: symptom.cpu.high
+
+observations:
+  - id: observation.http.request_rate
+    value: not_above_baseline
+
+candidate_hypotheses:
+  - id: hypothesis.traffic.increase
+    confidence: decreased
+    reason: rule.traffic_increase.request_rate_normal
+
+  - id: hypothesis.cpu.busy_loop
+    confidence: unknown
+    next_probe: probe.cpu.capture_profile
+
+  - id: hypothesis.gc.pressure
+    confidence: unknown
+    next_probe: probe.runtime.inspect_gc_metrics
+
+  - id: hypothesis.kernel.work
+    confidence: unknown
+    next_probe: probe.cpu.inspect_user_vs_system
+
+notes:
+  - This file is an illustrative investigation state, not yet a formal runtime schema.
+  - The first rule removes traffic increase from the leading explanations without requiring an LLM to rediscover that reasoning.
