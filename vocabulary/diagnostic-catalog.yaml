@@ -122,7 +122,7 @@ entries:
     kind: symptom
     title: Database connection failed
     canonical_id: symptom.database.connection_failed
-    routes_to: [D3.2, N2.1, N2.2, N2.3, N3.1, N3.2, N3.3]
+    routes_to: [D3.2, N2.1, N2.2, N2.3, N3.1, N3.2, N3.3, N3.4]
 
   - code: S7
     kind: symptom
@@ -134,7 +134,7 @@ entries:
     kind: symptom
     title: TLS handshake failed
     canonical_id: symptom.network.tls_handshake_failed
-    routes_to: [N3.3]
+    routes_to: [N3.3, N3.4]
 
   - code: R1.1
     kind: mechanism
@@ -385,6 +385,18 @@ entries:
       - code: N3.3-L1
         id: experiment.network.tls_certificate_verification.python_linux
 
+  - code: N3.4
+    kind: mechanism
+    title: TLS protocol version negotiation failure
+    canonical_id: hypothesis.network.tls_protocol_negotiation_failure
+    symptoms: [S6, S8]
+    coverage: empirical
+    claims:
+      - claim.network.tls_protocol_negotiation_failure.no_common_version_blocks_handshake
+    experiments:
+      - code: N3.4-L1
+        id: experiment.network.tls_protocol_negotiation.python_linux
+
   - code: Q1.1
     kind: mechanism
     title: Queueing delay
@@ -409,8 +421,8 @@ planned_examples:
     title: Network latency
   - code: N1.2
     title: Packet loss
-  - code: N3.4
-    title: TLS protocol or cipher negotiation failure
+  - code: N3.5
+    title: TLS cipher-suite negotiation failure
   - code: E2.1
     title: External dependency error / unavailability
   - code: Q2.1
