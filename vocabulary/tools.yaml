@@ -32,3 +32,7 @@ tools:
   - id: tool.socket_api
     title: Operating system socket and resolver APIs
     provides: [capability.network.inspect_connection_error, capability.network.resolve_name]
+
+  - id: tool.openssl
+    title: OpenSSL
+    provides: [capability.network.inspect_tls_handshake]

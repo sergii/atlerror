@@ -1,0 +1,30 @@
+id: hypothesis.network.tls_certificate_verification_failure
+kind: hypothesis
+title: TLS certificate verification failure
+summary: TCP connectivity to a peer succeeds, but the client rejects the peer certificate during TLS verification so the secure session is not established.
+predictions:
+  - observation: observation.network.tls_certificate_verification_error
+    expected: certificate_verification_error_present_after_tcp_establishment
+    strength: strong
+falsifiers:
+  - observation: observation.network.tls_certificate_verification_error
+    condition: absent_when_tls_handshake_fails
+    effect: decrease
+tested_by:
+  - probe.network.inspect_tls_handshake
+related_to:
+  - symptom.network.tls_handshake_failed
+  - symptom.database.connection_failed
+  - system_entity.application_service
+  - system_entity.external_dependency
+  - boundary.application.external_dependency_tls
+common_misconceptions:
+  - Successful TCP establishment proves TLS will succeed; certificate verification occurs later in the connection lifecycle.
+  - Disabling certificate verification is a valid production fix; it removes an important authenticity control instead of repairing trust or identity configuration.
+  - Every certificate verification failure is caused by expiry; untrusted issuer, self-signed certificates, hostname mismatch, incomplete chains, and policy can also cause rejection.
+search_terms:
+  - certificate verify failed
+  - self signed certificate
+  - unable to get local issuer certificate
+  - hostname mismatch TLS
+  - SSL certificate verification error

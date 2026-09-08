@@ -1,0 +1,16 @@
+id: experiment.network.tls_certificate_verification.python_linux
+kind: experiment
+title: TLS certificate verification failure with untrusted peer certificate
+claims:
+  - claim.network.tls_certificate_verification_failure.untrusted_certificate_is_rejected
+description: Run one TLS peer that selects a trusted CA-signed certificate for a control SNI name and an untrusted self-signed certificate for an intervention SNI name. Baseline verifies the trusted name, intervention establishes TCP but fails TLS certificate verification for the untrusted name, and recovery verifies the trusted name again.
+runner:
+  type: docker_compose
+  compose_file: lab/network-tls-certificate-verification/compose.yml
+  setup_service: tls
+  evidence_service: probe
+expected_result: supports
+limitations:
+  - Uses a controlled local CA and self-signed certificate generated inside the lab image.
+  - Validates certificate trust rejection, not every TLS handshake failure mechanism.
+  - Does not cover hostname mismatch, certificate expiry, protocol/cipher negotiation, mTLS, revocation, or production PKI distribution.

@@ -1,0 +1,7 @@
+id: observation.network.tls_certificate_verification_error
+kind: observation
+title: TLS certificate verification error observed
+summary: A client reports that the peer certificate could not be verified during TLS session establishment after transport connectivity was available.
+explanation:
+  short: Captures a client-visible certificate trust or identity verification failure during TLS handshake.
+  detailed: Record the TLS lifecycle phase, whether TCP was already established, the runtime or OpenSSL verification error class/code/message, and whether a secure session was created. This observation distinguishes certificate verification failure from DNS resolution, TCP refusal/reset/timeout, and non-certificate TLS negotiation failures.

@@ -1,0 +1,8 @@
+id: rule.network.tls_certificate_verification_failure.absent
+hypothesis: hypothesis.network.tls_certificate_verification_failure
+when:
+  observation: observation.network.tls_certificate_verification_error
+  operator: absent
+effect:
+  confidence: decrease
+explanation: If the TLS handshake fails but no certificate verification error is observed, certificate trust or identity rejection becomes a weaker explanation and other TLS negotiation mechanisms should be considered.
