@@ -1,6 +1,7 @@
 require "json"
 
 EXPERIMENT_ID = "experiment.memory.retention.ruby"
+CLAIM_ID = "claim.memory.retention.ruby_live_set_and_rss_grow"
 OBJECT_COUNT = Integer(ENV.fetch("OBJECT_COUNT", "60000"))
 PAYLOAD_BYTES = Integer(ENV.fetch("PAYLOAD_BYTES", "1024"))
 MIN_RSS_DELTA_KB = Integer(ENV.fetch("MIN_RSS_DELTA_KB", "30000"))
@@ -60,8 +61,10 @@ recovery = snapshot
 result = assertions.values.all? ? "supports" : "inconclusive"
 
 puts JSON.generate(
+  schema_version: "0.1",
+  kind: "empirical_evidence",
   experiment: EXPERIMENT_ID,
-  tests: ["hypothesis.memory.retention"],
+  claims: [CLAIM_ID],
   environment: {
     runtime: "ruby",
     runtime_version: RUBY_VERSION,
@@ -73,20 +76,26 @@ puts JSON.generate(
     object_count: OBJECT_COUNT,
     payload_bytes: PAYLOAD_BYTES
   },
-  baseline: baseline,
-  retained: intervention,
-  recovery: recovery,
-  deltas: {
-    rss_kb: rss_delta_kb,
-    heap_live_objects: live_delta
-  },
-  thresholds: {
-    min_rss_delta_kb: MIN_RSS_DELTA_KB,
-    min_live_delta: MIN_LIVE_DELTA
+  observations: {
+    baseline: baseline,
+    intervention: intervention,
+    recovery: recovery,
+    deltas: {
+      rss_kb: rss_delta_kb,
+      heap_live_objects: live_delta
+    },
+    thresholds: {
+      min_rss_delta_kb: MIN_RSS_DELTA_KB,
+      min_live_delta: MIN_LIVE_DELTA
+    }
   },
   assertions: assertions,
   result: result,
-  interpretation: "Retaining reachable Ruby objects should increase both the managed live set and process RSS. Releasing the references should reduce the managed live set; RSS is recorded but is not required to return immediately because allocator behavior is separate from object reachability."
+  interpretation: "Retaining reachable Ruby objects should increase both the managed live set and process RSS. Releasing the references should reduce the managed live set; RSS is recorded but is not required to return immediately because allocator behavior is separate from object reachability.",
+  limitations: [
+    "This synthetic reproduction does not prove that every high-RSS incident is caused by retained Ruby objects.",
+    "Allocator and operating-system behavior influence RSS recovery independently from Ruby object reachability."
+  ]
 )
 
 exit(assertions.values.all? ? 0 : 1)
