@@ -37,6 +37,9 @@ jobs:
           - name: traffic-increase-ruby-http
             manifest: experiments/cpu/traffic-increase-ruby-http.yaml
             result: experiment.traffic.increase.ruby_http.json
+          - name: gc-pressure-ruby
+            manifest: experiments/cpu/gc-pressure-ruby.yaml
+            result: experiment.gc.pressure.ruby.json
 
     name: ${{ matrix.name }}
 
