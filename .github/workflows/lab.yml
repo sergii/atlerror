@@ -85,6 +85,9 @@ jobs:
           - name: network-tls-certificate-verification-python-linux
             manifest: experiments/network/tls-certificate-verification-python.yaml
             result: experiment.network.tls_certificate_verification.python_linux.json
+          - name: network-tls-protocol-negotiation-python-linux
+            manifest: experiments/network/tls-protocol-negotiation-python.yaml
+            result: experiment.network.tls_protocol_negotiation.python_linux.json
 
     name: ${{ matrix.name }}
 
