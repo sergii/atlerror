@@ -23,7 +23,7 @@ tools:
 
   - id: tool.runtime_metrics
     title: Runtime metrics
-    provides: [capability.runtime.gc_metrics]
+    provides: [capability.runtime.gc_metrics, capability.database.inspect_connection_pool]
 
   - id: tool.postgresql
     title: PostgreSQL

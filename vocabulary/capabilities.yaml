@@ -28,6 +28,9 @@ capabilities:
   - id: capability.database.inspect_state
     title: Inspect database state
     description: Read database rows or aggregates needed to evaluate application consistency invariants without changing database state.
+  - id: capability.database.inspect_connection_pool
+    title: Inspect application database connection pool
+    description: Read application-side database connection pool capacity, occupancy, checkout wait, timeout, and related runtime metrics without changing state.
   - id: capability.queue.inspect
     title: Inspect queue waits
     description: Measure queueing delay, backlog, or time spent waiting before work begins.

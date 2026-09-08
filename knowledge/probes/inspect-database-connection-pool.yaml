@@ -1,0 +1,10 @@
+id: probe.database.inspect_connection_pool
+kind: probe
+title: Inspect application database connection pool
+summary: Measure connection checkout wait and pool occupancy or utilization from the application runtime without mutating database state.
+produces:
+  - observation.database.connection_pool_wait_time
+  - observation.database.connection_pool_utilization
+requires:
+  - capability.database.inspect_connection_pool
+risk: read_only

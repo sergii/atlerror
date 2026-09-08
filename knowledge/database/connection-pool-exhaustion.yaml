@@ -1,0 +1,42 @@
+id: hypothesis.database.connection_pool_exhaustion
+kind: hypothesis
+title: Application database connection pool exhaustion
+summary: Requests or jobs wait to obtain a database connection because all slots in the application's bounded connection pool are occupied, even though the database itself may still be responsive and able to accept other connections.
+predictions:
+  - observation: observation.database.connection_pool_wait_time
+    expected: above_baseline
+    strength: strong
+  - observation: observation.database.connection_pool_utilization
+    expected: at_or_near_capacity_during_wait
+    strength: strong
+  - observation: observation.http.request_latency
+    expected: above_baseline_when_database_checkout_is_on_critical_path
+    strength: strong
+  - observation: observation.database.query_latency
+    expected: may_remain_near_baseline_after_checkout
+    strength: moderate
+falsifiers:
+  - observation: observation.database.connection_pool_wait_time
+    condition: not_above_baseline_during_slow_requests
+    effect: decrease
+tested_by:
+  - probe.database.inspect_connection_pool
+  - probe.database.measure_query_latency
+  - probe.http.measure_request_latency
+related_to:
+  - hypothesis.latency.queueing
+  - hypothesis.latency.database
+  - system_entity.application_service
+  - system_entity.database
+  - boundary.application.database
+common_misconceptions:
+  - Connection pool exhaustion necessarily means PostgreSQL has reached max_connections.
+  - A fast SQL query rules out database-related request latency.
+  - Increasing the application pool size is always a safe fix regardless of database capacity and workload.
+search_terms:
+  - database connection pool exhaustion
+  - connection checkout wait
+  - pool timeout
+  - ActiveRecord connection pool wait
+  - HikariCP pool exhaustion
+  - psycopg pool timeout

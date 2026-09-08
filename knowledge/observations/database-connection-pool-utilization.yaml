@@ -1,0 +1,7 @@
+id: observation.database.connection_pool_utilization
+kind: observation
+title: Database connection pool utilization
+summary: Number or fraction of application database pool slots currently checked out or otherwise unavailable compared with the configured pool capacity.
+explanation:
+  short: Shows whether the application pool is at or near capacity while callers wait for a connection.
+  detailed: High utilization alone does not prove harmful contention, but utilization at capacity combined with measurable checkout wait distinguishes pool saturation from a merely busy but adequately sized pool.

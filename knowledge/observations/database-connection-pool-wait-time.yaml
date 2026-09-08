@@ -1,0 +1,7 @@
+id: observation.database.connection_pool_wait_time
+kind: observation
+title: Database connection pool checkout wait time
+summary: Time spent waiting inside the application to obtain a database connection from its bounded connection pool before database work can begin.
+explanation:
+  short: Separates pre-query pool checkout delay from time actually spent executing a database operation.
+  detailed: Elevated checkout wait with otherwise fast database execution is strong evidence that request latency is being introduced by application-side pool contention rather than by the measured SQL statement itself.

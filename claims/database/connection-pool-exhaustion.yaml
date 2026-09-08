@@ -1,0 +1,27 @@
+id: claim.database.connection_pool_exhaustion.checkout_wait_drives_latency
+kind: claim
+title: Saturated application database pool adds checkout latency
+statement: When all slots in a bounded application database connection pool are occupied, a concurrent request can spend most of its added latency waiting for connection checkout while the subsequent SQL query remains fast and the database still accepts an independent direct connection.
+hypothesis: hypothesis.database.connection_pool_exhaustion
+predictions:
+  - observation: observation.database.connection_pool_wait_time
+    expected: materially_above_baseline
+    strength: strong
+  - observation: observation.database.connection_pool_utilization
+    expected: at_capacity_while_request_waits
+    strength: strong
+  - observation: observation.database.query_latency
+    expected: near_baseline_after_checkout
+    strength: strong
+  - observation: observation.http.request_latency
+    expected: increases_by_approximately_the_checkout_wait
+    strength: strong
+system_entities:
+  - system_entity.application_service
+  - system_entity.database
+boundaries:
+  - boundary.application.database
+limitations:
+  - Validates application-side pool contention, not PostgreSQL max_connections exhaustion.
+  - Uses one Python psycopg_pool configuration and does not establish safe pool sizing for production workloads.
+  - A real incident can combine pool contention with slow queries, locks, or database connection limits.
