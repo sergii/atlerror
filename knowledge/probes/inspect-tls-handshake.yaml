@@ -1,10 +1,11 @@
 id: probe.network.inspect_tls_handshake
 kind: probe
 title: Inspect TLS handshake
-summary: Establish controlled transport connectivity to an endpoint, attempt TLS negotiation with normal verification, and capture certificate verification, protocol negotiation, negotiated TLS metadata, and handshake outcome.
+summary: Establish controlled transport connectivity to an endpoint, attempt TLS negotiation with normal verification, and capture certificate verification, protocol-version negotiation, cipher-suite negotiation, negotiated TLS metadata, and handshake outcome.
 produces:
   - observation.network.tls_certificate_verification_error
   - observation.network.tls_protocol_negotiation_error
+  - observation.network.tls_cipher_negotiation_error
 requires:
   - capability.network.inspect_tls_handshake
 preferred_tools:
