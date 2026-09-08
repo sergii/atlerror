@@ -3,11 +3,12 @@ kind: symptom
 title: High latency
 summary: User-visible or internal operation latency is materially above its expected baseline or service objective.
 explanation:
-  short: A request or operation is taking longer than expected; the delay may originate in compute, a downstream dependency, a database, or queueing.
+  short: A request or operation is taking longer than expected; the delay may originate in compute, a downstream dependency, a database, locking, or queueing.
   detailed: High latency is an end-to-end symptom rather than a root cause. Diagnose it by decomposing time across system entities and boundaries, then testing which component or wait state accounts for the excess duration.
 may_indicate:
   - hypothesis.latency.external_dependency
   - hypothesis.latency.database
+  - hypothesis.database.lock_contention
   - hypothesis.latency.cpu_saturation
   - hypothesis.latency.queueing
 common_misconceptions:

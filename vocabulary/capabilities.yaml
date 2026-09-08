@@ -19,6 +19,9 @@ capabilities:
   - id: capability.database.query_metrics
     title: Read database query latency
     description: Measure or retrieve database query timing and wait information.
+  - id: capability.database.inspect_locks
+    title: Inspect database locks
+    description: Read lock ownership, blocked sessions, blockers, and lock-related wait metadata without changing database state.
   - id: capability.queue.inspect
     title: Inspect queue waits
     description: Measure queueing delay, backlog, or time spent waiting before work begins.

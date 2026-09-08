@@ -1,0 +1,16 @@
+id: experiment.latency.database.lock_wait_python_postgres
+kind: experiment
+title: PostgreSQL row lock wait propagates to request latency
+claims:
+  - claim.database.lock_contention.row_lock_wait_propagates_upstream
+description: Run two PostgreSQL sessions against the same row. The locker acquires a row lock and sleeps inside its transaction; only after the locker is confirmed active does the waiter issue a conflicting update while the application measures wait and upstream request latency.
+runner:
+  type: docker_compose
+  compose_file: lab/latency-database-lock/compose.yml
+  setup_service: app
+  evidence_service: probe
+expected_result: supports
+limitations:
+  - Uses PostgreSQL 17 in Docker on one host.
+  - Validates row-lock blocking and wait-event observation, not deadlocks, advisory locks, table locks, or distributed transactions.
+  - Synthetic request and connection setup overhead remains in every phase and is controlled by baseline/intervention/recovery comparison.

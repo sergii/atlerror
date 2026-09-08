@@ -1,0 +1,6 @@
+id: observation.database.lock_wait_event
+kind: observation
+title: Database lock wait event
+summary: Whether the database reports that a session is currently waiting on a lock-related wait event.
+explanation:
+  short: In PostgreSQL this can be observed through session wait metadata such as pg_stat_activity.wait_event_type = 'Lock'.
