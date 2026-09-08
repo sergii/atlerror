@@ -1,0 +1,21 @@
+id: claim.network.tls_cipher_negotiation_failure.no_common_cipher_blocks_handshake
+kind: claim
+title: No common TLS cipher suite blocks the handshake after TCP establishment
+statement: When a reachable TLS peer and client both use TLS 1.2 and the same trusted certificate configuration, a client whose permitted cipher set overlaps the server completes the handshake while an otherwise identical client restricted to a disjoint cipher set cannot establish a TLS session.
+hypothesis: hypothesis.network.tls_cipher_negotiation_failure
+predictions:
+  - observation: observation.network.tls_cipher_negotiation_error
+    expected: tcp_established_and_tls12_shared_but_handshake_fails_when_cipher_sets_do_not_overlap
+    strength: strong
+system_entities:
+  - system_entity.application_service
+  - system_entity.external_dependency
+boundaries:
+  - boundary.application.external_dependency_tls
+scope:
+  runtime: python
+  os: linux
+limitations:
+  - Validates one controlled TLS 1.2 cipher-suite mismatch using OpenSSL cipher configuration.
+  - Uses a trusted lab certificate and a shared TLS version so certificate verification and protocol-version mismatch are intentionally not the failing mechanisms.
+  - Does not cover TLS 1.3 cipher configuration, signature-algorithm mismatch, groups/key exchange policy, ALPN, mutual TLS, middleboxes, or every OpenSSL error surface.
