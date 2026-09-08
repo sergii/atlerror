@@ -1,0 +1,26 @@
+id: probe.memory.inspect_process_usage
+kind: probe
+title: Inspect process memory usage
+summary: Compare process or container RSS and memory trend with a relevant baseline and resource limit.
+
+explanation:
+  short: This probe establishes the scope and magnitude of the memory symptom before attributing it to a specific mechanism.
+  detailed: Use comparable workload windows and distinguish process RSS from runtime heap metrics. Container and host memory can differ from process-level accounting.
+
+produces:
+  - observation.memory.rss
+
+requires:
+  - capability.metrics.query
+
+preferred_tools:
+  - tool.opentelemetry
+  - tool.prometheus
+  - tool.datadog
+
+risk: read_only
+
+search_terms:
+  - inspect process memory
+  - rss diagnostics
+  - container memory metrics
