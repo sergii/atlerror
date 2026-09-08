@@ -1,0 +1,13 @@
+id: observation.workload.concurrency
+kind: observation
+title: Workload concurrency
+summary: The number of requests, jobs, messages, sessions, or other work units simultaneously in flight compared with the expected baseline.
+
+explanation:
+  short: Higher concurrency can increase the live working set even when memory used per work unit is unchanged.
+  detailed: Prefer a concurrency measure relevant to the system boundary being diagnosed, such as in-flight HTTP requests, active jobs, open sessions, or concurrent message handlers.
+
+search_terms:
+  - request concurrency
+  - inflight requests
+  - concurrent jobs memory
