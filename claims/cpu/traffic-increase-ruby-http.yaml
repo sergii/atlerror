@@ -13,8 +13,7 @@ predictions:
 scope:
   runtime: ruby
   os: linux
-  transport: http
 limitations:
-  - This validates a controlled fixed-cost request mechanism, not every relationship between production traffic and CPU.
+  - This validates a controlled fixed-cost HTTP request mechanism, not every relationship between production traffic and CPU.
   - Route mix, caching, batching, I/O waits, autoscaling, backpressure, and saturation can make production CPU scale non-linearly with request rate.
   - The experiment uses a single service instance and does not establish a universal CPU-per-request coefficient.
