@@ -40,6 +40,9 @@ jobs:
           - name: gc-pressure-ruby
             manifest: experiments/cpu/gc-pressure-ruby.yaml
             result: experiment.gc.pressure.ruby.json
+          - name: kernel-work-ruby
+            manifest: experiments/cpu/kernel-work-ruby.yaml
+            result: experiment.kernel.work.ruby.json
 
     name: ${{ matrix.name }}
 
