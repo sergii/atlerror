@@ -1,0 +1,19 @@
+id: claim.cpu.busy_loop.ruby_consumes_one_core
+kind: claim
+title: Ruby busy loop consumes a CPU core
+statement: In Ruby on Linux, a tight non-blocking loop can consume close to one logical CPU core while spending most of its CPU time in user space.
+hypothesis: hypothesis.cpu.busy_loop
+predictions:
+  - observation: observation.cpu.utilization
+    expected: near_one_core_and_above_idle_baseline
+    strength: strong
+  - observation: observation.cpu.user_share
+    expected: dominant
+    strength: strong
+scope:
+  runtime: ruby
+  os: linux
+limitations:
+  - This demonstrates the CPU mechanism but does not prove that a production high-CPU incident is a busy loop.
+  - Scheduler noise, CPU quotas, virtualization, and host contention can affect measured utilization.
+  - Hot-stack repetition is a separate diagnostic prediction and is not validated by this first experiment.
