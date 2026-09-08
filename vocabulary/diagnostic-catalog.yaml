@@ -118,6 +118,12 @@ entries:
     canonical_id: symptom.data.invariant_violated
     routes_to: [D2.4]
 
+  - code: S6
+    kind: symptom
+    title: Database connection failed
+    canonical_id: symptom.database.connection_failed
+    routes_to: [D3.2]
+
   - code: R1.1
     kind: mechanism
     title: Traffic-driven CPU load
@@ -282,6 +288,18 @@ entries:
     experiments:
       - code: D3.1-L1
         id: experiment.database.connection_pool_exhaustion.python_postgres
+
+  - code: D3.2
+    kind: mechanism
+    title: Database connection admission exhaustion
+    canonical_id: hypothesis.database.connection_admission_exhaustion
+    symptoms: [S6]
+    coverage: empirical
+    claims:
+      - claim.database.connection_admission_exhaustion.postgres_rejects_new_sessions
+    experiments:
+      - code: D3.2-L1
+        id: experiment.database.connection_admission_exhaustion.python_postgres
 
   - code: Q1.1
     kind: mechanism
