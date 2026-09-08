@@ -1,0 +1,8 @@
+id: rule.network.connection_timeout.absent
+hypothesis: hypothesis.network.connection_timeout
+when:
+  observation: observation.network.connection_timeout
+  operator: absent
+effect:
+  confidence: decrease
+explanation: If connection establishment fails without the connect deadline expiring, TCP connection timeout is a weaker explanation and active refusal, reset, DNS, TLS, admission, authentication, or other failures should remain candidates.
