@@ -5,7 +5,7 @@ summary: The number or size of runtime-managed objects that remain live after ga
 
 explanation:
   short: A growing post-GC live set is stronger evidence of retained managed objects than RSS growth alone.
-  detailed: The exact metric differs by runtime, but the diagnostic idea is stable: measure memory that remains reachable after collection and compare it over equivalent workload windows.
+  detailed: "The exact metric differs by runtime, but the diagnostic idea is stable: measure memory that remains reachable after collection and compare it over equivalent workload windows."
 
 search_terms:
   - heap live objects
