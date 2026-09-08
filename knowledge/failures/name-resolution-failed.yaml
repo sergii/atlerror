@@ -1,0 +1,19 @@
+id: symptom.network.name_resolution_failed
+kind: symptom
+title: Name resolution failed
+summary: A client could not translate an endpoint name into a usable network address before transport connection establishment began.
+explanation:
+  short: The failure occurs during name resolution, before TCP, TLS, database protocol, or application-protocol work can start.
+  detailed: Name resolution failures include authoritative negative answers such as NXDOMAIN, resolver timeouts, malformed responses, policy failures, or local resolver configuration problems. Diagnose the resolver outcome separately from connection refused, reset, or connect timeout because those occur later in the lifecycle.
+may_indicate:
+  - hypothesis.network.dns_resolution_failure
+common_misconceptions:
+  - A DNS failure is the same as a TCP connection timeout.
+  - A reachable IP address proves the configured hostname resolves correctly.
+  - NXDOMAIN proves the authoritative DNS provider is unavailable; it can be a valid negative answer for a missing name.
+search_terms:
+  - DNS resolution failed
+  - NXDOMAIN
+  - name or service not known
+  - EAI_NONAME
+  - resolver failure
