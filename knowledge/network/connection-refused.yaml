@@ -1,0 +1,28 @@
+id: hypothesis.network.connection_refused
+kind: hypothesis
+title: TCP connection refused
+summary: A client attempts to establish a TCP connection to a reachable host and destination port where no listener accepts connections, so the transport stack rejects establishment immediately rather than timing out or completing a session.
+predictions:
+  - observation: observation.network.connection_refused
+    expected: explicit_connection_refused_error_present
+    strength: strong
+falsifiers:
+  - observation: observation.network.connection_refused
+    condition: absent_when_connection_establishment_fails
+    effect: decrease
+tested_by:
+  - probe.network.inspect_connection_error
+related_to:
+  - symptom.database.connection_failed
+  - hypothesis.network.connection_reset
+  - system_entity.application_service
+  - system_entity.external_dependency
+common_misconceptions:
+  - Connection refused means the remote host is unreachable; refusal usually implies the network path reached a stack that actively rejected the destination port.
+  - Connection refused and connection reset are the same lifecycle event; refusal happens during establishment while reset normally terminates an established connection.
+  - A refusal proves the application process is down; wrong ports, listener binding, local policy, proxies, and service startup state can produce the same client-visible signal.
+search_terms:
+  - ECONNREFUSED
+  - connection refused
+  - tcp refused
+  - no listener port
