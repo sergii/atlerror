@@ -1,0 +1,34 @@
+id: hypothesis.cpu.busy_loop
+kind: hypothesis
+title: Busy loop
+summary: A code path repeatedly consumes CPU without blocking or making proportionate useful progress.
+
+explanation:
+  short: A busy loop continuously executes instead of waiting, sleeping, or completing useful work.
+  detailed: Busy loops often produce sustained user-space CPU in one or a few processes or threads, with a repeated hot stack and without a matching increase in external workload. They may be accidental infinite loops, retry loops without backoff, spin waits, or unexpectedly tight polling loops.
+
+predictions:
+  - observation: observation.cpu.hot_stack_repetition
+    expected: present
+    strength: strong
+  - observation: observation.http.request_rate
+    expected: not_above_baseline
+    strength: moderate
+
+falsifiers:
+  - observation: observation.cpu.hot_stack_repetition
+    condition: absent
+    effect: decrease
+
+tested_by:
+  - probe.cpu.capture_profile
+
+common_misconceptions:
+  - Every loop with high CPU is an infinite loop.
+  - More threads necessarily solve a CPU-bound busy loop.
+
+search_terms:
+  - busy loop
+  - tight loop high cpu
+  - infinite loop cpu
+  - spin loop cpu
