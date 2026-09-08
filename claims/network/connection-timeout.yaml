@@ -1,0 +1,19 @@
+id: claim.network.connection_timeout.dropped_syn_expires_connect_deadline
+kind: claim
+title: Dropped TCP establishment traffic expires the connect deadline
+statement: When a Linux client can reach a peer through one control port but TCP establishment traffic to another destination port is silently dropped, the client can remain unestablished until its configured connect deadline expires rather than receiving ECONNREFUSED or completing a connection.
+hypothesis: hypothesis.network.connection_timeout
+predictions:
+  - observation: observation.network.connection_timeout
+    expected: client_connect_deadline_expires_on_silently_dropped_port
+    strength: strong
+system_entities:
+  - system_entity.application_service
+  - system_entity.external_dependency
+scope:
+  runtime: python
+  os: linux
+limitations:
+  - Validates one Linux connect-timeout path produced by netfilter DROP in Docker.
+  - Real timeouts may arise from packet loss, routing, firewall policy, asymmetric paths, unavailable hosts, or infrastructure behavior.
+  - Does not cover application read deadlines after a connection is established.
