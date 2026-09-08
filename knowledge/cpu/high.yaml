@@ -1,0 +1,28 @@
+id: symptom.cpu.high
+kind: symptom
+title: High CPU utilization
+summary: CPU utilization is elevated relative to the expected baseline for a process, host, container, or service.
+
+explanation:
+  short: High CPU means one or more execution contexts are spending more time actively computing than expected.
+  detailed: High CPU is a symptom, not a cause. It can result from more useful work, inefficient work, runtime overhead, kernel work, contention side effects, or unexpected execution paths. Diagnosis starts by identifying scope and correlating CPU with workload and runtime signals.
+
+why_it_matters: Sustained or repeated CPU saturation can increase latency, reduce throughput, create queueing, and amplify other bottlenecks.
+
+may_indicate:
+  - hypothesis.traffic.increase
+  - hypothesis.cpu.busy_loop
+  - hypothesis.gc.pressure
+  - hypothesis.kernel.work
+
+common_misconceptions:
+  - High CPU always means traffic increased.
+  - Moving CPU-heavy work to a database or another service automatically fixes the problem.
+  - A short CPU spike is necessarily an incident.
+
+search_terms:
+  - high cpu
+  - cpu spike
+  - cpu 100 percent
+  - production cpu high
+  - server high cpu
