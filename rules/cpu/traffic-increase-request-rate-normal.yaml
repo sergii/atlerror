@@ -1,0 +1,11 @@
+id: rule.traffic_increase.request_rate_normal
+hypothesis: hypothesis.traffic.increase
+
+when:
+  observation: observation.http.request_rate
+  operator: not_above_baseline
+
+effect:
+  confidence: decrease
+
+explanation: If incoming HTTP request rate is not above its comparable baseline, increased traffic becomes a weaker explanation for elevated CPU.
