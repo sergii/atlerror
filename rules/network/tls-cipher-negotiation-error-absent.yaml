@@ -1,0 +1,8 @@
+id: rule.network.tls_cipher_negotiation_error.absent
+hypothesis: hypothesis.network.tls_cipher_negotiation_failure
+when:
+  observation: observation.network.tls_cipher_negotiation_error
+  operator: absent
+effect:
+  confidence: decrease
+explanation: If a TLS handshake fails but there is no evidence of cipher-suite negotiation failure while a shared protocol version is available, this mechanism becomes less likely and certificate, protocol-version, mTLS, or other handshake mechanisms should be considered.

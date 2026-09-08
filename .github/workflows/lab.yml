@@ -88,6 +88,9 @@ jobs:
           - name: network-tls-protocol-negotiation-python-linux
             manifest: experiments/network/tls-protocol-negotiation-python.yaml
             result: experiment.network.tls_protocol_negotiation.python_linux.json
+          - name: network-tls-cipher-negotiation-python-linux
+            manifest: experiments/network/tls-cipher-negotiation-python.yaml
+            result: experiment.network.tls_cipher_negotiation.python_linux.json
 
     name: ${{ matrix.name }}
 
