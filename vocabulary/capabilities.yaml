@@ -40,6 +40,9 @@ capabilities:
   - id: capability.network.resolve_name
     title: Resolve network endpoint name
     description: Query DNS or the applicable resolver and capture positive answers, authoritative negative answers, resolver errors, and timing before transport establishment.
+  - id: capability.network.inspect_tls_handshake
+    title: Inspect TLS handshake and certificate verification
+    description: Attempt controlled TLS negotiation with normal verification and capture transport establishment, certificate verification errors, negotiated TLS metadata, and handshake outcome.
   - id: capability.queue.inspect
     title: Inspect queue waits
     description: Measure queueing delay, backlog, or time spent waiting before work begins.
