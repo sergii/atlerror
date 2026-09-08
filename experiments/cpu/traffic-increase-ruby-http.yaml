@@ -1,0 +1,15 @@
+id: experiment.traffic.increase.ruby_http
+kind: experiment
+title: Ruby HTTP traffic increase raises service CPU
+claims:
+  - claim.traffic.increase.fixed_cost_http_raises_cpu
+description: Run a Ruby HTTP service and a separate load-generator container, compare a low-rate baseline with a higher sustained request rate, then return to the baseline rate.
+runner:
+  type: docker_compose
+  compose_file: lab/traffic-cpu/compose.yml
+  setup_service: app
+  evidence_service: probe
+expected_result: supports
+limitations:
+  - The service performs synthetic fixed-cost CPU work per request.
+  - This is a two-container Linux experiment on one host and does not model autoscaling or distributed load balancing.
