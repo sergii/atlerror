@@ -1,0 +1,30 @@
+id: hypothesis.workload.concurrency
+kind: hypothesis
+title: Increased workload concurrency
+summary: More requests, jobs, messages, or sessions are simultaneously in flight, increasing the amount of live state held at one time.
+
+explanation:
+  short: Memory can rise because the system is holding more concurrent working state even when per-unit memory usage is unchanged.
+  detailed: Increased concurrency can enlarge buffers, request state, decoded payloads, database result sets, job state, and other temporary live objects. The key discriminator is whether memory growth tracks concurrent in-flight work rather than retained state after the workload subsides.
+
+predictions:
+  - observation: observation.workload.concurrency
+    expected: above_baseline
+    strength: strong
+  - observation: observation.memory.rss
+    expected: positively_correlated_with_concurrency
+    strength: moderate
+
+falsifiers:
+  - observation: observation.workload.concurrency
+    condition: not_above_baseline
+    effect: decrease
+
+tested_by:
+  - probe.workload.inspect_concurrency
+  - probe.memory.inspect_process_usage
+
+search_terms:
+  - concurrency memory usage
+  - inflight requests memory
+  - workload memory working set

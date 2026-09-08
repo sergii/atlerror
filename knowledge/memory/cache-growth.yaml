@@ -1,0 +1,30 @@
+id: hypothesis.cache.growth
+kind: hypothesis
+title: Cache growth
+summary: An application cache, memoization store, or in-process index retains more entries than its normal baseline or intended bound.
+
+explanation:
+  short: Memory can grow intentionally because a cache keeps more data resident.
+  detailed: Cache growth can resemble a leak at the process level, but the retained objects may be expected by design. Diagnosis should correlate memory growth with cache entry count, size, eviction behavior, workload, and configured limits.
+
+predictions:
+  - observation: observation.cache.size
+    expected: above_baseline_or_limit
+    strength: strong
+  - observation: observation.memory.rss
+    expected: positively_correlated_with_cache_growth
+    strength: moderate
+
+falsifiers:
+  - observation: observation.cache.size
+    condition: not_above_baseline_or_limit
+    effect: decrease
+
+tested_by:
+  - probe.cache.inspect_size
+  - probe.memory.inspect_process_usage
+
+search_terms:
+  - cache memory growth
+  - unbounded cache memory
+  - memoization memory leak

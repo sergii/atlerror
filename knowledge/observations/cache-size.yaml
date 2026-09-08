@@ -1,0 +1,13 @@
+id: observation.cache.size
+kind: observation
+title: Cache size
+summary: The number of entries or estimated memory footprint of an application cache compared with its expected baseline or configured bound.
+
+explanation:
+  short: Cache size helps distinguish intentional retained state from unrelated process memory growth.
+  detailed: Prefer both entry count and memory size when available, and correlate them with eviction policy, hit rate, workload, and RSS growth.
+
+search_terms:
+  - cache size memory
+  - cache entries memory usage
+  - application cache growth

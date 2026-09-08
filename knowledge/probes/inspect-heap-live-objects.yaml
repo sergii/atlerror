@@ -1,0 +1,24 @@
+id: probe.runtime.inspect_heap_live_objects
+kind: probe
+title: Inspect live heap after garbage collection
+summary: Compare runtime-managed live objects or live heap size after garbage collection across equivalent workload windows.
+
+explanation:
+  short: This probe tests whether managed objects remain reachable and accumulate over time.
+  detailed: Runtime-specific adapters should use the closest available post-GC live-set metric. The result is more diagnostic for managed-object retention than RSS alone, but it does not account for all native or mapped memory.
+
+produces:
+  - observation.runtime.heap_live_objects
+
+requires:
+  - capability.runtime.gc_metrics
+
+preferred_tools:
+  - tool.runtime_metrics
+
+risk: read_only
+
+search_terms:
+  - inspect live heap
+  - live objects after gc
+  - memory retention diagnostics

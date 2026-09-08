@@ -1,0 +1,33 @@
+id: hypothesis.memory.retention
+kind: hypothesis
+title: Retained live objects
+summary: Objects or buffers remain reachable longer than intended and increase the application's live memory set.
+
+explanation:
+  short: Memory retention occurs when live references prevent memory from becoming reclaimable even after useful work has finished.
+  detailed: Retention can come from global collections, caches, callbacks, request-scoped state that escapes its lifetime, background job state, or other references. A useful discriminator is whether live heap state remains elevated after garbage collection while process memory also trends upward.
+
+predictions:
+  - observation: observation.runtime.heap_live_objects
+    expected: above_baseline_after_gc
+    strength: strong
+  - observation: observation.memory.rss
+    expected: elevated_or_rising
+    strength: moderate
+
+falsifiers:
+  - observation: observation.runtime.heap_live_objects
+    condition: returns_near_baseline_after_gc
+    effect: decrease
+
+tested_by:
+  - probe.runtime.inspect_heap_live_objects
+  - probe.memory.inspect_process_usage
+
+common_misconceptions:
+  - RSS staying high after GC is sufficient proof that live objects are still retained.
+
+search_terms:
+  - retained objects
+  - memory leak live objects
+  - heap live objects growing

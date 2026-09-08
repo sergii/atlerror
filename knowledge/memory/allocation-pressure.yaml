@@ -1,0 +1,30 @@
+id: hypothesis.memory.allocation_pressure
+kind: hypothesis
+title: Allocation pressure
+summary: The application allocates memory faster than its normal baseline, increasing transient heap usage and garbage collection pressure.
+
+explanation:
+  short: High allocation rate can raise memory use even when objects are eventually reclaimable.
+  detailed: Allocation pressure differs from retention. The live set may remain relatively stable while the application rapidly creates short-lived objects, forcing the runtime and allocator to cycle through more memory and perform more garbage collection work.
+
+predictions:
+  - observation: observation.runtime.allocation_rate
+    expected: above_baseline
+    strength: strong
+  - observation: observation.memory.rss
+    expected: elevated_or_more_volatile
+    strength: moderate
+
+falsifiers:
+  - observation: observation.runtime.allocation_rate
+    condition: not_above_baseline
+    effect: decrease
+
+tested_by:
+  - probe.runtime.inspect_gc_metrics
+  - probe.memory.inspect_process_usage
+
+search_terms:
+  - allocation pressure
+  - high allocation rate memory
+  - gc memory pressure

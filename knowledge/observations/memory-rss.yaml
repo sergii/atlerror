@@ -1,0 +1,16 @@
+id: observation.memory.rss
+kind: observation
+title: Resident set size
+summary: The amount of physical memory currently resident for the observed process or workload, compared with its expected baseline or limit.
+
+explanation:
+  short: RSS is a useful process-level memory signal but does not by itself identify which memory is live, reclaimable, fragmented, mapped, or allocator-retained.
+  detailed: Interpret RSS together with runtime heap metrics, workload, native allocations, mappings, and container or host memory accounting. A high RSS can persist after objects are freed because allocators and runtimes do not necessarily return pages to the operating system immediately.
+
+common_misconceptions:
+  - High RSS alone proves a managed-runtime memory leak.
+
+search_terms:
+  - rss memory
+  - resident set size
+  - process memory rss

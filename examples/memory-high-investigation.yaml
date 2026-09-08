@@ -1,0 +1,22 @@
+id: example.memory.high.001
+symptom: symptom.memory.high
+
+observations:
+  - id: observation.memory.rss
+    state: above_baseline
+
+candidate_hypotheses:
+  - hypothesis.memory.retention
+  - hypothesis.memory.allocation_pressure
+  - hypothesis.cache.growth
+  - hypothesis.workload.concurrency
+
+next_probes:
+  - probe.runtime.inspect_heap_live_objects
+  - probe.runtime.inspect_gc_metrics
+  - probe.cache.inspect_size
+  - probe.workload.inspect_concurrency
+
+notes:
+  - High RSS alone does not identify the memory mechanism.
+  - Prefer probes that distinguish retained live state from transient allocation pressure and workload-driven working-set growth.
