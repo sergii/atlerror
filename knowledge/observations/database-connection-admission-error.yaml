@@ -1,0 +1,7 @@
+id: observation.database.connection_admission_error
+kind: observation
+title: Database connection admission error
+summary: Explicit server-side rejection returned while establishing a new database session because the caller is not admitted under the current connection-capacity policy.
+explanation:
+  short: Captures database rejection of a new session due to connection capacity or reserved-slot policy; PostgreSQL may expose SQLSTATE 53300, a capacity-specific FATAL message, or both depending on the client error surface.
+  detailed: This differs from application-pool checkout wait because the client reached the database and the server rejected creation of a new session before ordinary query execution. Structured error codes are preferred when available, but a client library may not preserve SQLSTATE for every startup FATAL response, so the explicit server-originated capacity message and independently observed connection-capacity state are also relevant evidence.

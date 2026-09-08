@@ -1,0 +1,21 @@
+id: claim.database.connection_admission_exhaustion.postgres_rejects_new_sessions
+kind: claim
+title: PostgreSQL rejects new ordinary sessions at connection admission capacity
+statement: When PostgreSQL ordinary client-session admission capacity is exhausted, a new ordinary application connection is explicitly rejected by the server because of connection-capacity or reserved-slot policy while an already established administrative session remains usable; releasing one ordinary session permits a new ordinary connection again.
+hypothesis: hypothesis.database.connection_admission_exhaustion
+predictions:
+  - observation: observation.database.connection_admission_error
+    expected: explicit_server_capacity_or_reserved_slot_rejection_for_new_ordinary_connection
+    strength: strong
+  - observation: observation.database.connection_capacity
+    expected: ordinary_client_capacity_exhausted_while_existing_admin_session_remains_usable
+    strength: strong
+system_entities:
+  - system_entity.database
+boundaries:
+  - boundary.application.database
+limitations:
+  - Validates PostgreSQL connection admission under a deliberately small configured max_connections value.
+  - PostgreSQL may expose SQLSTATE 53300 for too_many_connections, but client libraries can lose structured SQLSTATE on startup FATAL errors; the explicit server capacity-rejection message remains relevant evidence.
+  - Does not establish a recommended production max_connections value.
+  - Real deployments may add PgBouncer, proxies, managed-service limits, role-specific reserved connections, or network failures that alter the observed failure surface.

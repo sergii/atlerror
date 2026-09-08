@@ -88,6 +88,10 @@ profiles:
     facets: {domains: [database, application], concerns: [performance, capacity, reliability], resources: [database], layers: [application, persistence]}
     coverage: {semantic: complete, predictions: complete, falsification: complete, probes: complete, rules: complete, human_explanation: complete, agent_action: partial}
     empirical: {synthetic_labs: 1, runtimes: [python], databases: [postgresql], production_evidence: none}
+  - code: D3.2
+    facets: {domains: [database], concerns: [availability, capacity, reliability], resources: [database], layers: [persistence]}
+    coverage: {semantic: complete, predictions: complete, falsification: complete, probes: complete, rules: complete, human_explanation: complete, agent_action: partial}
+    empirical: {synthetic_labs: 1, runtimes: [python], databases: [postgresql], production_evidence: none}
   - code: Q1.1
     facets: {domains: [queue_messaging], concerns: [performance, capacity], resources: [queue], layers: [messaging]}
     coverage: {semantic: complete, predictions: complete, falsification: complete, probes: complete, rules: none, human_explanation: partial, agent_action: none}

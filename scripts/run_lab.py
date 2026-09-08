@@ -142,15 +142,20 @@ def main() -> None:
     if set(evidence["claims"]) != set(manifest["claims"]):
         raise SystemExit("ERROR: evidence claims do not match experiment manifest claims")
 
-    if evidence["result"] != manifest["expected_result"]:
-        raise SystemExit(
-            f"ERROR: experiment result {evidence['result']} does not match expected {manifest['expected_result']}"
-        )
-
     results_dir = ROOT / "lab-results"
     results_dir.mkdir(exist_ok=True)
     result_path = results_dir / f"{experiment_id}.json"
     result_path.write_text(json.dumps(evidence, indent=2) + "\n", encoding="utf-8")
+
+    if evidence["result"] != manifest["expected_result"]:
+        print(
+            "EVIDENCE_ON_MISMATCH: " + json.dumps(evidence, sort_keys=True),
+            file=sys.stderr,
+        )
+        print(f"Evidence written to {result_path.relative_to(ROOT)}", file=sys.stderr)
+        raise SystemExit(
+            f"ERROR: experiment result {evidence['result']} does not match expected {manifest['expected_result']}"
+        )
 
     print(json.dumps(evidence, sort_keys=True))
     print(f"Evidence written to {result_path.relative_to(ROOT)}")

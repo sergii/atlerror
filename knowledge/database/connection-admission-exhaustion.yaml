@@ -1,0 +1,31 @@
+id: hypothesis.database.connection_admission_exhaustion
+kind: hypothesis
+title: Database connection admission exhaustion
+summary: The database has reached its configured client-session admission capacity for a class of callers, so new connection attempts are rejected before query execution begins.
+predictions:
+  - observation: observation.database.connection_admission_error
+    expected: present_with_capacity_or_reserved_slot_error
+    strength: strong
+  - observation: observation.database.connection_capacity
+    expected: ordinary_client_capacity_exhausted
+    strength: strong
+falsifiers:
+  - observation: observation.database.connection_admission_error
+    condition: absent_when_new_database_connections_fail
+    effect: decrease
+tested_by:
+  - probe.database.inspect_connection_admission
+related_to:
+  - hypothesis.database.connection_pool_exhaustion
+  - system_entity.database
+  - boundary.application.database
+common_misconceptions:
+  - Application pool checkout timeout proves the database itself has no connection slots left.
+  - Existing sessions must stop working when new sessions are rejected at the admission limit.
+  - Raising max_connections is always safe without considering database memory and workload capacity.
+search_terms:
+  - postgres max_connections
+  - postgres too many connections
+  - SQLSTATE 53300
+  - superuser_reserved_connections
+  - remaining connection slots are reserved

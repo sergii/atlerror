@@ -1,0 +1,17 @@
+id: experiment.database.connection_admission_exhaustion.python_postgres
+kind: experiment
+title: PostgreSQL connection admission exhaustion and recovery
+claims:
+  - claim.database.connection_admission_exhaustion.postgres_rejects_new_sessions
+description: Configure PostgreSQL 17 with a deliberately small max_connections value and reserved superuser capacity. Keep an administrative session open, create an ordinary application role, verify an ordinary baseline connection, then open ordinary application sessions until PostgreSQL explicitly rejects a new session because ordinary client capacity is exhausted. Record the client-visible SQLSTATE when available, the server FATAL message, and connection-capacity state through the existing admin session. Release one ordinary session and verify a new ordinary application connection succeeds again.
+runner:
+  type: docker_compose
+  compose_file: lab/database-connection-admission/compose.yml
+  setup_service: harness
+  evidence_service: probe
+expected_result: supports
+limitations:
+  - Uses a deliberately small PostgreSQL max_connections setting to reproduce admission exhaustion quickly.
+  - Validates server-side connection admission rather than application-pool sizing or network establishment failures.
+  - Client libraries may not preserve structured SQLSTATE for every PostgreSQL startup FATAL response, so the experiment records both structured fields and the explicit server error message.
+  - Managed PostgreSQL services and proxies may expose additional limits and different operational controls.

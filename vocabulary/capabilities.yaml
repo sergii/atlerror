@@ -31,6 +31,9 @@ capabilities:
   - id: capability.database.inspect_connection_pool
     title: Inspect application database connection pool
     description: Read application-side database connection pool capacity, occupancy, checkout wait, timeout, and related runtime metrics without changing state.
+  - id: capability.database.inspect_connections
+    title: Inspect database connection admission and sessions
+    description: Read database connection limits, active sessions, reserved admission policy, and connection-establishment errors without mutating application data.
   - id: capability.queue.inspect
     title: Inspect queue waits
     description: Measure queueing delay, backlog, or time spent waiting before work begins.

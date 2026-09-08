@@ -1,0 +1,8 @@
+id: rule.database.connection_admission.error_absent
+hypothesis: hypothesis.database.connection_admission_exhaustion
+when:
+  observation: observation.database.connection_admission_error
+  operator: absent
+effect:
+  confidence: decrease
+explanation: If failed new database connections are not accompanied by a database-side admission or capacity rejection, connection admission exhaustion is a weaker explanation and network, authentication, TLS, availability, or other establishment failures should remain candidates.
