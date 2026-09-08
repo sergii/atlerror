@@ -1,0 +1,22 @@
+services:
+  server:
+    build: .
+    command: ["python", "server.py"]
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import socket; s=socket.create_connection(('127.0.0.1', 9000), timeout=1); s.sendall(b'ping'); assert s.recv(16) == b'pong'; s.close()"
+      interval: 1s
+      timeout: 2s
+      retries: 15
+
+  probe:
+    build: .
+    command: ["python", "probe.py"]
+    environment:
+      TARGET_HOST: server
+      OPEN_PORT: "9000"
+      CLOSED_PORT: "9001"
+      SOCKET_TIMEOUT_SECONDS: "2"
