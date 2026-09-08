@@ -1,0 +1,34 @@
+id: hypothesis.database.deadlock
+kind: hypothesis
+title: Database deadlock
+summary: Two or more database transactions form a cycle in the lock wait-for graph, so none can proceed until the database aborts a participant.
+predictions:
+  - observation: observation.database.deadlock_error
+    expected: present_for_at_least_one_transaction
+    strength: strong
+  - observation: observation.database.deadlock_count
+    expected: increases_when_database_detects_cycle
+    strength: strong
+  - observation: observation.database.transaction_outcome
+    expected: at_least_one_transaction_aborted_by_deadlock_detector
+    strength: strong
+falsifiers:
+  - observation: observation.database.deadlock_error
+    condition: absent_when_the_failure_is_observed
+    effect: decrease
+tested_by:
+  - probe.database.inspect_deadlock_errors
+  - probe.database.inspect_lock_waits
+related_to:
+  - hypothesis.database.lock_contention
+  - hypothesis.latency.database
+  - system_entity.database
+common_misconceptions:
+  - A deadlock is merely a long lock wait; a deadlock specifically requires a cycle in the wait-for graph.
+  - Increasing a lock timeout removes the deadlock mechanism.
+  - Retrying without changing access order guarantees the deadlock will not recur.
+search_terms:
+  - postgres deadlock
+  - SQLSTATE 40P01
+  - deadlock detected
+  - wait-for cycle
