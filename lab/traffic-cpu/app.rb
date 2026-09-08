@@ -26,7 +26,9 @@ loop do
     next unless request_line
 
     _method, path, _version = request_line.split(" ", 3)
-    client.gets until $_ == "\r\n" rescue nil
+    while (header_line = client.gets)
+      break if header_line == "\r\n"
+    end
 
     case path
     when "/health"
