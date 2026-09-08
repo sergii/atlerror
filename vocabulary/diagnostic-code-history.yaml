@@ -1,0 +1,21 @@
+version: 0.1
+
+policy:
+  published_codes_immutable: true
+  reuse_for_different_meaning: forbidden
+  reclassification_strategy: preserve_old_code_and_add_alias_or_deprecation
+
+aliases: []
+
+deprecations: []
+
+# Future example:
+# aliases:
+#   - code: D2.4
+#     target: D5.1
+#     reason: Topic moved to a better primary catalog family; old published code remains resolvable.
+#
+# deprecations:
+#   - code: N2.7
+#     superseded_by: N2.9
+#     reason: Original topic was split after publication.
