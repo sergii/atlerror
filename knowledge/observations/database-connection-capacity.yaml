@@ -1,0 +1,7 @@
+id: observation.database.connection_capacity
+kind: observation
+title: Database connection capacity
+summary: Configured and currently occupied database client-session capacity relevant to whether a new caller can be admitted.
+explanation:
+  short: Compares active client sessions with limits and reserved connection policy.
+  detailed: Connection capacity should be interpreted with caller role and reserved-slot policy. A server can reject an ordinary application connection while an already established administrative session remains healthy or reserved administrative capacity still exists.
