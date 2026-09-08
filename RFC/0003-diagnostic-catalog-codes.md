@@ -4,18 +4,14 @@ Status: Draft
 
 ## Purpose
 
-Atlerror canonical semantic IDs are stable machine identities such as:
+Atlerror uses descriptive canonical semantic IDs such as:
 
 ```text
 hypothesis.database.deadlock
 experiment.database.deadlock.python_postgres
 ```
 
-They are intentionally descriptive, but they are not ideal for quickly navigating the size and depth of the diagnostic corpus.
-
-This RFC introduces a second, shorter namespace for human and agent navigation.
-
-Examples:
+Those IDs are authoritative machine identities, but they are intentionally verbose. This RFC defines a shorter navigation namespace for humans and agents:
 
 ```text
 S4        Transaction failed
@@ -23,19 +19,35 @@ D2.2      Database deadlock
 D2.2-L1   PostgreSQL two-transaction deadlock lab
 ```
 
-The short code is an alias for a catalog location. It does not replace the canonical ID.
+The short code is a catalog address. It does not replace the canonical ID and it does not itself assert ontology relationships.
 
-## Why two identifiers
+## Identity layers
 
-Canonical IDs answer:
+Atlerror deliberately separates four identities:
 
-> What semantic object is this exactly?
+```text
+canonical semantic identity   hypothesis.database.deadlock
+human catalog identity        D2.2
+experiment design identity    D2.2-L1 / experiment.database.deadlock.python_postgres
+experiment run identity       one execution with timestamp, environment, git SHA, and evidence
+```
 
-Catalog codes answer:
+`D2.2-L1` names a reusable laboratory design, not a single CI run. The same lab can execute many times and produce many evidence records.
 
-> Where is this topic in the diagnostic map, and how much of it have we covered?
+## Catalog tree versus ontology graph
 
-The same mechanism can accumulate multiple claims, runtimes, and experiments without changing its short topic code.
+The catalog is a primary navigation tree. The ontology is a graph.
+
+A mechanism has one short primary catalog location so humans can navigate it quickly, but it may have many semantic relationships and many cross-cutting facets.
+
+For example, `R1.4 Kernel/system CPU work` is primarily catalogued under CPU/resource mechanisms, but may also concern operating-system and filesystem behavior. Its catalog placement MUST NOT be interpreted as an exclusive `is-a` relationship.
+
+Therefore:
+
+1. Short codes are navigation aliases.
+2. Canonical semantic IDs are identity.
+3. Semantic relations use canonical IDs, never short codes.
+4. Cross-cutting truth belongs in ontology relations and facets, not by duplicating or deeply nesting codes.
 
 ## Code hierarchy
 
@@ -50,13 +62,9 @@ S3  High latency
 S4  Transaction failed
 ```
 
-Symptoms are intentionally separated from fault domains because one symptom can be explained by mechanisms from multiple domains.
-
-For example, `S3 High latency` can route to database, external dependency, CPU saturation, queueing, or network topics.
+Symptoms are entry points into the graph rather than fault domains. One symptom can route to mechanisms from several domains.
 
 ### Fault / mechanism domains
-
-The first letter describes the diagnostic domain:
 
 ```text
 R  Resource and runtime
@@ -70,9 +78,7 @@ F  Filesystem and storage
 X  Security and identity
 ```
 
-The first number selects a family inside the domain. The second selects a concrete mechanism/topic.
-
-Example:
+The first number selects a family. The second selects a concrete topic:
 
 ```text
 D2     Locking, transactions, and isolation
@@ -82,55 +88,102 @@ D2.3   Serialization failure
 D2.4   Isolation anomaly / write skew
 ```
 
+Mechanism codes intentionally stop at two numeric levels. Do not create catalog addresses such as `D2.3.4.1.2`; detailed structure belongs in canonical semantic IDs and graph relations.
+
 ### Labs
 
-A reproducible empirical lab inherits the mechanism code and adds `-L<number>`:
+A reproducible laboratory design inherits the mechanism code and adds `-L<number>`:
 
 ```text
 D2.2-L1
-```
-
-This means the first empirical lab validating `D2.2 Deadlock`.
-
-If later we reproduce the same mechanism in another database or runtime, we can add:
-
-```text
 D2.2-L2
-D2.2-L3
 ```
 
-without inventing a new fault code.
+Multiple labs may validate the same mechanism in different runtimes, databases, operating systems, or scenarios without changing the mechanism code.
 
-## Stability rules
+## Stability and evolution
+
+Published short codes are immutable references.
+
+Rules:
 
 1. Canonical semantic IDs remain authoritative.
-2. Short codes MUST NOT be used as the target of semantic relations such as `may_indicate`, `predicts`, or `tested_by`.
-3. Published short codes should remain stable.
-4. A code should not be silently reused for a different meaning.
-5. If taxonomy changes, prefer alias/deprecation metadata over renumbering history.
+2. Short codes MUST NOT be targets of semantic relations such as `may_indicate`, `predicts`, or `tested_by`.
+3. A published code MUST NOT be silently reused for another meaning.
+4. Reclassification does not justify historical renumbering.
+5. When a topic moves, keep the old code resolvable through explicit alias/deprecation metadata.
 6. Planned topics may reserve a code before their canonical semantic object exists.
+7. Numeric order is catalog order, not a claim that the family is exhaustive.
 
-## Coverage states
-
-Each mechanism receives one of three initial coverage states:
+Machine-readable code history and future aliases live in:
 
 ```text
-planned    catalog slot exists, semantic implementation not yet complete
-semantic   canonical ontology exists, but no empirical lab yet
-empirical  at least one reproducible lab supports a claim for the mechanism
+vocabulary/diagnostic-code-history.yaml
 ```
 
-This is deliberately not a truth score. `empirical` means we have reproducible synthetic evidence for at least one scoped claim, not that every manifestation of the mechanism has been proven.
+## Facets
+
+Because real faults cross tree boundaries, Atlerror keeps facets separately from the primary catalog location.
+
+Example conceptual profile:
+
+```yaml
+code: R1.4
+facets:
+  domains: [resource_runtime, infrastructure_os, filesystem_storage]
+  concerns: [performance]
+  resources: [cpu, filesystem]
+  layers: [runtime, operating_system]
+```
+
+Facets are intentionally many-to-many. They support search, filtering, learning paths, and agent retrieval without making the short-code hierarchy unstable.
+
+Machine-readable profiles live in:
+
+```text
+vocabulary/diagnostic-profiles.yaml
+```
+
+## Coverage vector
+
+The old single labels `planned`, `semantic`, and `empirical` remain useful as quick catalog summaries, but they are too coarse for knowledge-quality tracking.
+
+Each mechanism can therefore expose a multidimensional coverage profile:
+
+```yaml
+coverage:
+  semantic: complete
+  predictions: complete
+  falsification: complete
+  probes: complete
+  rules: partial
+  human_explanation: complete
+  agent_action: none
+
+empirical:
+  synthetic_labs: 1
+  runtimes: [python]
+  databases: [postgresql]
+  production_evidence: none
+```
+
+This is a coverage report, not a confidence or truth score. In particular, one successful synthetic lab does not prove universal behavior or production prevalence.
 
 ## Current map
 
-The machine-readable source is:
+Primary tree:
 
 ```text
 vocabulary/diagnostic-catalog.yaml
 ```
 
-Current empirical lab codes:
+Orthogonal facets and coverage:
+
+```text
+vocabulary/diagnostic-profiles.yaml
+```
+
+Current empirical labs before D2.3:
 
 ```text
 R1.1-L1  Traffic-driven CPU load
@@ -144,18 +197,14 @@ D2.2-L1  PostgreSQL deadlock
 E1.1-L1  Slow external dependency
 ```
 
-That gives the repository nine empirical labs mapped into the catalog.
-
 ## Immediate roadmap
-
-The next reserved database transaction topics are:
 
 ```text
 D2.3     Serialization failure
-D2.3-L1  First serialization-failure lab
+D2.3-L1  PostgreSQL serialization-failure lab
 
 D2.4     Isolation anomaly / write skew
 D2.4-L1  First isolation-anomaly lab
 ```
 
-The intended order is `D2.3` first, because it extends the current `S4 Transaction failed` branch directly after `D2.2 Deadlock` and lets Atlerror distinguish SQLSTATE `40P01` deadlock failures from SQLSTATE `40001` serialization failures.
+D2.3 deliberately distinguishes SQLSTATE `40001` serialization failures from D2.2 SQLSTATE `40P01` deadlocks. D2.4 is kept separate because a logical isolation anomaly is not identical to the database rejecting a transaction to preserve serializability.
