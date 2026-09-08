@@ -1,0 +1,19 @@
+id: claim.memory.retention.ruby_live_set_and_rss_grow
+kind: claim
+title: Retained Ruby objects grow live heap and RSS
+statement: In Ruby on Linux, retaining a large set of reachable heap objects under an otherwise comparable workload increases both the post-GC live object count and process RSS relative to baseline.
+hypothesis: hypothesis.memory.retention
+predictions:
+  - observation: observation.runtime.heap_live_objects
+    expected: above_baseline_after_gc
+    strength: strong
+  - observation: observation.memory.rss
+    expected: above_baseline
+    strength: strong
+scope:
+  runtime: ruby
+  os: linux
+limitations:
+  - This does not establish that all high RSS is caused by retained Ruby objects.
+  - This synthetic reproduction does not establish production frequency or impact thresholds.
+  - RSS behavior also depends on allocator, mappings, and operating-system reclaim behavior.

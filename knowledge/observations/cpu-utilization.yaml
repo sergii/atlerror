@@ -1,0 +1,13 @@
+id: observation.cpu.utilization
+kind: observation
+title: CPU utilization
+summary: The amount of CPU time consumed by the observed process or workload relative to elapsed wall time and its expected baseline.
+
+explanation:
+  short: Sustained utilization near one logical core means the process is actively executing for most of the observation window.
+  detailed: CPU utilization should be interpreted with CPU mode breakdown, workload rate, scheduling limits, and profiler data. A high value identifies resource consumption but not the responsible code path or cause.
+
+search_terms:
+  - cpu utilization
+  - process cpu percent
+  - cpu saturation

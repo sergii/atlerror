@@ -1,0 +1,13 @@
+id: observation.cpu.user_share
+kind: observation
+title: User CPU share
+summary: The share of process CPU time spent executing in user space rather than kernel or system mode.
+
+explanation:
+  short: A high user CPU share indicates that application or runtime execution dominates CPU consumption.
+  detailed: User CPU share helps distinguish application-level computation from syscall-, networking-, storage-, or other kernel-heavy work. It still does not identify the exact hot code path without profiling.
+
+search_terms:
+  - user cpu
+  - user versus system cpu
+  - application cpu time

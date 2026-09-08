@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://atlerror.dev/schema/claim.schema.json",
+  "title": "Atlerror Diagnostic Claim",
+  "type": "object",
+  "required": ["id", "kind", "title", "statement", "hypothesis", "predictions"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^claim\\.[a-z0-9_]+(\\.[a-z0-9_]+)+$"
+    },
+    "kind": { "const": "claim" },
+    "title": { "type": "string", "minLength": 1 },
+    "statement": { "type": "string", "minLength": 1 },
+    "hypothesis": {
+      "type": "string",
+      "pattern": "^hypothesis\\.[a-z0-9_]+(\\.[a-z0-9_]+)*$"
+    },
+    "predictions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["observation", "expected"],
+        "properties": {
+          "observation": {
+            "type": "string",
+            "pattern": "^observation\\.[a-z0-9_]+(\\.[a-z0-9_]+)*$"
+          },
+          "expected": { "type": "string", "minLength": 1 },
+          "strength": {
+            "type": "string",
+            "enum": ["weak", "moderate", "strong"]
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "scope": {
+      "type": "object",
+      "properties": {
+        "runtime": { "type": "string" },
+        "os": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "limitations": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  },
+  "additionalProperties": false
+}
