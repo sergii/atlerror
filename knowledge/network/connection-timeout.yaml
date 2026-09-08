@@ -1,0 +1,30 @@
+id: hypothesis.network.connection_timeout
+kind: hypothesis
+title: TCP connection establishment timeout
+summary: A client starts TCP connection establishment but receives no successful handshake and no prompt active rejection before its connection deadline expires.
+predictions:
+  - observation: observation.network.connection_timeout
+    expected: connect_deadline_expires_without_establishment_or_active_refusal
+    strength: strong
+falsifiers:
+  - observation: observation.network.connection_timeout
+    condition: absent_when_connection_establishment_fails
+    effect: decrease
+tested_by:
+  - probe.network.inspect_connection_error
+related_to:
+  - symptom.database.connection_failed
+  - hypothesis.network.connection_refused
+  - hypothesis.network.connection_reset
+  - system_entity.application_service
+  - system_entity.external_dependency
+common_misconceptions:
+  - A connection timeout and connection refused mean the same thing; refusal is an active prompt rejection while timeout means the deadline elapsed without one.
+  - A connect timeout proves the destination application is down; packet filtering, routing, security policy, asymmetric paths, overloaded network devices, or unreachable hosts can produce the same symptom.
+  - A TCP connect timeout is the same as an application read timeout after a connection has already been established.
+search_terms:
+  - connect timeout
+  - connection timed out
+  - ETIMEDOUT
+  - tcp syn timeout
+  - dropped syn

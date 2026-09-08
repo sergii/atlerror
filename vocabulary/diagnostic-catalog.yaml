@@ -122,7 +122,7 @@ entries:
     kind: symptom
     title: Database connection failed
     canonical_id: symptom.database.connection_failed
-    routes_to: [D3.2, N2.1, N2.2]
+    routes_to: [D3.2, N2.1, N2.2, N2.3]
 
   - code: R1.1
     kind: mechanism
@@ -325,6 +325,18 @@ entries:
       - code: N2.2-L1
         id: experiment.network.connection_refused.python_linux
 
+  - code: N2.3
+    kind: mechanism
+    title: TCP connection establishment timeout
+    canonical_id: hypothesis.network.connection_timeout
+    symptoms: [S6]
+    coverage: empirical
+    claims:
+      - claim.network.connection_timeout.dropped_syn_expires_connect_deadline
+    experiments:
+      - code: N2.3-L1
+        id: experiment.network.connection_timeout.python_linux
+
   - code: Q1.1
     kind: mechanism
     title: Queueing delay
@@ -349,8 +361,6 @@ planned_examples:
     title: Network latency
   - code: N1.2
     title: Packet loss
-  - code: N2.3
-    title: Connection timeout
   - code: N3.1
     title: DNS resolution failure
   - code: E2.1

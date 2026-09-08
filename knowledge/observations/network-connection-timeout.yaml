@@ -1,0 +1,7 @@
+id: observation.network.connection_timeout
+kind: observation
+title: TCP connection establishment timeout observed
+summary: The client operating system or runtime reports that a TCP connection attempt did not establish before its configured connection deadline expired.
+explanation:
+  short: Indicates that connect remained unresolved until the client deadline rather than receiving a prompt refusal or establishing a session.
+  detailed: A connect timeout is a lifecycle-phase observation. It should be separated from ECONNREFUSED, which actively rejects establishment, and ECONNRESET, which normally terminates an established connection. The observation alone does not identify whether packets were dropped by the destination, an intermediary, local policy, routing, or another network condition.
