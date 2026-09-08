@@ -1,0 +1,31 @@
+id: hypothesis.network.dns_resolver_timeout
+kind: hypothesis
+title: DNS resolver timeout
+summary: A client sends a name-resolution query to a configured resolver but receives no usable DNS response before its resolution deadline expires, so transport establishment cannot begin.
+predictions:
+  - observation: observation.network.dns_resolution_timeout
+    expected: resolver_query_deadline_expires_without_dns_response
+    strength: strong
+falsifiers:
+  - observation: observation.network.dns_resolution_timeout
+    condition: absent_when_name_resolution_fails
+    effect: decrease
+tested_by:
+  - probe.network.resolve_name
+related_to:
+  - symptom.network.name_resolution_failed
+  - symptom.database.connection_failed
+  - hypothesis.network.dns_resolution_failure
+  - system_entity.application_service
+  - system_entity.dns_resolver
+  - boundary.application.dns_resolver
+common_misconceptions:
+  - DNS timeout and NXDOMAIN are the same failure; NXDOMAIN is an explicit DNS response while timeout means no usable response arrived before the client deadline.
+  - A DNS timeout proves the authoritative DNS server is down; recursive resolvers, local stubs, packet filtering, routing, overload, or upstream dependencies may be responsible.
+  - DNS timeout and TCP connect timeout occur at the same lifecycle phase; DNS resolution normally happens before a destination address is available for TCP establishment.
+search_terms:
+  - DNS timeout
+  - resolver timeout
+  - DNS query timed out
+  - nameserver timeout
+  - temporary failure in name resolution
