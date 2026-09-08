@@ -1,0 +1,7 @@
+id: observation.network.tls_cipher_negotiation_error
+kind: observation
+title: TLS cipher negotiation error observed
+summary: A client reports a TLS handshake failure after TCP establishment where a shared protocol version exists but no mutually permitted cipher suite can be negotiated.
+explanation:
+  short: Captures a secure-transport capability mismatch at the cipher-suite negotiation layer.
+  detailed: Record whether TCP was established, the client and server protocol-version constraints, the configured cipher sets, the runtime or OpenSSL error class/reason, whether certificate verification failed, and whether a TLS session was established. This distinguishes cipher mismatch from certificate verification failure and protocol-version mismatch.
