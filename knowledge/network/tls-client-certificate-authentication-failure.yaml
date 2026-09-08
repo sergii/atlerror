@@ -1,0 +1,33 @@
+id: hypothesis.network.tls_client_certificate_authentication_failure
+kind: hypothesis
+title: TLS client-certificate authentication failure
+summary: TCP connectivity succeeds and the client can verify the server certificate, but a TLS peer configured to require a client certificate cannot authenticate the client because no acceptable client certificate is presented.
+predictions:
+  - observation: observation.network.tls_client_certificate_authentication_error
+    expected: tcp_established_and_server_trusted_but_tls_fails_when_required_client_certificate_is_missing_or_unacceptable
+    strength: strong
+falsifiers:
+  - observation: observation.network.tls_client_certificate_authentication_error
+    condition: absent_when_tls_handshake_fails
+    effect: decrease
+tested_by:
+  - probe.network.inspect_tls_handshake
+related_to:
+  - symptom.network.tls_handshake_failed
+  - symptom.database.connection_failed
+  - hypothesis.network.tls_certificate_verification_failure
+  - hypothesis.network.tls_protocol_negotiation_failure
+  - hypothesis.network.tls_cipher_negotiation_failure
+  - system_entity.application_service
+  - system_entity.external_dependency
+  - boundary.application.external_dependency_tls
+common_misconceptions:
+  - A trusted server certificate is sufficient for mutual TLS; mTLS also requires the server to authenticate an acceptable client certificate.
+  - Missing client certificates are the same as server-certificate trust failures; they involve opposite authentication directions and different remediation.
+  - Disabling server certificate verification repairs a missing client certificate; it does not satisfy a server-side client-authentication policy.
+search_terms:
+  - mutual TLS client certificate required
+  - mTLS client certificate missing
+  - TLS certificate required alert
+  - peer did not return a certificate
+  - client certificate authentication failed
