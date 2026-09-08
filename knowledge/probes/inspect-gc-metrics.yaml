@@ -1,0 +1,25 @@
+id: probe.runtime.inspect_gc_metrics
+kind: probe
+title: Inspect runtime GC metrics
+summary: Compare garbage collection CPU share and allocation rate with their expected baselines.
+
+explanation:
+  short: This probe tests whether runtime memory-management work plausibly explains elevated CPU.
+  detailed: Interpret GC CPU together with allocation rate and application workload because GC pressure may be downstream of allocation-heavy code rather than the primary failure mechanism.
+
+produces:
+  - observation.runtime.gc_cpu_share
+  - observation.runtime.allocation_rate
+
+requires:
+  - capability.runtime.gc_metrics
+
+preferred_tools:
+  - tool.runtime_metrics
+
+risk: read_only
+
+search_terms:
+  - inspect gc metrics
+  - gc cpu diagnostics
+  - allocation metrics
