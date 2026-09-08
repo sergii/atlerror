@@ -52,6 +52,9 @@ jobs:
           - name: latency-database-lock-wait-python-postgres
             manifest: experiments/latency/database-lock-wait-python-postgres.yaml
             result: experiment.latency.database.lock_wait_python_postgres.json
+          - name: database-deadlock-python-postgres
+            manifest: experiments/database/deadlock-python-postgres.yaml
+            result: experiment.database.deadlock.python_postgres.json
 
     name: ${{ matrix.name }}
 

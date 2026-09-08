@@ -1,0 +1,16 @@
+id: experiment.database.deadlock.python_postgres
+kind: experiment
+title: PostgreSQL cyclic row locks cause deadlock abort
+claims:
+  - claim.database.deadlock.cycle_aborts_transaction
+description: Run two concurrent PostgreSQL transactions. Baseline and recovery acquire the same two row locks in a consistent order; intervention synchronizes them after each holds a different first row and then requests the other's row, creating a deterministic wait-for cycle.
+runner:
+  type: docker_compose
+  compose_file: lab/database-deadlock/compose.yml
+  setup_service: harness
+  evidence_service: probe
+expected_result: supports
+limitations:
+  - Uses PostgreSQL 17 in Docker on one host.
+  - Models two transactions and two row locks, not distributed transactions or all PostgreSQL lock modes.
+  - Sets deadlock_timeout to 100 ms in synthetic sessions so CI completes quickly; production settings can differ.

@@ -1,0 +1,4 @@
+id: observation.database.transaction_outcome
+kind: observation
+title: Database transaction outcome
+summary: Whether a transaction committed, rolled back, or was aborted by the database due to a specific failure mechanism.

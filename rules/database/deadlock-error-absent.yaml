@@ -1,0 +1,8 @@
+id: rule.database_deadlock.deadlock_error_absent
+hypothesis: hypothesis.database.deadlock
+when:
+  observation: observation.database.deadlock_error
+  operator: absent
+effect:
+  confidence: decrease
+explanation: If the observed transaction failure has no database deadlock error or equivalent server evidence, a deadlock becomes a weaker explanation and other transaction-failure mechanisms should be considered.

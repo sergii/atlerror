@@ -1,0 +1,4 @@
+id: observation.database.deadlock_error
+kind: observation
+title: Database deadlock error
+summary: A database operation reports an error explicitly classified as a deadlock, such as PostgreSQL SQLSTATE 40P01.

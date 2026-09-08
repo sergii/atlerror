@@ -1,0 +1,21 @@
+id: claim.database.deadlock.cycle_aborts_transaction
+kind: claim
+title: PostgreSQL deadlock cycle aborts a transaction
+statement: When two PostgreSQL transactions hold row locks in opposing order and form a lock wait-for cycle, PostgreSQL detects the deadlock and aborts a participant with SQLSTATE 40P01; using a consistent lock acquisition order removes that cycle and allows both transactions to commit.
+hypothesis: hypothesis.database.deadlock
+predictions:
+  - observation: observation.database.deadlock_error
+    expected: SQLSTATE_40P01_present_during_cyclic_ordering
+    strength: strong
+  - observation: observation.database.deadlock_count
+    expected: server_deadlock_counter_increases
+    strength: strong
+  - observation: observation.database.transaction_outcome
+    expected: one_transaction_aborted_and_peer_can_commit
+    strength: strong
+system_entities:
+  - system_entity.database
+limitations:
+  - This validates a two-transaction, two-row PostgreSQL deadlock pattern rather than every possible wait-for cycle.
+  - PostgreSQL chooses the deadlock victim; the experiment does not require a specific transaction to be aborted.
+  - Consistent lock ordering removes this constructed cycle but is not a universal prevention strategy for every application topology.

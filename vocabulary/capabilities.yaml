@@ -22,6 +22,9 @@ capabilities:
   - id: capability.database.inspect_locks
     title: Inspect database locks
     description: Read lock ownership, blocked sessions, blockers, and lock-related wait metadata without changing database state.
+  - id: capability.database.inspect_errors
+    title: Inspect database errors
+    description: Read database error codes, deadlock counters, logs, or client-visible database failures without changing database state.
   - id: capability.queue.inspect
     title: Inspect queue waits
     description: Measure queueing delay, backlog, or time spent waiting before work begins.

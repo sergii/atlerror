@@ -1,0 +1,4 @@
+id: observation.database.deadlock_count
+kind: observation
+title: Database deadlock count
+summary: The database server counter of detected deadlocks compared with an earlier observation point.
