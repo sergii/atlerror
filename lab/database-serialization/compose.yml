@@ -1,0 +1,39 @@
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: atlerror
+      POSTGRES_PASSWORD: atlerror
+      POSTGRES_DB: atlerror
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U atlerror -d atlerror"]
+      interval: 1s
+      timeout: 1s
+      retries: 30
+
+  harness:
+    build: .
+    image: atlerror-postgres-serialization-lab
+    command: ["sleep", "infinity"]
+    environment:
+      DB_HOST: db
+      DB_PORT: "5432"
+      DB_USER: atlerror
+      DB_PASSWORD: atlerror
+      DB_NAME: atlerror
+    depends_on:
+      db:
+        condition: service_healthy
+
+  probe:
+    image: atlerror-postgres-serialization-lab
+    command: ["python", "/lab/probe.py"]
+    environment:
+      DB_HOST: db
+      DB_PORT: "5432"
+      DB_USER: atlerror
+      DB_PASSWORD: atlerror
+      DB_NAME: atlerror
+    depends_on:
+      db:
+        condition: service_healthy

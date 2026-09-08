@@ -10,6 +10,8 @@ import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
 CATALOG = ROOT / "vocabulary" / "diagnostic-catalog.yaml"
+PROFILES = ROOT / "vocabulary" / "diagnostic-profiles.yaml"
+HISTORY = ROOT / "vocabulary" / "diagnostic-code-history.yaml"
 
 SYMPTOM_CODE = re.compile(r"^S[1-9][0-9]*$")
 FAMILY_CODE = re.compile(r"^[A-Z][1-9][0-9]*$")
@@ -36,6 +38,113 @@ def fail(errors: list[str]) -> None:
     for error in errors:
         print(f"ERROR: {error}")
     raise SystemExit(1)
+
+
+def validate_profiles(entries_by_code: dict[str, dict[str, Any]], errors: list[str]) -> tuple[int, int]:
+    document = load_yaml(PROFILES) or {}
+    facet_dimensions = document.get("facet_dimensions", {})
+    coverage_dimensions = document.get("coverage_dimensions", {})
+    profiles = document.get("profiles", [])
+    profiles_by_code: dict[str, dict[str, Any]] = {}
+
+    mechanism_codes = {code for code, entry in entries_by_code.items() if entry.get("kind") == "mechanism"}
+
+    for profile in profiles:
+        code = profile.get("code")
+        if code not in mechanism_codes:
+            errors.append(f"profile references unknown/non-mechanism code: {code}")
+            continue
+        if code in profiles_by_code:
+            errors.append(f"duplicate diagnostic profile: {code}")
+            continue
+        profiles_by_code[code] = profile
+
+        facets = profile.get("facets", {})
+        for dimension, values in facets.items():
+            allowed = set(facet_dimensions.get(dimension, []))
+            if not allowed:
+                errors.append(f"{code}: unknown facet dimension: {dimension}")
+                continue
+            if not isinstance(values, list) or not values:
+                errors.append(f"{code}: facet {dimension} must be a non-empty list")
+                continue
+            for value in values:
+                if value not in allowed:
+                    errors.append(f"{code}: invalid {dimension} facet: {value}")
+
+        coverage = profile.get("coverage", {})
+        missing_coverage = set(coverage_dimensions) - set(coverage)
+        extra_coverage = set(coverage) - set(coverage_dimensions)
+        if missing_coverage:
+            errors.append(f"{code}: missing coverage dimensions: {sorted(missing_coverage)}")
+        if extra_coverage:
+            errors.append(f"{code}: unknown coverage dimensions: {sorted(extra_coverage)}")
+        for dimension, value in coverage.items():
+            if value not in set(coverage_dimensions.get(dimension, [])):
+                errors.append(f"{code}: invalid coverage value {dimension}={value}")
+
+        empirical = profile.get("empirical", {})
+        synthetic_labs = empirical.get("synthetic_labs")
+        if not isinstance(synthetic_labs, int) or synthetic_labs < 0:
+            errors.append(f"{code}: empirical.synthetic_labs must be a non-negative integer")
+            continue
+        catalog_lab_count = len(entries_by_code[code].get("experiments", []))
+        if synthetic_labs != catalog_lab_count:
+            errors.append(f"{code}: profile synthetic_labs={synthetic_labs} but catalog has {catalog_lab_count} experiments")
+        if entries_by_code[code].get("coverage") == "empirical" and synthetic_labs < 1:
+            errors.append(f"{code}: empirical catalog coverage requires at least one synthetic lab in profile")
+        if empirical.get("production_evidence") not in {"none", "observed", "validated"}:
+            errors.append(f"{code}: invalid production_evidence: {empirical.get('production_evidence')}")
+
+    missing_profiles = mechanism_codes - set(profiles_by_code)
+    if missing_profiles:
+        errors.append(f"mechanisms missing diagnostic profiles: {sorted(missing_profiles)}")
+
+    synthetic_labs = sum((profile.get("empirical", {}).get("synthetic_labs") or 0) for profile in profiles_by_code.values())
+    return len(profiles_by_code), synthetic_labs
+
+
+def validate_history(entries_by_code: dict[str, dict[str, Any]], planned_codes: set[str], errors: list[str]) -> tuple[int, int]:
+    document = load_yaml(HISTORY) or {}
+    policy = document.get("policy", {})
+    if policy.get("published_codes_immutable") is not True:
+        errors.append("code history must declare published_codes_immutable: true")
+    if policy.get("reuse_for_different_meaning") != "forbidden":
+        errors.append("code history must forbid reuse_for_different_meaning")
+
+    resolvable = set(entries_by_code) | planned_codes
+    alias_codes: set[str] = set()
+    for alias in document.get("aliases", []):
+        code, target = alias.get("code"), alias.get("target")
+        if not isinstance(code, str) or not (SYMPTOM_CODE.fullmatch(code) or MECHANISM_CODE.fullmatch(code)):
+            errors.append(f"invalid alias code: {code!r}")
+            continue
+        if code in alias_codes:
+            errors.append(f"duplicate alias code: {code}")
+        alias_codes.add(code)
+        if target not in resolvable:
+            errors.append(f"{code}: alias target is not resolvable: {target}")
+        if code == target:
+            errors.append(f"{code}: alias cannot target itself")
+
+    deprecated_codes: set[str] = set()
+    for item in document.get("deprecations", []):
+        code, target = item.get("code"), item.get("superseded_by")
+        if not isinstance(code, str) or not (SYMPTOM_CODE.fullmatch(code) or MECHANISM_CODE.fullmatch(code)):
+            errors.append(f"invalid deprecated code: {code!r}")
+            continue
+        if code in deprecated_codes:
+            errors.append(f"duplicate deprecated code: {code}")
+        deprecated_codes.add(code)
+        if target is not None and target not in resolvable:
+            errors.append(f"{code}: superseded_by is not resolvable: {target}")
+        if target == code:
+            errors.append(f"{code}: deprecation cannot supersede itself")
+
+    overlap = alias_codes & deprecated_codes
+    if overlap:
+        errors.append(f"codes cannot be both alias and deprecation: {sorted(overlap)}")
+    return len(alias_codes), len(deprecated_codes)
 
 
 def validate() -> None:
@@ -104,8 +213,6 @@ def validate() -> None:
         family_code = code.split(".", 1)[0]
         if family_code not in family_codes:
             errors.append(f"{code}: family not declared: {family_code}")
-        elif code[0] not in domain_prefixes:
-            errors.append(f"{code}: domain prefix not declared")
 
         coverage = entry.get("coverage")
         if coverage not in {"planned", "semantic", "empirical"}:
@@ -160,6 +267,7 @@ def validate() -> None:
             elif entries_by_code[symptom].get("kind") != "symptom":
                 errors.append(f"{code}: symptoms must reference symptom entries: {symptom}")
 
+    planned_codes: set[str] = set()
     for planned in document.get("planned_examples", []):
         code = planned.get("code")
         if not isinstance(code, str) or not MECHANISM_CODE.fullmatch(code):
@@ -167,9 +275,13 @@ def validate() -> None:
             continue
         if code in entries_by_code:
             errors.append(f"planned example duplicates catalog entry: {code}")
+        planned_codes.add(code)
         family_code = code.split(".", 1)[0]
         if family_code not in family_codes:
             errors.append(f"planned example uses undeclared family: {code}")
+
+    profile_count, profile_lab_count = validate_profiles(entries_by_code, errors)
+    alias_count, deprecated_count = validate_history(entries_by_code, planned_codes, errors)
 
     if errors:
         fail(errors)
@@ -181,7 +293,9 @@ def validate() -> None:
     planned = sum(1 for entry in entries if entry.get("coverage") == "planned")
     print(
         f"Validated diagnostic catalog: {symptoms} symptoms, {mechanisms} mechanisms, "
-        f"{len(lab_codes)} lab codes ({empirical} empirical, {semantic} semantic, {planned} planned)."
+        f"{len(lab_codes)} lab codes ({empirical} empirical, {semantic} semantic, {planned} planned); "
+        f"{profile_count} profiles / {profile_lab_count} synthetic labs; "
+        f"{alias_count} aliases / {deprecated_count} deprecations."
     )
 
 

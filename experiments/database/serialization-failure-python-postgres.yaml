@@ -1,0 +1,16 @@
+id: experiment.database.serialization_failure.python_postgres
+kind: experiment
+title: PostgreSQL serializable concurrent update causes 40001
+claims:
+  - claim.database.serialization_failure.concurrent_serializable_update_aborts_transaction
+description: Run PostgreSQL 17 with two SERIALIZABLE transactions. A stale transaction reads a row first, a concurrent transaction commits an update, then the stale transaction attempts its own update and should be rejected with SQLSTATE 40001. Retry the failed work in a fresh transaction and verify it commits.
+runner:
+  type: docker_compose
+  compose_file: lab/database-serialization/compose.yml
+  setup_service: harness
+  evidence_service: probe
+expected_result: supports
+limitations:
+  - Uses PostgreSQL 17 in Docker on one host.
+  - Reproduces a concurrent-update serialization failure, not every SSI dangerous-structure pattern.
+  - A successful synthetic retry does not define an application-wide retry budget or idempotency policy.

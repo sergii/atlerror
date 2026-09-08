@@ -1,0 +1,30 @@
+id: hypothesis.database.serialization_failure
+kind: hypothesis
+title: Database serialization failure
+summary: A transaction running under serializable isolation conflicts with concurrent committed state in a way that cannot be reconciled with a valid serial execution, so the database aborts the transaction.
+predictions:
+  - observation: observation.database.serialization_failure
+    expected: present_for_aborted_transaction
+    strength: strong
+  - observation: observation.database.transaction_outcome
+    expected: one_transaction_aborted_and_fresh_retry_can_commit
+    strength: strong
+falsifiers:
+  - observation: observation.database.serialization_failure
+    condition: absent_when_the_transaction_failure_is_observed
+    effect: decrease
+tested_by:
+  - probe.database.inspect_serialization_failures
+related_to:
+  - hypothesis.database.deadlock
+  - hypothesis.database.lock_contention
+  - system_entity.database
+common_misconceptions:
+  - A serialization failure is the same mechanism as a deadlock.
+  - SQLSTATE 40001 means the transaction is permanently invalid and should never be retried.
+  - Retrying inside the same failed transaction snapshot is equivalent to starting a fresh transaction.
+search_terms:
+  - postgres serialization failure
+  - SQLSTATE 40001
+  - could not serialize access due to concurrent update
+  - serializable transaction retry

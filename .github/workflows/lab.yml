@@ -55,6 +55,9 @@ jobs:
           - name: database-deadlock-python-postgres
             manifest: experiments/database/deadlock-python-postgres.yaml
             result: experiment.database.deadlock.python_postgres.json
+          - name: database-serialization-failure-python-postgres
+            manifest: experiments/database/serialization-failure-python-postgres.yaml
+            result: experiment.database.serialization_failure.python_postgres.json
 
     name: ${{ matrix.name }}
 

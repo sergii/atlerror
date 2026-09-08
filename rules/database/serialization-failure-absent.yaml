@@ -1,0 +1,8 @@
+id: rule.database_serialization.serialization_failure_absent
+hypothesis: hypothesis.database.serialization_failure
+when:
+  observation: observation.database.serialization_failure
+  operator: absent
+effect:
+  confidence: decrease
+explanation: If the failed transaction does not report a serialization-failure classification such as PostgreSQL SQLSTATE 40001, serialization failure becomes a weaker explanation for that observed transaction failure.

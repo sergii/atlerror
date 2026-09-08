@@ -1,0 +1,4 @@
+id: observation.database.serialization_failure
+kind: observation
+title: Database serialization failure
+summary: A database transaction is aborted because its concurrent execution cannot be committed while preserving the requested serializable isolation semantics, such as PostgreSQL SQLSTATE 40001.
