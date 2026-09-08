@@ -34,6 +34,9 @@ capabilities:
   - id: capability.database.inspect_connections
     title: Inspect database connection admission and sessions
     description: Read database connection limits, active sessions, reserved admission policy, and connection-establishment errors without mutating application data.
+  - id: capability.network.inspect_connection_error
+    title: Inspect network connection error
+    description: Attempt a controlled network connection and capture transport-layer establishment or teardown errors such as reset, refusal, timeout, and their OS/runtime error metadata.
   - id: capability.queue.inspect
     title: Inspect queue waits
     description: Measure queueing delay, backlog, or time spent waiting before work begins.
