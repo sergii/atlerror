@@ -4,19 +4,20 @@ title: Database connection failed
 summary: An application, worker, or diagnostic client could not establish a new database session or connection.
 explanation:
   short: A new database connection attempt failed before normal query or transaction work could begin.
-  detailed: Connection establishment can fail because the database rejects admission at a configured session limit, the network path resets or refuses the connection, connection establishment receives no response before its deadline, name resolution or TLS fails, credentials are invalid, or the database process is unavailable. Diagnose the concrete establishment error and lifecycle phase before assigning a mechanism.
+  detailed: Connection establishment can fail because the database rejects admission at a configured session limit, the network path resets or refuses the connection, connection establishment receives no response before its deadline, name resolution returns a negative result or times out, TLS fails, credentials are invalid, or the database process is unavailable. Diagnose the concrete establishment error and lifecycle phase before assigning a mechanism.
 may_indicate:
   - hypothesis.database.connection_admission_exhaustion
   - hypothesis.network.connection_reset
   - hypothesis.network.connection_refused
   - hypothesis.network.connection_timeout
   - hypothesis.network.dns_resolution_failure
+  - hypothesis.network.dns_resolver_timeout
 common_misconceptions:
   - Every database connection failure is a network problem.
   - Application connection-pool exhaustion and PostgreSQL max_connections exhaustion are the same mechanism.
   - A responsive existing database session proves new sessions can still be admitted.
   - A transport reset is equivalent to a database protocol error returned over a healthy connection.
-  - Connection refused, connection reset, connect timeout, and DNS resolution failure describe the same connection lifecycle event.
+  - Connection refused, connection reset, connect timeout, DNS negative response, and DNS timeout describe the same connection lifecycle event.
 search_terms:
   - database connection failed
   - postgres too many connections
@@ -30,3 +31,5 @@ search_terms:
   - connect timeout
   - NXDOMAIN
   - DNS resolution failed
+  - DNS timeout
+  - resolver timeout
