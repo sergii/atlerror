@@ -1,0 +1,32 @@
+id: hypothesis.network.tls_cipher_negotiation_failure
+kind: hypothesis
+title: TLS cipher-suite negotiation failure
+summary: TCP connectivity succeeds and client and server share a TLS protocol version, but they cannot agree on a mutually supported cipher suite, so the TLS session is not established even though certificate trust is not the failing mechanism.
+predictions:
+  - observation: observation.network.tls_cipher_negotiation_error
+    expected: no_common_tls_cipher_after_tcp_establishment_with_shared_protocol_version
+    strength: strong
+falsifiers:
+  - observation: observation.network.tls_cipher_negotiation_error
+    condition: absent_when_tls_handshake_fails
+    effect: decrease
+tested_by:
+  - probe.network.inspect_tls_handshake
+related_to:
+  - symptom.network.tls_handshake_failed
+  - symptom.database.connection_failed
+  - hypothesis.network.tls_certificate_verification_failure
+  - hypothesis.network.tls_protocol_negotiation_failure
+  - system_entity.application_service
+  - system_entity.external_dependency
+  - boundary.application.external_dependency_tls
+common_misconceptions:
+  - Every TLS negotiation failure is a protocol-version mismatch; endpoints can share a TLS version but still have no usable cipher suite in common.
+  - A trusted certificate proves the TLS handshake can complete; trust verification and cryptographic capability negotiation are distinct mechanisms.
+  - Enabling arbitrary legacy ciphers is always the right fix; remediation should preserve the required security policy while restoring a safe overlap.
+search_terms:
+  - no shared cipher
+  - TLS cipher mismatch
+  - SSL handshake failure cipher
+  - handshake failure no shared cipher
+  - cipher suite negotiation failed
