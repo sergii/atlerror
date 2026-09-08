@@ -1,0 +1,13 @@
+id: observation.cpu.hot_stack_repetition
+kind: observation
+title: Repeated hot CPU stack
+summary: CPU profiling repeatedly attributes a large share of samples to the same stack or small set of stacks.
+
+explanation:
+  short: A repeatedly hot stack suggests CPU is concentrated in a specific execution path.
+  detailed: This observation is useful for distinguishing concentrated application work such as a busy loop or expensive algorithm from broad workload growth. It should be interpreted together with traffic, process scope, and runtime behavior.
+
+search_terms:
+  - hot stack
+  - cpu flamegraph hot path
+  - repeated cpu stack
