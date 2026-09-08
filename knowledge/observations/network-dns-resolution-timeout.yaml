@@ -1,0 +1,7 @@
+id: observation.network.dns_resolution_timeout
+kind: observation
+title: DNS resolution timeout observed
+summary: A DNS query was sent to a resolver but no usable response arrived before the client or resolver deadline expired.
+explanation:
+  short: Indicates a name-resolution deadline expired before an address or explicit DNS error response was received.
+  detailed: This observation belongs to the name-resolution phase. It differs from NXDOMAIN, SERVFAIL, or REFUSED because those are DNS responses, and from TCP connection timeout because no transport connection to the application endpoint has begun yet. The timeout alone does not identify whether the resolver, network path, recursive upstream, policy, or overload caused the missing response.
