@@ -1,0 +1,13 @@
+id: observation.runtime.allocation_rate
+kind: observation
+title: Runtime allocation rate
+summary: The rate at which the application allocates objects or memory compared with its normal baseline.
+
+explanation:
+  short: A higher allocation rate can increase garbage collection work and CPU consumption.
+  detailed: Allocation rate is especially useful when correlated with request volume and CPU profiles because an increase may reflect either more workload or a code-path regression.
+
+search_terms:
+  - allocation rate
+  - object allocations
+  - memory allocation cpu
