@@ -1,0 +1,50 @@
+version: 0.1
+
+active:
+  - id: concept_kind.symptom
+    title: Symptom
+    description: A deviation from expected system behavior.
+
+  - id: concept_kind.hypothesis
+    title: Hypothesis
+    description: A candidate explanation that should make testable predictions.
+
+  - id: concept_kind.observation
+    title: Observation
+    description: A concrete measured or reported fact about a system.
+
+  - id: concept_kind.probe
+    title: Probe
+    description: A diagnostic action intended primarily to gather evidence.
+
+planned:
+  - system_entity
+  - boundary
+  - signal
+  - evidence
+  - prediction
+  - diagnostic_experiment
+  - finding
+  - failure_class
+  - trigger
+  - contributing_factor
+  - cause
+  - necessary_condition
+  - latent_condition
+  - proximate_cause
+  - failed_defense
+  - amplifier
+  - mitigating_factor
+  - mitigation
+  - fix
+  - verification
+  - prevention
+  - guardrail
+  - tool
+  - capability
+  - action
+  - risk_level
+  - approval_policy
+  - actor
+  - provenance
+  - event
