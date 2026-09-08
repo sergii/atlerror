@@ -1,0 +1,12 @@
+id: probe.database.inspect_serialization_failures
+kind: probe
+title: Inspect database serialization failures
+summary: Read client-visible database error codes and transaction outcomes to determine whether a failed operation was aborted for serialization reasons, such as PostgreSQL SQLSTATE 40001.
+produces:
+  - observation.database.serialization_failure
+  - observation.database.transaction_outcome
+requires:
+  - capability.database.inspect_errors
+preferred_tools:
+  - tool.postgresql
+risk: read_only
