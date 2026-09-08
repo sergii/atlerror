@@ -1,0 +1,17 @@
+id: experiment.cpu.busy_loop.ruby
+kind: experiment
+title: Ruby busy loop consumes one CPU core
+description: Compare an idle baseline with a tight non-blocking Ruby loop and measure process CPU utilization plus user/system CPU time.
+claims:
+  - claim.cpu.busy_loop.ruby_consumes_one_core
+runner:
+  type: docker
+  build_context: lab/cpu-busy-loop
+  image: atlerror-cpu-busy-loop
+  docker_args:
+    - --cpus=1
+    - --memory=128m
+expected_result: supports
+limitations:
+  - The experiment validates CPU consumption and user-space dominance, not hot-stack repetition.
+  - Host scheduling and virtualization may influence exact utilization values.
