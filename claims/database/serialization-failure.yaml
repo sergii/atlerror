@@ -1,0 +1,18 @@
+id: claim.database.serialization_failure.concurrent_serializable_update_aborts_transaction
+kind: claim
+title: PostgreSQL concurrent serializable update aborts stale transaction
+statement: When a PostgreSQL SERIALIZABLE transaction reads a row, another SERIALIZABLE transaction commits a conflicting update to that row, and the first transaction later attempts its own update from the stale snapshot, PostgreSQL aborts the stale transaction with SQLSTATE 40001; retrying the work in a fresh transaction can commit.
+hypothesis: hypothesis.database.serialization_failure
+predictions:
+  - observation: observation.database.serialization_failure
+    expected: SQLSTATE_40001_present_for_stale_serializable_transaction
+    strength: strong
+  - observation: observation.database.transaction_outcome
+    expected: stale_transaction_aborts_and_fresh_retry_commits
+    strength: strong
+system_entities:
+  - system_entity.database
+limitations:
+  - This validates one PostgreSQL concurrent-update serialization failure, not every Serializable Snapshot Isolation conflict pattern.
+  - The experiment does not establish a universal retry policy; applications still need bounded retries and idempotency where appropriate.
+  - This claim is intentionally distinct from D2.4 logical isolation anomalies such as write skew under weaker isolation.
