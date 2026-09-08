@@ -1,0 +1,9 @@
+id: boundary.application.external_dependency_tls
+kind: boundary
+title: Application to external dependency TLS boundary
+summary: A TLS-secured transport interaction from the application service to a downstream external dependency after name resolution and TCP establishment.
+source: system_entity.application_service
+target: system_entity.external_dependency
+protocol: tls
+explanation:
+  short: Certificate verification and other TLS negotiation failures occur on this boundary after transport connectivity is available but before protected application traffic begins.
