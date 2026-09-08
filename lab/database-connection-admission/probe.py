@@ -26,6 +26,25 @@ def conninfo(user, password):
     )
 
 
+def classify_capacity_rejection(exc):
+    message = str(exc).strip()
+    normalized = message.lower()
+    signals = []
+    if exc.sqlstate == "53300":
+        signals.append("sqlstate_53300")
+    if "remaining connection slots are reserved" in normalized:
+        signals.append("reserved_connection_slots_message")
+    if "too many connections" in normalized:
+        signals.append("too_many_connections_message")
+    return {
+        "is_capacity_admission_rejection": bool(signals),
+        "signals": signals,
+        "sqlstate": exc.sqlstate,
+        "error_class": type(exc).__name__,
+        "message": message,
+    }
+
+
 admin = psycopg.connect(conninfo(ADMIN_USER, ADMIN_PASSWORD), autocommit=True)
 held = []
 rejection = None
@@ -63,12 +82,7 @@ try:
             connection = psycopg.connect(conninfo(APP_USER, APP_PASSWORD))
             held.append(connection)
         except psycopg.Error as exc:
-            rejection = {
-                "attempt": attempt,
-                "sqlstate": exc.sqlstate,
-                "error_class": type(exc).__name__,
-                "message": str(exc).strip(),
-            }
+            rejection = {"attempt": attempt, **classify_capacity_rejection(exc)}
             break
 
     with admin.cursor() as cursor:
@@ -115,8 +129,7 @@ try:
             "ordinary_connection_succeeded": False,
             "connect_ms": (time.monotonic() - recovery_started) * 1000.0,
             "select_1": None,
-            "sqlstate": exc.sqlstate,
-            "message": str(exc).strip(),
+            **classify_capacity_rejection(exc),
         }
 finally:
     for connection in held:
@@ -130,7 +143,8 @@ assertions = {
     "baseline_ordinary_connection_succeeds": baseline.get("ordinary_connection_succeeded") is True,
     "ordinary_connections_can_fill_capacity": capacity.get("held_ordinary_connections", 0) > 0,
     "new_ordinary_connection_is_rejected": rejection is not None,
-    "rejection_is_sqlstate_53300": rejection is not None and rejection.get("sqlstate") == "53300",
+    "rejection_is_explicit_capacity_admission": rejection is not None
+    and rejection.get("is_capacity_admission_rejection") is True,
     "existing_admin_session_remains_usable": capacity.get("existing_admin_session_select_1") == 1,
     "releasing_one_session_restores_admission": recovery.get("ordinary_connection_succeeded") is True,
 }
@@ -164,10 +178,11 @@ evidence = {
     },
     "assertions": assertions,
     "result": result,
-    "interpretation": "Ordinary PostgreSQL sessions are opened until a new ordinary connection is rejected by server-side admission capacity. The expected discriminator is SQLSTATE 53300 while an already established administrative session remains healthy. Closing one ordinary session should restore ordinary connection admission.",
+    "interpretation": "Ordinary PostgreSQL sessions are opened until a new ordinary connection is explicitly rejected by server-side admission capacity. SQLSTATE 53300 is recorded when the client preserves it, but the lab also recognizes PostgreSQL's explicit reserved-slot or too-many-connections FATAL message. An already established administrative session must remain healthy, and closing one ordinary session must restore ordinary connection admission.",
     "limitations": [
         "PostgreSQL is configured with a deliberately small max_connections value for deterministic reproduction.",
         "The experiment validates server-side session admission, not safe production max_connections sizing.",
+        "Client libraries can expose different structured fields for connection-startup FATAL errors.",
         "Managed services, proxies, PgBouncer, role-specific reservations, and network layers can add different admission limits or error surfaces.",
     ],
 }
