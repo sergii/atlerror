@@ -3,7 +3,8 @@ hypothesis: hypothesis.memory.retention
 
 when:
   observation: observation.runtime.heap_live_objects
-  operator: returns_near_baseline_after_gc
+  operator: equals
+  value: near_baseline_after_gc
 
 effect:
   confidence: decrease
