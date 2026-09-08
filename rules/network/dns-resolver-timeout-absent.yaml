@@ -1,0 +1,8 @@
+id: rule.network.dns_resolver_timeout.absent
+hypothesis: hypothesis.network.dns_resolver_timeout
+when:
+  observation: observation.network.dns_resolution_timeout
+  operator: absent
+effect:
+  confidence: decrease
+explanation: If name resolution fails but a DNS response arrives before the resolution deadline, resolver timeout is a weaker explanation and explicit DNS outcomes such as NXDOMAIN, SERVFAIL, REFUSED, malformed answers, or other name-resolution failures should remain candidates.
