@@ -1,0 +1,47 @@
+name: Run empirical labs
+
+on:
+  push:
+    branches: [main, feat/memory-high-lab]
+    paths:
+      - "lab/**"
+      - "knowledge/memory/**"
+      - "knowledge/observations/memory-*.yaml"
+      - "knowledge/observations/runtime-heap-live-objects.yaml"
+      - "knowledge/probes/inspect-memory-usage.yaml"
+      - "knowledge/probes/inspect-heap-live-objects.yaml"
+      - "rules/memory/**"
+      - ".github/workflows/lab.yml"
+  pull_request:
+    paths:
+      - "lab/**"
+      - "knowledge/memory/**"
+      - "knowledge/observations/memory-*.yaml"
+      - "knowledge/observations/runtime-heap-live-objects.yaml"
+      - "knowledge/probes/inspect-memory-usage.yaml"
+      - "knowledge/probes/inspect-heap-live-objects.yaml"
+      - "rules/memory/**"
+      - ".github/workflows/lab.yml"
+
+jobs:
+  memory-retention:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build memory retention lab
+        run: docker build -t atlerror-memory-retention ./lab/memory-retention
+
+      - name: Run memory retention experiment
+        run: |
+          mkdir -p lab-results
+          docker run --rm --memory=256m atlerror-memory-retention | tee lab-results/memory-retention.json
+
+      - name: Upload experiment result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: memory-retention-result
+          path: lab-results/memory-retention.json
