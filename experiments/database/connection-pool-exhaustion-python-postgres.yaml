@@ -1,0 +1,16 @@
+id: experiment.database.connection_pool_exhaustion.python_postgres
+kind: experiment
+title: Application database connection pool exhaustion with fast PostgreSQL query
+claims:
+  - claim.database.connection_pool_exhaustion.checkout_wait_drives_latency
+description: Run a threaded Python HTTP application backed by psycopg_pool with max_size=1. Baseline requests obtain the pool connection immediately and execute SELECT 1. During intervention, a holder request occupies the only application pool slot while sleeping in application code; a concurrent measured request must wait for checkout, then execute the same SELECT 1. A separate direct PostgreSQL connection is tested while the application pool is saturated to distinguish application-pool exhaustion from database-wide connection exhaustion. Recovery repeats the measured request after the holder releases the connection.
+runner:
+  type: docker_compose
+  compose_file: lab/database-connection-pool/compose.yml
+  setup_service: app
+  evidence_service: probe
+expected_result: supports
+limitations:
+  - Uses PostgreSQL 17 and psycopg_pool in Docker on one host.
+  - Uses pool max_size=1 to make the wait deterministic rather than to model a recommended production size.
+  - Holds the pool connection during application sleep so query execution itself can remain fast and be measured separately from checkout wait.
