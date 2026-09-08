@@ -1,0 +1,7 @@
+id: system_entity.dns_resolver
+kind: system_entity
+title: DNS resolver
+summary: A resolver that translates endpoint names into network addresses or returns negative/error responses used before transport establishment.
+entity_type: resolver
+explanation:
+  short: Name resolution is a distinct dependency in the connection lifecycle and can fail before any TCP connection is attempted.
