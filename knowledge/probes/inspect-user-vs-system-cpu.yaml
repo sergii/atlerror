@@ -1,0 +1,24 @@
+id: probe.cpu.inspect_user_vs_system
+kind: probe
+title: Inspect user versus system CPU
+summary: Compare user-space and system/kernel CPU shares to determine where processor time is being spent.
+
+explanation:
+  short: This probe distinguishes application computation from kernel-heavy execution.
+  detailed: Elevated system CPU can point toward networking, syscalls, scheduler overhead, filesystem work, interrupts, or other kernel activity. It is an early discriminator before lower-level profiling.
+
+produces:
+  - observation.cpu.system_share
+
+requires:
+  - capability.cpu.mode_breakdown
+
+preferred_tools:
+  - tool.perf
+
+risk: read_only
+
+search_terms:
+  - user versus system cpu
+  - system cpu diagnostics
+  - kernel cpu breakdown
