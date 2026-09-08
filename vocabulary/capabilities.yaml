@@ -1,0 +1,18 @@
+version: 0.1
+
+capabilities:
+  - id: capability.metrics.query
+    title: Query metrics
+    description: Read time-series or aggregate metrics from an available telemetry source.
+
+  - id: capability.cpu.profile
+    title: Capture CPU profile
+    description: Sample or trace CPU execution to identify hot code paths.
+
+  - id: capability.runtime.gc_metrics
+    title: Read runtime GC metrics
+    description: Inspect runtime garbage collection and allocation telemetry.
+
+  - id: capability.cpu.mode_breakdown
+    title: Inspect user versus system CPU
+    description: Read CPU accounting split between user-space and kernel/system work.
