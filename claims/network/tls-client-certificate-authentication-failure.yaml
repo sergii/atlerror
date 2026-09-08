@@ -1,0 +1,21 @@
+id: claim.network.tls_client_certificate_authentication_failure.missing_client_cert_blocks_mtls
+kind: claim
+title: Missing required client certificate blocks mutual TLS
+statement: When a reachable TLS peer uses a trusted server certificate and requires a client certificate signed by the lab CA, a client presenting a valid certificate completes mutual TLS while an otherwise identical client that presents no client certificate cannot establish a usable protected session.
+hypothesis: hypothesis.network.tls_client_certificate_authentication_failure
+predictions:
+  - observation: observation.network.tls_client_certificate_authentication_error
+    expected: tcp_established_and_server_certificate_trusted_but_missing_required_client_certificate_blocks_mtls
+    strength: strong
+system_entities:
+  - system_entity.application_service
+  - system_entity.external_dependency
+boundaries:
+  - boundary.application.external_dependency_tls
+scope:
+  runtime: python
+  os: linux
+limitations:
+  - Validates one controlled missing-client-certificate mTLS failure.
+  - Uses a trusted lab CA for both server and valid client certificates so server trust and protocol/cipher negotiation are intentionally not the failing mechanisms.
+  - Does not cover expired/revoked client certificates, wrong client identity, EKU/policy mismatch, intermediate-chain problems, post-handshake authentication, or application-layer authorization after successful mTLS.
