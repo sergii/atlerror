@@ -1,0 +1,21 @@
+id: claim.network.dns_resolver_timeout.silent_query_expires_resolution_deadline
+kind: claim
+title: Silent DNS query expires the resolution deadline
+statement: When the same reachable DNS resolver answers a control name normally but deliberately sends no response for a second query, the client remains in name resolution until its configured DNS deadline expires, without receiving NXDOMAIN or beginning transport establishment to the application endpoint.
+hypothesis: hypothesis.network.dns_resolver_timeout
+predictions:
+  - observation: observation.network.dns_resolution_timeout
+    expected: controlled_silent_dns_query_expires_client_resolution_deadline
+    strength: strong
+system_entities:
+  - system_entity.application_service
+  - system_entity.dns_resolver
+boundaries:
+  - boundary.application.dns_resolver
+scope:
+  runtime: python
+  os: linux
+limitations:
+  - Validates a controlled DNS-query timeout through a local UDP resolver fixture.
+  - Does not distinguish production causes such as resolver overload, packet loss, firewall policy, recursive upstream failure, routing, or resolver process failure.
+  - Does not cover DNS SERVFAIL, REFUSED, malformed responses, TCP fallback, DNSSEC validation, or stale/wrong positive answers.

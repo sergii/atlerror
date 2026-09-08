@@ -1,0 +1,34 @@
+services:
+  dns:
+    build: .
+    command: ["python", "dns_server.py"]
+    networks:
+      labnet:
+        ipv4_address: 172.32.0.53
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import socket; s=socket.socket(socket.AF_INET, socket.SOCK_DGRAM); s.settimeout(1); s.sendto(b'health', ('127.0.0.1', 5353)); data,_=s.recvfrom(16); assert data == b'ok'"
+      interval: 1s
+      timeout: 2s
+      retries: 15
+
+  probe:
+    build: .
+    command: ["python", "probe.py"]
+    environment:
+      DNS_SERVER: "172.32.0.53"
+      DNS_PORT: "5353"
+      KNOWN_NAME: "known.atlerror.test"
+      TIMEOUT_NAME: "timeout.atlerror.test"
+      DNS_TIMEOUT_SECONDS: "0.6"
+    networks:
+      - labnet
+
+networks:
+  labnet:
+    ipam:
+      config:
+        - subnet: 172.32.0.0/24

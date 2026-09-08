@@ -1,0 +1,16 @@
+id: experiment.network.dns_resolver_timeout.python_linux
+kind: experiment
+title: DNS resolver timeout under silent query drop
+claims:
+  - claim.network.dns_resolver_timeout.silent_query_expires_resolution_deadline
+description: Run a controlled DNS resolver that answers a known control name with an A record but deliberately sends no response for a designated timeout name. Baseline resolves the control name. During intervention, the same resolver receives the timeout-name query but remains silent until the client's explicit DNS deadline expires. Recovery resolves the control name again through the same resolver.
+runner:
+  type: docker_compose
+  compose_file: lab/network-dns-resolver-timeout/compose.yml
+  setup_service: dns
+  evidence_service: probe
+expected_result: supports
+limitations:
+  - The silent DNS response is produced intentionally by a controlled UDP resolver fixture.
+  - Validates one DNS timeout mechanism, not every production cause of resolver timeout.
+  - Does not cover recursive resolver retries, multiple nameservers, TCP fallback, or application-endpoint transport timeouts.

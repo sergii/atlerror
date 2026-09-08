@@ -122,13 +122,13 @@ entries:
     kind: symptom
     title: Database connection failed
     canonical_id: symptom.database.connection_failed
-    routes_to: [D3.2, N2.1, N2.2, N2.3, N3.1]
+    routes_to: [D3.2, N2.1, N2.2, N2.3, N3.1, N3.2]
 
   - code: S7
     kind: symptom
     title: Name resolution failed
     canonical_id: symptom.network.name_resolution_failed
-    routes_to: [N3.1]
+    routes_to: [N3.1, N3.2]
 
   - code: R1.1
     kind: mechanism
@@ -355,6 +355,18 @@ entries:
       - code: N3.1-L1
         id: experiment.network.dns_resolution_failure.python_linux
 
+  - code: N3.2
+    kind: mechanism
+    title: DNS resolver timeout / unavailable response
+    canonical_id: hypothesis.network.dns_resolver_timeout
+    symptoms: [S6, S7]
+    coverage: empirical
+    claims:
+      - claim.network.dns_resolver_timeout.silent_query_expires_resolution_deadline
+    experiments:
+      - code: N3.2-L1
+        id: experiment.network.dns_resolver_timeout.python_linux
+
   - code: Q1.1
     kind: mechanism
     title: Queueing delay
@@ -379,8 +391,6 @@ planned_examples:
     title: Network latency
   - code: N1.2
     title: Packet loss
-  - code: N3.2
-    title: DNS resolver timeout / unavailable resolver
   - code: N3.3
     title: TLS handshake or certificate failure
   - code: E2.1
