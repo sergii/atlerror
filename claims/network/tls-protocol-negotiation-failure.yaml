@@ -1,0 +1,21 @@
+id: claim.network.tls_protocol_negotiation_failure.no_common_version_blocks_handshake
+kind: claim
+title: No common TLS version blocks the handshake after TCP establishment
+statement: When a reachable TLS peer presents the same trusted certificate but is restricted to TLS 1.2, a client that also permits TLS 1.2 completes the handshake while an otherwise identical client restricted to TLS 1.3 cannot negotiate a secure session because the supported protocol-version sets do not overlap.
+hypothesis: hypothesis.network.tls_protocol_negotiation_failure
+predictions:
+  - observation: observation.network.tls_protocol_negotiation_error
+    expected: tcp_established_but_tls_fails_when_client_and_server_versions_do_not_overlap
+    strength: strong
+system_entities:
+  - system_entity.application_service
+  - system_entity.external_dependency
+boundaries:
+  - boundary.application.external_dependency_tls
+scope:
+  runtime: python
+  os: linux
+limitations:
+  - Validates one controlled TLS-version mismatch using TLS 1.2 versus TLS 1.3.
+  - Uses a trusted lab certificate so certificate verification is intentionally not the failing mechanism.
+  - Does not cover cipher-suite mismatch, signature-algorithm mismatch, ALPN negotiation, mutual TLS, middleboxes, or every OpenSSL error surface.
