@@ -2,46 +2,59 @@ name: Run empirical labs
 
 on:
   push:
-    branches: [main, feat/memory-high-lab]
+    branches: [main]
     paths:
       - "lab/**"
-      - "knowledge/memory/**"
-      - "knowledge/observations/memory-*.yaml"
-      - "knowledge/observations/runtime-heap-live-objects.yaml"
-      - "knowledge/probes/inspect-memory-usage.yaml"
-      - "knowledge/probes/inspect-heap-live-objects.yaml"
-      - "rules/memory/**"
+      - "claims/**"
+      - "experiments/**"
+      - "schema/**"
+      - "scripts/run_lab.py"
+      - "knowledge/**"
       - ".github/workflows/lab.yml"
   pull_request:
     paths:
       - "lab/**"
-      - "knowledge/memory/**"
-      - "knowledge/observations/memory-*.yaml"
-      - "knowledge/observations/runtime-heap-live-objects.yaml"
-      - "knowledge/probes/inspect-memory-usage.yaml"
-      - "knowledge/probes/inspect-heap-live-objects.yaml"
-      - "rules/memory/**"
+      - "claims/**"
+      - "experiments/**"
+      - "schema/**"
+      - "scripts/run_lab.py"
+      - "knowledge/**"
       - ".github/workflows/lab.yml"
 
 jobs:
-  memory-retention:
+  experiment:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: memory-retention-ruby
+            manifest: experiments/memory/retention-ruby.yaml
+            result: experiment.memory.retention.ruby.json
+          - name: cpu-busy-loop-ruby
+            manifest: experiments/cpu/busy-loop-ruby.yaml
+            result: experiment.cpu.busy_loop.ruby.json
+
+    name: ${{ matrix.name }}
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Build memory retention lab
-        run: docker build -t atlerror-memory-retention ./lab/memory-retention
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
 
-      - name: Run memory retention experiment
-        run: |
-          mkdir -p lab-results
-          docker run --rm --memory=256m atlerror-memory-retention | tee lab-results/memory-retention.json
+      - name: Install lab runner dependencies
+        run: python -m pip install --disable-pip-version-check PyYAML jsonschema
 
-      - name: Upload experiment result
+      - name: Run empirical experiment
+        run: python scripts/run_lab.py "${{ matrix.manifest }}"
+
+      - name: Upload empirical evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: memory-retention-result
-          path: lab-results/memory-retention.json
+          name: ${{ matrix.name }}-evidence
+          path: lab-results/${{ matrix.result }}
