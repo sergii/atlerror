@@ -1,0 +1,17 @@
+id: experiment.kernel.work.ruby
+kind: experiment
+title: Ruby filesystem syscall storm increases system CPU share
+claims:
+  - claim.kernel.work.ruby_syscall_storm_raises_system_cpu_share
+description: Compare a mostly user-space Ruby compute baseline with a filesystem metadata syscall storm, then return to user-space compute while measuring process user and system CPU time.
+runner:
+  type: docker
+  build_context: lab/kernel-work
+  image: atlerror-kernel-work
+  docker_args:
+    - --cpus=1
+    - --memory=128m
+expected_result: supports
+limitations:
+  - The intervention uses repeated cached filesystem metadata syscalls and represents only one class of kernel work.
+  - Exact user/system CPU ratios vary with Linux kernel, filesystem, container runtime, Ruby build, and host scheduling.

@@ -11,6 +11,9 @@ predictions:
   - observation: observation.cpu.system_share
     expected: above_baseline
     strength: strong
+  - observation: observation.cpu.utilization
+    expected: elevated_when_kernel_work_is_sustained
+    strength: moderate
 
 falsifiers:
   - observation: observation.cpu.system_share
