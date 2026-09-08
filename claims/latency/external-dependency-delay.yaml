@@ -1,0 +1,20 @@
+id: claim.latency.external_dependency.delay_propagates_upstream
+kind: claim
+title: Downstream synchronous delay propagates upstream
+statement: When a synchronous downstream HTTP dependency on the critical path becomes slower while other work remains comparable, upstream end-to-end request latency increases by a similar amount.
+hypothesis: hypothesis.latency.external_dependency
+predictions:
+  - observation: observation.dependency.latency
+    expected: materially_above_baseline
+    strength: strong
+  - observation: observation.http.request_latency
+    expected: materially_above_baseline
+    strength: strong
+system_entities:
+  - system_entity.application_service
+  - system_entity.external_dependency
+boundaries:
+  - boundary.application.external_dependency
+limitations:
+  - This claim applies to synchronous critical-path calls; asynchronous work need not propagate latency directly to the caller.
+  - Retries, hedging, timeouts, batching, caching, parallel calls, and other work can change the magnitude of propagation.

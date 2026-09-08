@@ -1,0 +1,14 @@
+id: hypothesis.latency.queueing
+kind: hypothesis
+title: Queueing delay
+summary: Requests or jobs are spending material time waiting before useful work begins.
+predictions:
+  - observation: observation.queue.wait_time
+    expected: above_baseline
+    strength: strong
+falsifiers:
+  - observation: observation.queue.wait_time
+    condition: not_above_baseline
+    effect: decrease
+tested_by:
+  - probe.queue.measure_wait_time

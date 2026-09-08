@@ -1,0 +1,15 @@
+id: experiment.latency.external_dependency.ruby_http
+kind: experiment
+title: Downstream HTTP delay propagates to upstream request latency
+claims:
+  - claim.latency.external_dependency.delay_propagates_upstream
+description: Run an application service that synchronously calls a downstream dependency, increase only the dependency delay, then return it to baseline while measuring downstream and end-to-end request latency.
+runner:
+  type: docker_compose
+  compose_file: lab/latency-dependency/compose.yml
+  setup_service: app
+  evidence_service: probe
+expected_result: supports
+limitations:
+  - Both services are synthetic Ruby processes on one Docker host.
+  - The experiment validates synchronous latency propagation, not internet routing or provider-internal causes.

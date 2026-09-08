@@ -1,0 +1,6 @@
+id: observation.dependency.latency
+kind: observation
+title: Downstream dependency latency
+summary: Time spent waiting for a downstream dependency interaction compared with its normal baseline.
+explanation:
+  short: Measures latency attributable to a downstream call on a system boundary.

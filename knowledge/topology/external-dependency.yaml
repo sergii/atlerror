@@ -1,0 +1,7 @@
+id: system_entity.external_dependency
+kind: system_entity
+title: External dependency
+summary: A downstream service outside the application component whose response can affect the application request path.
+entity_type: external_service
+explanation:
+  short: A remote dependency whose latency or failures can propagate into an upstream request.

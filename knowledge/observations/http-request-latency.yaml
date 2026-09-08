@@ -1,0 +1,6 @@
+id: observation.http.request_latency
+kind: observation
+title: HTTP request latency
+summary: End-to-end duration of an HTTP request compared with its expected baseline or objective.
+explanation:
+  short: Measures how long the caller waits for the full request to complete.

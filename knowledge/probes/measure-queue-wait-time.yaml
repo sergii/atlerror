@@ -1,0 +1,9 @@
+id: probe.queue.measure_wait_time
+kind: probe
+title: Measure queue wait time
+summary: Measure how long work waits before execution begins.
+produces:
+  - observation.queue.wait_time
+requires:
+  - capability.queue.inspect
+risk: read_only

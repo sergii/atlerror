@@ -5,38 +5,39 @@ relations:
     from: symptom
     to: hypothesis
     semantics: A symptom makes a hypothesis relevant to consider but does not establish causality.
-
   - id: relation.predicts
     from: hypothesis
     to: observation
     semantics: The observation is expected under the hypothesis.
-
   - id: relation.tested_by
     from: hypothesis
     to: probe
     semantics: The probe can gather evidence that discriminates this hypothesis.
-
   - id: relation.produces
     from: probe
     to: observation
     semantics: The probe can produce this class of observation.
-
   - id: relation.requires
     from: probe
     to: capability
     semantics: The probe depends on an abstract diagnostic capability.
-
   - id: relation.supports
     from: observation
     to: hypothesis
     semantics: The observation raises confidence in the hypothesis.
-
   - id: relation.contradicts
     from: observation
     to: hypothesis
     semantics: The observation lowers confidence in or rejects the hypothesis.
-
   - id: relation.related_to
     from: concept
     to: concept
     semantics: A non-causal semantic relationship used for navigation and learning.
+  - id: relation.boundary_source
+    from: boundary
+    to: system_entity
+    semantics: The system entity that initiates or originates the modeled interaction.
+  - id: relation.boundary_target
+    from: boundary
+    to: system_entity
+    semantics: The system entity that receives the modeled interaction.

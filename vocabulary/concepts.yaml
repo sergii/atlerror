@@ -4,22 +4,23 @@ active:
   - id: concept_kind.symptom
     title: Symptom
     description: A deviation from expected system behavior.
-
   - id: concept_kind.hypothesis
     title: Hypothesis
     description: A candidate explanation that should make testable predictions.
-
   - id: concept_kind.observation
     title: Observation
     description: A concrete measured or reported fact about a system.
-
   - id: concept_kind.probe
     title: Probe
     description: A diagnostic action intended primarily to gather evidence.
+  - id: concept_kind.system_entity
+    title: System Entity
+    description: An addressable component or actor in the system topology, such as a service, database, queue, process, or external dependency.
+  - id: concept_kind.boundary
+    title: Boundary
+    description: A directed interaction boundary between two system entities over a protocol or transport.
 
 planned:
-  - system_entity
-  - boundary
   - signal
   - evidence
   - prediction

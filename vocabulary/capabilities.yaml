@@ -4,15 +4,21 @@ capabilities:
   - id: capability.metrics.query
     title: Query metrics
     description: Read time-series or aggregate metrics from an available telemetry source.
-
   - id: capability.cpu.profile
     title: Capture CPU profile
     description: Sample or trace CPU execution to identify hot code paths.
-
   - id: capability.runtime.gc_metrics
     title: Read runtime GC metrics
     description: Inspect runtime garbage collection and allocation telemetry.
-
   - id: capability.cpu.mode_breakdown
     title: Inspect user versus system CPU
     description: Read CPU accounting split between user-space and kernel/system work.
+  - id: capability.http.measure_latency
+    title: Measure HTTP latency
+    description: Measure end-to-end or downstream HTTP request duration.
+  - id: capability.database.query_metrics
+    title: Read database query latency
+    description: Measure or retrieve database query timing and wait information.
+  - id: capability.queue.inspect
+    title: Inspect queue waits
+    description: Measure queueing delay, backlog, or time spent waiting before work begins.
