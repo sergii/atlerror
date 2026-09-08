@@ -1,0 +1,13 @@
+id: observation.http.request_rate
+kind: observation
+title: HTTP request rate
+summary: The rate of incoming HTTP requests over a defined time window compared with an expected baseline.
+
+explanation:
+  short: Request rate is a workload signal used to determine whether CPU growth correlates with increased traffic.
+  detailed: The observation should be interpreted against a comparable baseline such as the same service, route mix, deployment, and time-of-day pattern. Aggregate request rate can hide route-specific or tenant-specific workload changes.
+
+search_terms:
+  - requests per second
+  - http request rate
+  - rps
