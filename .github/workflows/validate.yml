@@ -23,3 +23,6 @@ jobs:
 
       - name: Validate schemas and references
         run: python scripts/validate.py
+
+      - name: Validate diagnostic catalog codes
+        run: python scripts/validate_catalog.py
