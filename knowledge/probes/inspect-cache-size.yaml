@@ -1,0 +1,26 @@
+id: probe.cache.inspect_size
+kind: probe
+title: Inspect application cache size
+summary: Compare cache entry count or memory footprint with its normal baseline and configured limits.
+
+explanation:
+  short: This probe tests whether intentional retained cache state plausibly explains elevated process memory.
+  detailed: Prefer cache metrics from the application itself because generic process memory cannot identify which retained objects belong to a cache.
+
+produces:
+  - observation.cache.size
+
+requires:
+  - capability.metrics.query
+
+preferred_tools:
+  - tool.opentelemetry
+  - tool.prometheus
+  - tool.datadog
+
+risk: read_only
+
+search_terms:
+  - inspect cache size
+  - cache memory metrics
+  - cache growth diagnostics
