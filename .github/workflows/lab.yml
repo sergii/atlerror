@@ -67,6 +67,9 @@ jobs:
           - name: database-connection-admission-exhaustion-python-postgres
             manifest: experiments/database/connection-admission-exhaustion-python-postgres.yaml
             result: experiment.database.connection_admission_exhaustion.python_postgres.json
+          - name: network-connection-reset-python-linux
+            manifest: experiments/network/tcp-connection-reset-python.yaml
+            result: experiment.network.connection_reset.python_linux.json
 
     name: ${{ matrix.name }}
 
