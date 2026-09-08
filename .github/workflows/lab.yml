@@ -82,6 +82,9 @@ jobs:
           - name: network-dns-resolver-timeout-python-linux
             manifest: experiments/network/dns-resolver-timeout-python.yaml
             result: experiment.network.dns_resolver_timeout.python_linux.json
+          - name: network-tls-certificate-verification-python-linux
+            manifest: experiments/network/tls-certificate-verification-python.yaml
+            result: experiment.network.tls_certificate_verification.python_linux.json
 
     name: ${{ matrix.name }}
 
