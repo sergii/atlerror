@@ -1,0 +1,9 @@
+id: probe.network.inspect_connection_error
+kind: probe
+title: Inspect transport connection error
+summary: Attempt a controlled connection to the target endpoint and capture the operating-system or runtime transport error class, errno, and phase of failure.
+produces:
+  - observation.network.connection_reset
+requires:
+  - capability.network.inspect_connection_error
+risk: low

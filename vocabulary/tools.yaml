@@ -28,3 +28,7 @@ tools:
   - id: tool.postgresql
     title: PostgreSQL
     provides: [capability.database.query_metrics, capability.database.inspect_locks, capability.database.inspect_errors, capability.database.inspect_state, capability.database.inspect_connections]
+
+  - id: tool.socket_api
+    title: Operating system socket API
+    provides: [capability.network.inspect_connection_error]
