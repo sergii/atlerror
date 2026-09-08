@@ -1,0 +1,17 @@
+id: experiment.gc.pressure.ruby
+kind: experiment
+title: Ruby allocation storm increases GC pressure
+claims:
+  - claim.gc.pressure.ruby_allocation_storm_raises_gc_work
+description: Compare a low-allocation baseline with a sustained short-lived allocation storm, then return to the low-allocation workload while measuring Ruby allocation counters, GC time, and process CPU.
+runner:
+  type: docker
+  build_context: lab/gc-pressure
+  image: atlerror-gc-pressure
+  docker_args:
+    - --cpus=1
+    - --memory=256m
+expected_result: supports
+limitations:
+  - The workload uses synthetic Ruby strings and arrays and is not representative of every production allocation pattern.
+  - Exact GC timing and CPU ratios can vary across runner hardware and Ruby builds.

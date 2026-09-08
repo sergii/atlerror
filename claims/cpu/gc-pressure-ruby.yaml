@@ -1,0 +1,22 @@
+id: claim.gc.pressure.ruby_allocation_storm_raises_gc_work
+kind: claim
+title: Ruby allocation storm raises GC work and CPU
+statement: In Ruby on Linux, a sustained increase in short-lived object allocation can increase allocation rate, garbage-collection CPU share, and process CPU utilization compared with a low-allocation baseline.
+hypothesis: hypothesis.gc.pressure
+predictions:
+  - observation: observation.runtime.allocation_rate
+    expected: materially_above_baseline
+    strength: strong
+  - observation: observation.runtime.gc_cpu_share
+    expected: above_baseline
+    strength: strong
+  - observation: observation.cpu.utilization
+    expected: above_baseline
+    strength: moderate
+scope:
+  runtime: ruby
+  os: linux
+limitations:
+  - This validates one synthetic short-lived-allocation mechanism and does not show that every GC-heavy production incident has the same cause.
+  - GC algorithms, heap size, allocator behavior, object lifetime, and Ruby configuration can change the magnitude of the effect.
+  - Increased CPU includes both allocation/application work and garbage-collection work; GC CPU share is measured separately to avoid attributing all CPU growth to GC.

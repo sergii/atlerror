@@ -14,6 +14,9 @@ predictions:
   - observation: observation.runtime.allocation_rate
     expected: above_baseline
     strength: moderate
+  - observation: observation.cpu.utilization
+    expected: above_baseline
+    strength: moderate
 
 falsifiers:
   - observation: observation.runtime.gc_cpu_share
