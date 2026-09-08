@@ -1,0 +1,8 @@
+id: rule.network.tls_client_certificate_authentication_error.absent
+hypothesis: hypothesis.network.tls_client_certificate_authentication_failure
+when:
+  observation: observation.network.tls_client_certificate_authentication_error
+  operator: absent
+effect:
+  confidence: decrease
+explanation: If a TLS handshake fails but there is no evidence that required client-certificate authentication failed, this mechanism becomes less likely and server trust, protocol, cipher, or other handshake mechanisms should be considered.
