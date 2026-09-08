@@ -1,0 +1,8 @@
+id: rule.latency.database.query_latency_normal
+hypothesis: hypothesis.latency.database
+when:
+  observation: observation.database.query_latency
+  operator: not_above_baseline
+effect:
+  confidence: decrease
+explanation: If database query latency is not above its comparable baseline during the slow-request interval, database latency becomes a weaker explanation for the elevated end-to-end latency.

@@ -1,0 +1,9 @@
+id: boundary.application.database
+kind: boundary
+title: Application to database boundary
+summary: A synchronous database interaction from the application service to a database.
+source: system_entity.application_service
+target: system_entity.database
+protocol: postgresql
+explanation:
+  short: Database time on this synchronous boundary can contribute directly to upstream request latency.

@@ -6,9 +6,17 @@ predictions:
   - observation: observation.database.query_latency
     expected: above_baseline
     strength: strong
+  - observation: observation.http.request_latency
+    expected: above_baseline_when_database_call_is_on_critical_path
+    strength: strong
 falsifiers:
   - observation: observation.database.query_latency
     condition: not_above_baseline
     effect: decrease
 tested_by:
   - probe.database.measure_query_latency
+  - probe.http.measure_request_latency
+related_to:
+  - system_entity.application_service
+  - system_entity.database
+  - boundary.application.database

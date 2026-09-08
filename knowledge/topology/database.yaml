@@ -1,0 +1,7 @@
+id: system_entity.database
+kind: system_entity
+title: Database
+summary: A database service that executes queries and may contribute execution or wait time to an application request.
+entity_type: database
+explanation:
+  short: A stateful data service whose query execution, locking, I/O, or resource waits can contribute to upstream latency.

@@ -1,0 +1,21 @@
+id: claim.latency.database.query_delay_propagates_upstream
+kind: claim
+title: Synchronous database query delay propagates upstream
+statement: When a synchronous database query on the request critical path becomes slower while other work remains comparable, upstream end-to-end request latency increases by a similar amount.
+hypothesis: hypothesis.latency.database
+predictions:
+  - observation: observation.database.query_latency
+    expected: materially_above_baseline
+    strength: strong
+  - observation: observation.http.request_latency
+    expected: materially_above_baseline
+    strength: strong
+system_entities:
+  - system_entity.application_service
+  - system_entity.database
+boundaries:
+  - boundary.application.database
+limitations:
+  - This validates propagation of synchronous query delay, not every possible cause of database latency.
+  - Connection setup, pooling, application work, retries, parallel queries, and caching can change the amount of delay visible upstream.
+  - The first experiment uses PostgreSQL pg_sleep as a controlled query delay; lock waits and slow execution plans require separate claims and experiments.

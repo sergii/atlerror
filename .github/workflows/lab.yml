@@ -46,6 +46,9 @@ jobs:
           - name: latency-external-dependency-ruby-http
             manifest: experiments/latency/external-dependency-ruby-http.yaml
             result: experiment.latency.external_dependency.ruby_http.json
+          - name: latency-database-python-postgres
+            manifest: experiments/latency/database-query-delay-python-postgres.yaml
+            result: experiment.latency.database.query_delay_python_postgres.json
 
     name: ${{ matrix.name }}
 

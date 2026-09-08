@@ -1,0 +1,16 @@
+id: experiment.latency.database.query_delay_python_postgres
+kind: experiment
+title: PostgreSQL query delay propagates to upstream request latency
+claims:
+  - claim.latency.database.query_delay_propagates_upstream
+description: Run an application that synchronously executes a PostgreSQL query, increase only the query delay with pg_sleep, then return it to baseline while measuring database-call and end-to-end request latency.
+runner:
+  type: docker_compose
+  compose_file: lab/latency-database/compose.yml
+  setup_service: app
+  evidence_service: probe
+expected_result: supports
+limitations:
+  - PostgreSQL and the synthetic application run on one Docker host.
+  - pg_sleep creates controlled database-side delay but is not a slow execution plan, lock wait, or storage stall.
+  - The application invokes psql per request, so process and connection setup overhead is present in all phases.
