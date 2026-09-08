@@ -61,6 +61,9 @@ jobs:
           - name: database-write-skew-python-postgres
             manifest: experiments/database/write-skew-python-postgres.yaml
             result: experiment.database.isolation_anomaly.write_skew_python_postgres.json
+          - name: database-connection-pool-exhaustion-python-postgres
+            manifest: experiments/database/connection-pool-exhaustion-python-postgres.yaml
+            result: experiment.database.connection_pool_exhaustion.python_postgres.json
 
     name: ${{ matrix.name }}
 
