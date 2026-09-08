@@ -1,0 +1,8 @@
+id: rule.network.connection_reset.absent
+hypothesis: hypothesis.network.connection_reset
+when:
+  observation: observation.network.connection_reset
+  operator: absent
+effect:
+  confidence: decrease
+explanation: If a failed connection attempt has no explicit transport reset signal, TCP connection reset is a weaker explanation and refusal, timeout, DNS, TLS, application-protocol, authentication, or availability failures should remain candidates.
