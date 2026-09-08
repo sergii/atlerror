@@ -76,6 +76,9 @@ jobs:
           - name: network-connect-timeout-python-linux
             manifest: experiments/network/tcp-connect-timeout-python.yaml
             result: experiment.network.connection_timeout.python_linux.json
+          - name: network-dns-resolution-python-linux
+            manifest: experiments/network/dns-resolution-failure-python.yaml
+            result: experiment.network.dns_resolution_failure.python_linux.json
 
     name: ${{ matrix.name }}
 

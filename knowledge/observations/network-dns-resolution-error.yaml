@@ -1,0 +1,7 @@
+id: observation.network.dns_resolution_error
+kind: observation
+title: DNS resolution error observed
+summary: A resolver or runtime reports that an endpoint name could not be resolved to a usable address before transport connection establishment.
+explanation:
+  short: Captures a name-resolution failure such as NXDOMAIN or a runtime name-not-found result.
+  detailed: This observation belongs to the name-resolution phase. It should be separated from TCP refusal, reset, and connect timeout, which require or attempt transport establishment after address resolution. The resolver error identifies the failure surface but does not by itself identify whether the bad name came from configuration, DNS data, search-domain behavior, policy, or resolver infrastructure.

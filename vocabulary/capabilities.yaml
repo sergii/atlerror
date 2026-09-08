@@ -37,6 +37,9 @@ capabilities:
   - id: capability.network.inspect_connection_error
     title: Inspect network connection error
     description: Attempt a controlled network connection and capture transport-layer establishment or teardown errors such as reset, refusal, timeout, and their OS/runtime error metadata.
+  - id: capability.network.resolve_name
+    title: Resolve network endpoint name
+    description: Query DNS or the applicable resolver and capture positive answers, authoritative negative answers, resolver errors, and timing before transport establishment.
   - id: capability.queue.inspect
     title: Inspect queue waits
     description: Measure queueing delay, backlog, or time spent waiting before work begins.

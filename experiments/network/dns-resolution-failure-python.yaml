@@ -1,0 +1,16 @@
+id: experiment.network.dns_resolution_failure.python_linux
+kind: experiment
+title: Controlled authoritative DNS NXDOMAIN before transport
+claims:
+  - claim.network.dns_resolution_failure.nxdomain_prevents_transport
+description: Run a controlled authoritative DNS fixture that returns an A record for known.atlerror.test and NXDOMAIN for missing.atlerror.test. Baseline resolves the known name. During intervention, the client queries the missing name and must receive an authoritative NXDOMAIN during name resolution without attempting TCP. Recovery resolves the known name again through the same resolver.
+runner:
+  type: docker_compose
+  compose_file: lab/network-dns-resolution/compose.yml
+  setup_service: dns
+  evidence_service: probe
+expected_result: supports
+limitations:
+  - Validates an authoritative name-not-found response from a controlled DNS server in Docker.
+  - Does not cover resolver timeout, SERVFAIL, DNSSEC validation, malformed responses, cache poisoning, stale records, or wrong-address answers.
+  - Uses a custom DNS port inside the isolated lab while preserving DNS wire semantics.

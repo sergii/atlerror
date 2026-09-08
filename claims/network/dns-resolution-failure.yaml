@@ -1,0 +1,21 @@
+id: claim.network.dns_resolution_failure.nxdomain_prevents_transport
+kind: claim
+title: NXDOMAIN prevents transport establishment
+statement: When a DNS resolver returns an authoritative negative name response for a missing endpoint, the client observes a name-resolution failure before any TCP connection attempt can begin, while a valid name resolved through the same resolver still returns an address.
+hypothesis: hypothesis.network.dns_resolution_failure
+predictions:
+  - observation: observation.network.dns_resolution_error
+    expected: controlled_missing_name_returns_nxdomain_before_transport
+    strength: strong
+system_entities:
+  - system_entity.application_service
+  - system_entity.dns_resolver
+boundaries:
+  - boundary.application.dns_resolver
+scope:
+  runtime: python
+  os: linux
+limitations:
+  - Validates a controlled authoritative NXDOMAIN path through a local DNS fixture.
+  - Does not cover resolver timeout, SERVFAIL, malformed DNS responses, DNSSEC validation failure, search-domain mistakes, or stale/wrong answers.
+  - Does not establish the operational cause of a production NXDOMAIN such as configuration, deployment, or DNS record management.
