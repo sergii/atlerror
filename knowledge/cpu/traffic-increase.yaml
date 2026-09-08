@@ -5,12 +5,15 @@ summary: Higher incoming workload is causing the system to perform more useful w
 
 explanation:
   short: CPU can rise simply because the system is serving more requests, jobs, messages, or connections.
-  detailed: The key diagnostic question is whether CPU growth correlates with a workload increase. If request or job rate remains near baseline while CPU rises, traffic increase becomes a weaker explanation.
+  detailed: The key diagnostic question is whether CPU growth correlates with a workload increase. If request or job rate remains near baseline while CPU rises, traffic increase becomes a weaker explanation. The exact CPU response depends on per-unit work, route mix, caching, I/O waits, saturation, and scaling behavior.
 
 predictions:
   - observation: observation.http.request_rate
     expected: above_baseline
     strength: strong
+  - observation: observation.cpu.utilization
+    expected: above_baseline_or_positively_correlated_with_workload
+    strength: moderate
 
 falsifiers:
   - observation: observation.http.request_rate
@@ -22,6 +25,7 @@ tested_by:
 
 common_misconceptions:
   - High CPU by itself proves that traffic increased.
+  - CPU must scale linearly with request rate in every system.
 
 search_terms:
   - traffic spike high cpu

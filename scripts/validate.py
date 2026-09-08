@@ -78,6 +78,49 @@ def concept_references(concept: dict[str, Any]) -> Iterable[str]:
         yield falsifier["observation"]
 
 
+def repo_path(relative_path: str) -> Path | None:
+    path = (ROOT / relative_path).resolve()
+    try:
+        path.relative_to(ROOT)
+    except ValueError:
+        return None
+    return path
+
+
+def validate_runner(path: Path, runner: dict[str, Any], errors: list[str]) -> None:
+    label = path.relative_to(ROOT)
+
+    if runner.get("type") == "docker":
+        build_context = runner.get("build_context")
+        if not build_context:
+            return
+        context_path = repo_path(build_context)
+        if context_path is None:
+            errors.append(f"{label}: build context escapes repository: {build_context}")
+        elif not (context_path / "Dockerfile").exists():
+            errors.append(f"{label}: Dockerfile missing in build context: {build_context}")
+        return
+
+    if runner.get("type") == "docker_compose":
+        compose_file = runner.get("compose_file")
+        if not compose_file:
+            return
+        compose_path = repo_path(compose_file)
+        if compose_path is None:
+            errors.append(f"{label}: compose file escapes repository: {compose_file}")
+            return
+        if not compose_path.is_file():
+            errors.append(f"{label}: compose file missing: {compose_file}")
+            return
+
+        compose_document = load_yaml(compose_path) or {}
+        services = compose_document.get("services", {})
+        for field in ("setup_service", "evidence_service"):
+            service = runner.get(field)
+            if service and service not in services:
+                errors.append(f"{label}: {field} not found in compose services: {service}")
+
+
 def validate() -> None:
     concept_validator = Draft202012Validator(load_json(CONCEPT_SCHEMA))
     rule_validator = Draft202012Validator(load_json(RULE_SCHEMA))
@@ -142,16 +185,7 @@ def validate() -> None:
             if claim_id not in claims:
                 errors.append(f"{path.relative_to(ROOT)}: unresolved claim: {claim_id}")
 
-        build_context = document.get("runner", {}).get("build_context")
-        if build_context:
-            context_path = (ROOT / build_context).resolve()
-            try:
-                context_path.relative_to(ROOT)
-            except ValueError:
-                errors.append(f"{path.relative_to(ROOT)}: build context escapes repository: {build_context}")
-            else:
-                if not (context_path / "Dockerfile").exists():
-                    errors.append(f"{path.relative_to(ROOT)}: Dockerfile missing in build context: {build_context}")
+        validate_runner(path, document.get("runner", {}), errors)
 
     for path in rule_files():
         document = load_yaml(path)

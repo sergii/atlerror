@@ -1,0 +1,19 @@
+id: claim.traffic.increase.fixed_cost_http_raises_cpu
+kind: claim
+title: Higher fixed-cost HTTP traffic raises service CPU
+statement: For a Ruby service on Linux performing a comparable fixed amount of CPU work per HTTP request, increasing sustained request rate can increase service CPU utilization.
+hypothesis: hypothesis.traffic.increase
+predictions:
+  - observation: observation.http.request_rate
+    expected: above_baseline
+    strength: strong
+  - observation: observation.cpu.utilization
+    expected: above_baseline
+    strength: strong
+scope:
+  runtime: ruby
+  os: linux
+limitations:
+  - This validates a controlled fixed-cost HTTP request mechanism, not every relationship between production traffic and CPU.
+  - Route mix, caching, batching, I/O waits, autoscaling, backpressure, and saturation can make production CPU scale non-linearly with request rate.
+  - The experiment uses a single service instance and does not establish a universal CPU-per-request coefficient.
