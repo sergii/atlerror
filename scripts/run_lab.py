@@ -143,6 +143,10 @@ def main() -> None:
         raise SystemExit("ERROR: evidence claims do not match experiment manifest claims")
 
     if evidence["result"] != manifest["expected_result"]:
+        print(
+            "EVIDENCE_ON_MISMATCH: " + json.dumps(evidence, sort_keys=True),
+            file=sys.stderr,
+        )
         raise SystemExit(
             f"ERROR: experiment result {evidence['result']} does not match expected {manifest['expected_result']}"
         )
