@@ -1,0 +1,7 @@
+id: observation.network.tls_client_certificate_authentication_error
+kind: observation
+title: TLS client-certificate authentication error observed
+summary: A client or server reports a TLS handshake failure after TCP establishment where the server requires a client certificate and the client does not present an acceptable certificate.
+explanation:
+  short: Captures mutual-TLS failure in the client-authentication direction.
+  detailed: Record whether TCP was established, whether the server certificate was trusted, whether the server requested or required a client certificate, whether the client presented one, the TLS/OpenSSL error class and reason, and whether protected application traffic became possible. This distinguishes client-certificate authentication from server-certificate verification, protocol-version mismatch, and cipher mismatch.
