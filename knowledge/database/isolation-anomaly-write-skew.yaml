@@ -16,6 +16,7 @@ falsifiers:
 tested_by:
   - probe.database.inspect_invariants
 related_to:
+  - symptom.data.invariant_violated
   - hypothesis.database.serialization_failure
   - hypothesis.database.lock_contention
   - system_entity.database
