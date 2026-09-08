@@ -82,8 +82,8 @@ profiles:
     empirical: {synthetic_labs: 1, runtimes: [python], databases: [postgresql], production_evidence: none}
   - code: D2.4
     facets: {domains: [database, application], concerns: [concurrency, transactions, isolation, correctness], resources: [database], layers: [persistence, application]}
-    coverage: {semantic: none, predictions: none, falsification: none, probes: none, rules: none, human_explanation: none, agent_action: none}
-    empirical: {synthetic_labs: 0, runtimes: [], databases: [], production_evidence: none}
+    coverage: {semantic: complete, predictions: complete, falsification: complete, probes: complete, rules: complete, human_explanation: complete, agent_action: partial}
+    empirical: {synthetic_labs: 1, runtimes: [python], databases: [postgresql], production_evidence: none}
   - code: Q1.1
     facets: {domains: [queue_messaging], concerns: [performance, capacity], resources: [queue], layers: [messaging]}
     coverage: {semantic: complete, predictions: complete, falsification: complete, probes: complete, rules: none, human_explanation: partial, agent_action: none}
