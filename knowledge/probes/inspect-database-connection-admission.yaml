@@ -1,0 +1,10 @@
+id: probe.database.inspect_connection_admission
+kind: probe
+title: Inspect database connection admission
+summary: Attempt a controlled new database connection and inspect server connection limits, active sessions, reserved-slot policy, and establishment errors without mutating application data.
+produces:
+  - observation.database.connection_admission_error
+  - observation.database.connection_capacity
+requires:
+  - capability.database.inspect_connections
+risk: read_only
