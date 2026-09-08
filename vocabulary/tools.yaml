@@ -27,4 +27,4 @@ tools:
 
   - id: tool.postgresql
     title: PostgreSQL
-    provides: [capability.database.query_metrics, capability.database.inspect_locks, capability.database.inspect_errors]
+    provides: [capability.database.query_metrics, capability.database.inspect_locks, capability.database.inspect_errors, capability.database.inspect_state]

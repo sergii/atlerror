@@ -1,0 +1,12 @@
+id: probe.database.inspect_invariants
+kind: probe
+title: Inspect database invariants
+summary: Read the rows or aggregates that define an application consistency invariant and evaluate whether committed database state satisfies it.
+produces:
+  - observation.database.invariant_violation
+  - observation.database.transaction_outcome
+requires:
+  - capability.database.inspect_state
+preferred_tools:
+  - tool.postgresql
+risk: read_only

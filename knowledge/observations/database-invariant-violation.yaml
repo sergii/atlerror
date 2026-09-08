@@ -1,0 +1,4 @@
+id: observation.database.invariant_violation
+kind: observation
+title: Database invariant violation
+summary: Committed database state violates a business or consistency invariant that should hold across related rows or entities, even though individual transactions may have committed successfully.

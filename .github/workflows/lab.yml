@@ -58,6 +58,9 @@ jobs:
           - name: database-serialization-failure-python-postgres
             manifest: experiments/database/serialization-failure-python-postgres.yaml
             result: experiment.database.serialization_failure.python_postgres.json
+          - name: database-write-skew-python-postgres
+            manifest: experiments/database/write-skew-python-postgres.yaml
+            result: experiment.database.isolation_anomaly.write_skew_python_postgres.json
 
     name: ${{ matrix.name }}
 

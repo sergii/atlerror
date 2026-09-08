@@ -1,0 +1,16 @@
+id: experiment.database.isolation_anomaly.write_skew_python_postgres
+kind: experiment
+title: PostgreSQL Repeatable Read write skew versus Serializable protection
+claims:
+  - claim.database.isolation_anomaly.repeatable_read_allows_write_skew
+description: Use two doctor-on-call rows and the invariant that at least one doctor must remain on call. Baseline sequential REPEATABLE READ transactions preserve the invariant. During the intervention, two concurrent REPEATABLE READ transactions take snapshots before either writes, each sees two doctors on call, and each turns off a different doctor; both should commit and violate the invariant. Recovery repeats the concurrent pattern under SERIALIZABLE, where PostgreSQL should abort at least one participant and preserve the invariant.
+runner:
+  type: docker_compose
+  compose_file: lab/database-write-skew/compose.yml
+  setup_service: harness
+  evidence_service: probe
+expected_result: supports
+limitations:
+  - Uses PostgreSQL 17 in Docker on one host.
+  - Validates one two-row write-skew pattern and does not enumerate all anomalies possible under weaker isolation levels.
+  - The synthetic invariant and retry behavior are deliberately small so the concurrency mechanism is observable.

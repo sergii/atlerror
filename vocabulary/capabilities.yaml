@@ -25,6 +25,9 @@ capabilities:
   - id: capability.database.inspect_errors
     title: Inspect database errors
     description: Read database error codes, deadlock counters, logs, or client-visible database failures without changing database state.
+  - id: capability.database.inspect_state
+    title: Inspect database state
+    description: Read database rows or aggregates needed to evaluate application consistency invariants without changing database state.
   - id: capability.queue.inspect
     title: Inspect queue waits
     description: Measure queueing delay, backlog, or time spent waiting before work begins.

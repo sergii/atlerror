@@ -1,0 +1,17 @@
+id: symptom.data.invariant_violated
+kind: symptom
+title: Data invariant violated
+summary: Committed application or database state violates a business consistency rule even though the operations that produced it may have reported success.
+explanation:
+  short: Correct-looking individual commits can combine into an invalid state when concurrent decisions are made from incomplete or non-serializable views of the data.
+  detailed: Diagnose which invariant is broken, which transactions observed which state, and whether the isolation level or application concurrency control allowed a history that should have been rejected or coordinated.
+may_indicate:
+  - hypothesis.database.isolation_anomaly.write_skew
+common_misconceptions:
+  - If every transaction committed successfully, the resulting state must be valid.
+  - Data inconsistency always requires corruption, a failed write, or a database bug.
+search_terms:
+  - invariant violation
+  - inconsistent committed state
+  - write skew
+  - isolation anomaly

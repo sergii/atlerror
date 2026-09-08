@@ -1,0 +1,8 @@
+id: rule.database_write_skew.invariant_intact
+hypothesis: hypothesis.database.isolation_anomaly.write_skew
+when:
+  observation: observation.database.invariant_violation
+  operator: absent
+effect:
+  confidence: decrease
+explanation: If the relevant cross-row invariant remains intact after the suspected concurrent history, write skew becomes a weaker explanation for the observed problem.

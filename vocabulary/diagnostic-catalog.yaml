@@ -110,7 +110,13 @@ entries:
     kind: symptom
     title: Transaction failed
     canonical_id: symptom.transaction.failed
-    routes_to: [D2.2, D2.3, D2.4]
+    routes_to: [D2.2, D2.3]
+
+  - code: S5
+    kind: symptom
+    title: Data invariant violated
+    canonical_id: symptom.data.invariant_violated
+    routes_to: [D2.4]
 
   - code: R1.1
     kind: mechanism
@@ -256,9 +262,14 @@ entries:
   - code: D2.4
     kind: mechanism
     title: Isolation anomaly / write skew
-    symptoms: [S4]
-    coverage: planned
-    planned_labs: [D2.4-L1]
+    canonical_id: hypothesis.database.isolation_anomaly.write_skew
+    symptoms: [S5]
+    coverage: empirical
+    claims:
+      - claim.database.isolation_anomaly.repeatable_read_allows_write_skew
+    experiments:
+      - code: D2.4-L1
+        id: experiment.database.isolation_anomaly.write_skew_python_postgres
 
   - code: Q1.1
     kind: mechanism
