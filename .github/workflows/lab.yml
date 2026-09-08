@@ -70,6 +70,9 @@ jobs:
           - name: network-connection-reset-python-linux
             manifest: experiments/network/tcp-connection-reset-python.yaml
             result: experiment.network.connection_reset.python_linux.json
+          - name: network-connection-refused-python-linux
+            manifest: experiments/network/tcp-connection-refused-python.yaml
+            result: experiment.network.connection_refused.python_linux.json
 
     name: ${{ matrix.name }}
 
