@@ -7,12 +7,16 @@ explanation:
   detailed: TLS handshake failures can arise from certificate verification, hostname mismatch, expired certificates, protocol or cipher incompatibility, missing client certificates, or other secure-transport negotiation problems. Diagnose the concrete TLS verification or handshake error separately from DNS and TCP establishment failures.
 may_indicate:
   - hypothesis.network.tls_certificate_verification_failure
+  - hypothesis.network.tls_protocol_negotiation_failure
 common_misconceptions:
   - A successful TCP connection proves the endpoint is usable; TLS can still fail before application traffic begins.
   - Every TLS handshake failure means the certificate is expired; trust-chain, hostname, protocol, cipher, and mTLS failures are distinct mechanisms.
-  - TLS certificate verification failure is the same lifecycle phase as DNS or TCP connect timeout.
+  - Certificate verification failure and protocol-version negotiation failure are the same mechanism; one concerns trust/identity while the other concerns compatible TLS capabilities.
+  - TLS handshake failure is the same lifecycle phase as DNS or TCP connect timeout.
 search_terms:
   - TLS handshake failed
   - SSL handshake failed
   - certificate verify failed
   - SSL certificate problem
+  - TLS protocol version mismatch
+  - unsupported protocol
