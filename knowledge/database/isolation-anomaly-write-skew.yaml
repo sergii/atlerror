@@ -1,0 +1,30 @@
+id: hypothesis.database.isolation_anomaly.write_skew
+kind: hypothesis
+title: Write skew isolation anomaly
+summary: Concurrent transactions make decisions from compatible snapshots and update different rows, allowing both to commit while the combined state violates a cross-row invariant under an isolation level that does not serialize the transactions.
+predictions:
+  - observation: observation.database.transaction_outcome
+    expected: concurrent_transactions_can_both_commit
+    strength: strong
+  - observation: observation.database.invariant_violation
+    expected: present_after_concurrent_commits
+    strength: strong
+falsifiers:
+  - observation: observation.database.invariant_violation
+    condition: absent_after_the_suspected_concurrent_history
+    effect: decrease
+tested_by:
+  - probe.database.inspect_invariants
+related_to:
+  - hypothesis.database.serialization_failure
+  - hypothesis.database.lock_contention
+  - system_entity.database
+common_misconceptions:
+  - Successful commits imply the combined database state is logically valid.
+  - Write skew requires both transactions to update the same row.
+  - A serialization failure and a write skew anomaly are the same observed outcome.
+search_terms:
+  - postgres write skew
+  - snapshot isolation anomaly
+  - repeatable read write skew
+  - serializable snapshot isolation
