@@ -1,0 +1,13 @@
+id: observation.cpu.system_share
+kind: observation
+title: System CPU share
+summary: The share of CPU time spent in kernel or system mode compared with the expected baseline.
+
+explanation:
+  short: Elevated system CPU suggests that kernel-space work is contributing materially to total CPU usage.
+  detailed: This is an early discriminator between application user-space computation and work such as syscalls, networking, interrupts, filesystem activity, or scheduler overhead.
+
+search_terms:
+  - system cpu
+  - kernel cpu
+  - user vs system cpu
