@@ -1,0 +1,7 @@
+id: observation.database.connection_admission_error
+kind: observation
+title: Database connection admission error
+summary: Server-side error returned while establishing a new database session because the caller is not admitted under the current connection-capacity policy.
+explanation:
+  short: Captures explicit database rejection of a new session, including PostgreSQL SQLSTATE 53300 too_many_connections.
+  detailed: This differs from application-pool checkout wait because the client reached the database and the server rejected creation of a new session before ordinary query execution.
