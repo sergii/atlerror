@@ -1,0 +1,9 @@
+id: boundary.application.dns_resolver
+kind: boundary
+title: Application to DNS resolver boundary
+summary: A name-resolution interaction from the application or runtime to a DNS resolver before transport connection establishment.
+source: system_entity.application_service
+target: system_entity.dns_resolver
+protocol: dns
+explanation:
+  short: Failure on this boundary prevents the application from obtaining an address and therefore blocks later TCP, TLS, database, or application-protocol phases.
