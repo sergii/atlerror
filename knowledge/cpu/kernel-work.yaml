@@ -1,0 +1,30 @@
+id: hypothesis.kernel.work
+kind: hypothesis
+title: Kernel work
+summary: Elevated CPU is primarily spent in kernel-space work rather than application user-space computation.
+
+explanation:
+  short: System CPU can rise because the kernel is doing more work on behalf of applications or hardware.
+  detailed: Common contributors include syscalls, networking, interrupts, context switching, filesystem work, packet processing, and scheduler overhead. The first discriminator is often user CPU versus system CPU, followed by lower-level profiling or tracing.
+
+predictions:
+  - observation: observation.cpu.system_share
+    expected: above_baseline
+    strength: strong
+
+falsifiers:
+  - observation: observation.cpu.system_share
+    condition: not_above_baseline
+    effect: decrease
+
+tested_by:
+  - probe.cpu.inspect_user_vs_system
+
+common_misconceptions:
+  - High total CPU necessarily means application code is the hot path.
+
+search_terms:
+  - system cpu high
+  - kernel cpu high
+  - linux system cpu
+  - ebpf cpu troubleshooting
