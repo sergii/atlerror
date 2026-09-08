@@ -1,0 +1,31 @@
+services:
+  tls:
+    build: .
+    command: ["python", "server.py"]
+    networks:
+      - labnet
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import socket; s=socket.create_connection(('127.0.0.1', 9443), timeout=1); s.close()"
+      interval: 1s
+      timeout: 2s
+      retries: 15
+
+  probe:
+    build: .
+    command: ["python", "probe.py"]
+    environment:
+      TLS_SERVER: "tls"
+      TLS_PORT: "9443"
+      TRUSTED_NAME: "trusted.atlerror.test"
+      UNTRUSTED_NAME: "untrusted.atlerror.test"
+      CA_FILE: "/certs/ca.crt"
+      SOCKET_TIMEOUT: "1.0"
+    networks:
+      - labnet
+
+networks:
+  labnet:
