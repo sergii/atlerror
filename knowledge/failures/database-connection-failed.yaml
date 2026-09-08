@@ -1,0 +1,18 @@
+id: symptom.database.connection_failed
+kind: symptom
+title: Database connection failed
+summary: An application, worker, or diagnostic client could not establish a new database session or connection.
+explanation:
+  short: A new database connection attempt failed before normal query or transaction work could begin.
+  detailed: Connection establishment can fail because the database rejects admission at a configured session limit, the network path is unavailable, name resolution or TLS fails, credentials are invalid, or the database process is unavailable. Diagnose the concrete establishment error before assigning a mechanism.
+may_indicate:
+  - hypothesis.database.connection_admission_exhaustion
+common_misconceptions:
+  - Every database connection failure is a network problem.
+  - Application connection-pool exhaustion and PostgreSQL max_connections exhaustion are the same mechanism.
+  - A responsive existing database session proves new sessions can still be admitted.
+search_terms:
+  - database connection failed
+  - postgres too many connections
+  - SQLSTATE 53300
+  - remaining connection slots are reserved
