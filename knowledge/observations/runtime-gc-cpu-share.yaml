@@ -1,0 +1,13 @@
+id: observation.runtime.gc_cpu_share
+kind: observation
+title: Runtime GC CPU share
+summary: CPU time spent by the runtime on garbage collection relative to its normal baseline.
+
+explanation:
+  short: Higher GC CPU means memory management is consuming more CPU than usual.
+  detailed: Interpret this together with allocation rate, heap behavior, request mix, and application profiles because GC overhead may be a secondary effect.
+
+search_terms:
+  - gc cpu share
+  - garbage collection cpu time
+  - gc overhead
