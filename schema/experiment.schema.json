@@ -22,18 +22,33 @@
       }
     },
     "runner": {
-      "type": "object",
-      "required": ["type", "build_context", "image"],
-      "properties": {
-        "type": { "const": "docker" },
-        "build_context": { "type": "string", "minLength": 1 },
-        "image": { "type": "string", "minLength": 1 },
-        "docker_args": {
-          "type": "array",
-          "items": { "type": "string" }
+      "oneOf": [
+        {
+          "type": "object",
+          "required": ["type", "build_context", "image"],
+          "properties": {
+            "type": { "const": "docker" },
+            "build_context": { "type": "string", "minLength": 1 },
+            "image": { "type": "string", "minLength": 1 },
+            "docker_args": {
+              "type": "array",
+              "items": { "type": "string" }
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": ["type", "compose_file", "setup_service", "evidence_service"],
+          "properties": {
+            "type": { "const": "docker_compose" },
+            "compose_file": { "type": "string", "minLength": 1 },
+            "setup_service": { "type": "string", "minLength": 1 },
+            "evidence_service": { "type": "string", "minLength": 1 }
+          },
+          "additionalProperties": false
         }
-      },
-      "additionalProperties": false
+      ]
     },
     "expected_result": {
       "type": "string",
