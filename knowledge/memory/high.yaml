@@ -1,0 +1,28 @@
+id: symptom.memory.high
+kind: symptom
+title: High memory usage
+summary: Process, container, host, or service memory usage is elevated relative to its expected baseline or resource budget.
+
+explanation:
+  short: High memory is a symptom, not a diagnosis. The important question is what is retaining, allocating, caching, or concurrently holding memory.
+  detailed: Memory can rise because live objects are retained, allocation rate increases, caches grow, concurrent work increases the working set, native memory grows, fragmentation increases, or mapped/page-backed memory changes. Diagnosis should distinguish process RSS from runtime heap behavior and correlate changes with workload and application state.
+
+why_it_matters: Sustained memory growth can increase garbage collection work, trigger swapping or reclaim pressure, cause container OOM kills, and reduce system stability.
+
+may_indicate:
+  - hypothesis.memory.retention
+  - hypothesis.memory.allocation_pressure
+  - hypothesis.cache.growth
+  - hypothesis.workload.concurrency
+
+common_misconceptions:
+  - High RSS always proves a memory leak.
+  - A runtime heap returning to normal guarantees RSS will immediately return to baseline.
+  - Garbage collection pressure and memory retention are the same failure mechanism.
+
+search_terms:
+  - high memory
+  - memory usage growing
+  - process rss high
+  - container memory high
+  - ruby memory leak
