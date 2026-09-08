@@ -14,5 +14,5 @@ system_entities:
   - system_entity.database
 limitations:
   - This validates one classic two-row write-skew pattern in PostgreSQL, not every isolation anomaly.
-  - The business invariant is synthetic: at least one doctor must remain on call.
+  - "The business invariant is synthetic: at least one doctor must remain on call."
   - SERIALIZABLE protection can surface as SQLSTATE 40001 and still requires an application retry strategy where the operation should eventually succeed.
