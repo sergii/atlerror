@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://atlerror.dev/schema/rule.schema.json",
+  "title": "Atlerror Diagnostic Rule",
+  "type": "object",
+  "required": ["id", "hypothesis", "when", "effect", "explanation"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^rule\\.[a-z0-9_]+(\\.[a-z0-9_]+)+$"
+    },
+    "hypothesis": {
+      "type": "string",
+      "pattern": "^hypothesis\\.[a-z0-9_]+(\\.[a-z0-9_]+)*$"
+    },
+    "when": {
+      "type": "object",
+      "required": ["observation", "operator"],
+      "properties": {
+        "observation": {
+          "type": "string",
+          "pattern": "^observation\\.[a-z0-9_]+(\\.[a-z0-9_]+)*$"
+        },
+        "operator": {
+          "type": "string",
+          "enum": [
+            "above_baseline",
+            "not_above_baseline",
+            "below_baseline",
+            "not_below_baseline",
+            "equals",
+            "not_equals",
+            "present",
+            "absent"
+          ]
+        },
+        "value": {}
+      },
+      "additionalProperties": false
+    },
+    "effect": {
+      "type": "object",
+      "required": ["confidence"],
+      "properties": {
+        "confidence": {
+          "type": "string",
+          "enum": ["increase", "decrease", "reject"]
+        }
+      },
+      "additionalProperties": false
+    },
+    "explanation": {
+      "type": "string",
+      "minLength": 1
+    }
+  },
+  "additionalProperties": false
+}
