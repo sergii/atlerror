@@ -20,11 +20,13 @@ tested_by:
   - probe.database.inspect_deadlock_errors
   - probe.database.inspect_lock_waits
 related_to:
+  - hypothesis.database.serialization_failure
   - hypothesis.database.lock_contention
   - hypothesis.latency.database
   - system_entity.database
 common_misconceptions:
   - A deadlock is merely a long lock wait; a deadlock specifically requires a cycle in the wait-for graph.
+  - A deadlock and a serialization failure are the same mechanism because both can abort a transaction.
   - Increasing a lock timeout removes the deadlock mechanism.
   - Retrying without changing access order guarantees the deadlock will not recur.
 search_terms:
