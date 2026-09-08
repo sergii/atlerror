@@ -1,0 +1,9 @@
+id: probe.http.measure_request_latency
+kind: probe
+title: Measure end-to-end HTTP request latency
+summary: Measure request duration from the caller perspective across comparable traffic.
+produces:
+  - observation.http.request_latency
+requires:
+  - capability.http.measure_latency
+risk: read_only

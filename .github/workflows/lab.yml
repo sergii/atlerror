@@ -43,24 +43,23 @@ jobs:
           - name: kernel-work-ruby
             manifest: experiments/cpu/kernel-work-ruby.yaml
             result: experiment.kernel.work.ruby.json
+          - name: latency-external-dependency-ruby-http
+            manifest: experiments/latency/external-dependency-ruby-http.yaml
+            result: experiment.latency.external_dependency.ruby_http.json
 
     name: ${{ matrix.name }}
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.13"
-
       - name: Install lab runner dependencies
         run: python -m pip install --disable-pip-version-check PyYAML jsonschema
-
       - name: Run empirical experiment
         run: python scripts/run_lab.py "${{ matrix.manifest }}"
-
       - name: Upload empirical evidence
         if: always()
         uses: actions/upload-artifact@v4

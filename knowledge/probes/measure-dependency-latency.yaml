@@ -1,0 +1,9 @@
+id: probe.http.measure_dependency_latency
+kind: probe
+title: Measure downstream dependency latency
+summary: Measure duration of a downstream HTTP call on the request critical path.
+produces:
+  - observation.dependency.latency
+requires:
+  - capability.http.measure_latency
+risk: read_only

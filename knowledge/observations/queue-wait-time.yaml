@@ -1,0 +1,4 @@
+id: observation.queue.wait_time
+kind: observation
+title: Queue wait time
+summary: Time work spends waiting in a queue or scheduler before execution begins.

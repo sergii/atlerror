@@ -1,0 +1,9 @@
+id: probe.database.measure_query_latency
+kind: probe
+title: Measure database query latency
+summary: Measure database query duration and relevant database-side waits.
+produces:
+  - observation.database.query_latency
+requires:
+  - capability.database.query_metrics
+risk: read_only

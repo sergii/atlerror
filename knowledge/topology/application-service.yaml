@@ -1,0 +1,7 @@
+id: system_entity.application_service
+kind: system_entity
+title: Application service
+summary: The application component handling an incoming request and coordinating downstream work.
+entity_type: application_service
+explanation:
+  short: A service that receives work and may call databases, queues, caches, or external services.

@@ -1,0 +1,9 @@
+id: boundary.application.external_dependency
+kind: boundary
+title: Application to external dependency HTTP boundary
+summary: A synchronous HTTP interaction from the application service to a downstream external dependency.
+source: system_entity.application_service
+target: system_entity.external_dependency
+protocol: http
+explanation:
+  short: Latency introduced on this synchronous boundary can contribute directly to upstream request latency.

@@ -1,0 +1,8 @@
+id: rule.latency.external_dependency.normal
+hypothesis: hypothesis.latency.external_dependency
+when:
+  observation: observation.dependency.latency
+  operator: not_above_baseline
+effect:
+  confidence: decrease
+explanation: If downstream dependency latency is normal for the incident window, that dependency becomes a weaker explanation for high end-to-end latency.

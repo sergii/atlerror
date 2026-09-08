@@ -1,0 +1,4 @@
+id: observation.database.query_latency
+kind: observation
+title: Database query latency
+summary: Database query duration or database-side wait time compared with its normal baseline.

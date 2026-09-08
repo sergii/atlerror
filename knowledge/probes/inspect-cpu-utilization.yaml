@@ -1,0 +1,9 @@
+id: probe.cpu.inspect_utilization
+kind: probe
+title: Inspect CPU utilization
+summary: Read CPU utilization over the same interval as the latency symptom.
+produces:
+  - observation.cpu.utilization
+requires:
+  - capability.metrics.query
+risk: read_only

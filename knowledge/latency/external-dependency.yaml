@@ -1,0 +1,22 @@
+id: hypothesis.latency.external_dependency
+kind: hypothesis
+title: Slow external dependency
+summary: A downstream dependency is adding material time to the synchronous request path.
+predictions:
+  - observation: observation.dependency.latency
+    expected: above_baseline
+    strength: strong
+  - observation: observation.http.request_latency
+    expected: above_baseline_when_dependency_is_on_critical_path
+    strength: strong
+falsifiers:
+  - observation: observation.dependency.latency
+    condition: not_above_baseline
+    effect: decrease
+tested_by:
+  - probe.http.measure_dependency_latency
+  - probe.http.measure_request_latency
+related_to:
+  - system_entity.application_service
+  - system_entity.external_dependency
+  - boundary.application.external_dependency

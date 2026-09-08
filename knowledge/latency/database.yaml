@@ -1,0 +1,14 @@
+id: hypothesis.latency.database
+kind: hypothesis
+title: Database latency
+summary: Database query execution or database-side waiting is contributing materially to request latency.
+predictions:
+  - observation: observation.database.query_latency
+    expected: above_baseline
+    strength: strong
+falsifiers:
+  - observation: observation.database.query_latency
+    condition: not_above_baseline
+    effect: decrease
+tested_by:
+  - probe.database.measure_query_latency

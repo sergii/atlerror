@@ -1,0 +1,14 @@
+id: hypothesis.latency.cpu_saturation
+kind: hypothesis
+title: CPU saturation
+summary: Insufficient available CPU or CPU-heavy work is causing requests to wait for execution time.
+predictions:
+  - observation: observation.cpu.utilization
+    expected: near_saturation_or_materially_above_baseline
+    strength: moderate
+falsifiers:
+  - observation: observation.cpu.utilization
+    condition: normal_with_no_runnable_queue_pressure
+    effect: decrease
+tested_by:
+  - probe.cpu.inspect_utilization
