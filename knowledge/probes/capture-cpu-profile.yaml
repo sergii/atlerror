@@ -1,0 +1,25 @@
+id: probe.cpu.capture_profile
+kind: probe
+title: Capture CPU profile
+summary: Capture a CPU profile for the affected process and identify whether execution time is concentrated in repeated hot stacks.
+
+explanation:
+  short: CPU profiling helps localize which code paths are consuming processor time.
+  detailed: Use the least intrusive profiler available for the runtime and environment. Compare profile shape with workload and deployment context rather than interpreting a single hot frame in isolation.
+
+produces:
+  - observation.cpu.hot_stack_repetition
+
+requires:
+  - capability.cpu.profile
+
+preferred_tools:
+  - tool.perf
+  - tool.rbspy
+
+risk: read_only
+
+search_terms:
+  - capture cpu profile
+  - cpu flamegraph
+  - profile high cpu
