@@ -1,0 +1,16 @@
+id: experiment.network.connection_refused.python_linux
+kind: experiment
+title: Linux TCP connection refused on a closed peer port
+claims:
+  - claim.network.connection_refused.closed_port_surfaces_econnrefused
+description: Run a TCP peer in Docker that listens on port 9000 while port 9001 remains closed. Baseline connects to port 9000 and receives pong. During intervention, the client connects to the same peer host on closed port 9001 and must observe ECONNREFUSED during establishment. Recovery repeats the known-good connection to port 9000 and must succeed.
+runner:
+  type: docker_compose
+  compose_file: lab/network-connection-refused/compose.yml
+  setup_service: server
+  evidence_service: probe
+expected_result: supports
+limitations:
+  - Validates a Linux closed-port refusal within a Docker network on one host.
+  - Does not establish which component originated a refusal in a real multi-hop network.
+  - Does not cover reset after establishment, timeout, packet loss, DNS, TLS, or application-protocol errors.

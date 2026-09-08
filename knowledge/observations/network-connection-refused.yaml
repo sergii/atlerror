@@ -1,0 +1,7 @@
+id: observation.network.connection_refused
+kind: observation
+title: TCP connection refused observed
+summary: The client operating system or runtime reports that TCP connection establishment was actively refused, such as POSIX ECONNREFUSED or an equivalent platform-specific transport error.
+explanation:
+  short: Indicates that connection establishment was rejected promptly rather than timing out or reaching normal application-protocol exchange.
+  detailed: Connection refusal commonly means the destination network stack actively rejected the requested port because no listener was accepting it, although local policy, proxies, or other network components can produce equivalent behavior. It is distinct from ECONNRESET after establishment and from timeout when no prompt rejection arrives.
