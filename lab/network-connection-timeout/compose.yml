@@ -1,0 +1,27 @@
+services:
+  server:
+    build: .
+    cap_add:
+      - NET_ADMIN
+    command:
+      - sh
+      - -c
+      - "iptables -A INPUT -p tcp --dport 9001 -j DROP && exec python server.py"
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import socket; s=socket.create_connection(('127.0.0.1', 9000), timeout=1); s.sendall(b'ping'); assert s.recv(16) == b'pong'; s.close()"
+      interval: 1s
+      timeout: 2s
+      retries: 15
+
+  probe:
+    build: .
+    command: ["python", "probe.py"]
+    environment:
+      TARGET_HOST: server
+      CONTROL_PORT: "9000"
+      DROPPED_PORT: "9001"
+      CONNECT_TIMEOUT_SECONDS: "0.6"
