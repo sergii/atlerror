@@ -62,6 +62,55 @@ def run(command: list[str], *, capture: bool = False) -> subprocess.CompletedPro
     return completed
 
 
+def run_docker(runner: dict[str, Any]) -> subprocess.CompletedProcess[str]:
+    build_context = ensure_repo_path(runner["build_context"])
+    if not (build_context / "Dockerfile").exists():
+        raise SystemExit(f"ERROR: Dockerfile not found in {build_context.relative_to(ROOT)}")
+
+    image = runner["image"]
+    run(["docker", "build", "-t", image, str(build_context)])
+    return run(["docker", "run", "--rm", *runner.get("docker_args", []), image], capture=True)
+
+
+def run_docker_compose(
+    runner: dict[str, Any], experiment_id: str
+) -> subprocess.CompletedProcess[str]:
+    compose_file = ensure_repo_path(runner["compose_file"])
+    if not compose_file.is_file():
+        raise SystemExit(f"ERROR: compose file not found: {compose_file.relative_to(ROOT)}")
+
+    project_suffix = experiment_id.replace(".", "-").replace("_", "-")
+    project_name = f"atlerror-{project_suffix}"[:63]
+    compose = ["docker", "compose", "-p", project_name, "-f", str(compose_file)]
+
+    try:
+        run(compose + ["up", "-d", "--build", "--wait", runner["setup_service"]])
+        return run(
+            compose
+            + ["run", "--rm", "--no-deps", runner["evidence_service"]],
+            capture=True,
+        )
+    finally:
+        print("+ " + " ".join(compose + ["down", "-v", "--remove-orphans"]))
+        subprocess.run(
+            compose + ["down", "-v", "--remove-orphans"],
+            cwd=ROOT,
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+
+
+def execute_runner(
+    runner: dict[str, Any], experiment_id: str
+) -> subprocess.CompletedProcess[str]:
+    if runner["type"] == "docker":
+        return run_docker(runner)
+    if runner["type"] == "docker_compose":
+        return run_docker_compose(runner, experiment_id)
+    raise SystemExit(f"ERROR: unsupported runner type: {runner['type']}")
+
+
 def main() -> None:
     if len(sys.argv) != 2:
         raise SystemExit("usage: python scripts/run_lab.py experiments/<path>.yaml")
@@ -71,16 +120,7 @@ def main() -> None:
     validate_document(manifest, EXPERIMENT_SCHEMA, str(manifest_path.relative_to(ROOT)))
 
     experiment_id = manifest["id"]
-    runner = manifest["runner"]
-    build_context = ensure_repo_path(runner["build_context"])
-    if not (build_context / "Dockerfile").exists():
-        raise SystemExit(f"ERROR: Dockerfile not found in {build_context.relative_to(ROOT)}")
-
-    image = runner["image"]
-    run(["docker", "build", "-t", image, str(build_context)])
-
-    docker_command = ["docker", "run", "--rm", *runner.get("docker_args", []), image]
-    completed = run(docker_command, capture=True)
+    completed = execute_runner(manifest["runner"], experiment_id)
 
     output_lines = [line for line in completed.stdout.splitlines() if line.strip()]
     if not output_lines:
