@@ -1,0 +1,26 @@
+id: probe.http.inspect_request_rate
+kind: probe
+title: Inspect incoming HTTP request rate
+summary: Query request-rate telemetry and compare it with an appropriate baseline for the affected service or route.
+
+explanation:
+  short: This probe tests whether increased workload is a plausible explanation for elevated CPU.
+  detailed: Prefer a comparable baseline and preserve route or tenant dimensions when aggregate traffic could hide a localized workload increase.
+
+produces:
+  - observation.http.request_rate
+
+requires:
+  - capability.metrics.query
+
+preferred_tools:
+  - tool.opentelemetry
+  - tool.prometheus
+  - tool.datadog
+
+risk: read_only
+
+search_terms:
+  - inspect request rate
+  - check rps
+  - traffic baseline
