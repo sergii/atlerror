@@ -1,0 +1,29 @@
+id: hypothesis.traffic.increase
+kind: hypothesis
+title: Increased traffic
+summary: Higher incoming workload is causing the system to perform more useful work and consume more CPU.
+
+explanation:
+  short: CPU can rise simply because the system is serving more requests, jobs, messages, or connections.
+  detailed: The key diagnostic question is whether CPU growth correlates with a workload increase. If request or job rate remains near baseline while CPU rises, traffic increase becomes a weaker explanation.
+
+predictions:
+  - observation: observation.http.request_rate
+    expected: above_baseline
+    strength: strong
+
+falsifiers:
+  - observation: observation.http.request_rate
+    condition: not_above_baseline
+    effect: decrease
+
+tested_by:
+  - probe.http.inspect_request_rate
+
+common_misconceptions:
+  - High CPU by itself proves that traffic increased.
+
+search_terms:
+  - traffic spike high cpu
+  - requests per second cpu
+  - load increase cpu
