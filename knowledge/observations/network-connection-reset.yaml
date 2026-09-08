@@ -1,0 +1,7 @@
+id: observation.network.connection_reset
+kind: observation
+title: TCP connection reset observed
+summary: The client operating system or runtime reports that an established TCP connection was reset, such as POSIX ECONNRESET or an equivalent platform-specific transport error.
+explanation:
+  short: Indicates that a TCP connection existed and was then forcibly terminated with a reset rather than completing normally.
+  detailed: A reset is a transport-layer signal. It should be distinguished from connection refusal before establishment, timeout without a response, DNS or TLS failures, and application-protocol errors returned over a healthy connection. The reset signal alone does not identify which peer or intermediary originated the RST.
