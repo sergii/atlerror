@@ -1,0 +1,13 @@
+id: probe.database.inspect_deadlock_errors
+kind: probe
+title: Inspect database deadlock errors
+summary: Read client-visible database error codes and server-side deadlock counters or logs to determine whether the database detected a deadlock.
+produces:
+  - observation.database.deadlock_error
+  - observation.database.deadlock_count
+  - observation.database.transaction_outcome
+requires:
+  - capability.database.inspect_errors
+preferred_tools:
+  - tool.postgresql
+risk: read_only
