@@ -1,0 +1,21 @@
+id: claim.network.tls_certificate_verification_failure.untrusted_certificate_is_rejected
+kind: claim
+title: Untrusted TLS certificate is rejected after TCP establishment
+statement: When a client that trusts a controlled lab CA connects to the same reachable TLS peer, a server certificate signed by that trusted CA completes TLS establishment, while a self-signed certificate outside the trust store is rejected during certificate verification after TCP connectivity has already succeeded.
+hypothesis: hypothesis.network.tls_certificate_verification_failure
+predictions:
+  - observation: observation.network.tls_certificate_verification_error
+    expected: untrusted_peer_certificate_is_rejected_during_tls_verification_after_tcp_connect
+    strength: strong
+system_entities:
+  - system_entity.application_service
+  - system_entity.external_dependency
+boundaries:
+  - boundary.application.external_dependency_tls
+scope:
+  runtime: python
+  os: linux
+limitations:
+  - Validates one controlled untrusted/self-signed certificate path with a local TLS fixture.
+  - Does not cover certificate expiry, hostname mismatch, incomplete chains, revocation, OCSP, Certificate Transparency, protocol/cipher mismatch, or mutual TLS client-certificate failures.
+  - Does not establish which trust-store or certificate-management error caused a production verification failure.
