@@ -1,0 +1,8 @@
+id: rule.database.connection_pool.checkout_wait_normal
+hypothesis: hypothesis.database.connection_pool_exhaustion
+when:
+  observation: observation.database.connection_pool_wait_time
+  operator: not_above_baseline
+effect:
+  confidence: decrease
+explanation: If slow requests do not spend elevated time waiting for application database connection checkout, connection-pool exhaustion is a weaker explanation for the latency.
