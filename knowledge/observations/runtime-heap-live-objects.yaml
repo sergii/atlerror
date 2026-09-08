@@ -1,0 +1,13 @@
+id: observation.runtime.heap_live_objects
+kind: observation
+title: Runtime heap live objects
+summary: The number or size of runtime-managed objects that remain live after garbage collection, compared with the expected baseline.
+
+explanation:
+  short: A growing post-GC live set is stronger evidence of retained managed objects than RSS growth alone.
+  detailed: The exact metric differs by runtime, but the diagnostic idea is stable: measure memory that remains reachable after collection and compare it over equivalent workload windows.
+
+search_terms:
+  - heap live objects
+  - live objects after gc
+  - retained heap
