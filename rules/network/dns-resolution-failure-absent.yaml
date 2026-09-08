@@ -1,0 +1,8 @@
+id: rule.network.dns_resolution_failure.absent
+hypothesis: hypothesis.network.dns_resolution_failure
+when:
+  observation: observation.network.dns_resolution_error
+  operator: absent
+effect:
+  confidence: decrease
+explanation: If the endpoint name resolves successfully to a usable address when the connection failure occurs, DNS resolution failure is a weaker explanation and transport, TLS, admission, authentication, or application-protocol mechanisms should remain candidates.
