@@ -18,6 +18,7 @@ tested_by:
   - probe.http.measure_request_latency
 related_to:
   - hypothesis.database.lock_contention
+  - hypothesis.database.deadlock
   - system_entity.application_service
   - system_entity.database
   - boundary.application.database
