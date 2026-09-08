@@ -1,0 +1,121 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://atlerror.dev/schema/concept.schema.json",
+  "title": "Atlerror Concept",
+  "type": "object",
+  "required": ["id", "kind", "title", "summary"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*(\\.[a-z0-9_]+)+$"
+    },
+    "kind": {
+      "type": "string",
+      "enum": ["symptom", "hypothesis", "observation", "probe"]
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1
+    },
+    "summary": {
+      "type": "string",
+      "minLength": 1
+    },
+    "explanation": {
+      "type": "object",
+      "properties": {
+        "short": { "type": "string" },
+        "detailed": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "why_it_matters": { "type": "string" },
+    "may_indicate": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/conceptId" },
+      "uniqueItems": true
+    },
+    "predictions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["observation", "expected"],
+        "properties": {
+          "observation": { "$ref": "#/$defs/conceptId" },
+          "expected": { "type": "string" },
+          "strength": {
+            "type": "string",
+            "enum": ["weak", "moderate", "strong"]
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "falsifiers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["observation", "condition"],
+        "properties": {
+          "observation": { "$ref": "#/$defs/conceptId" },
+          "condition": { "type": "string" },
+          "effect": {
+            "type": "string",
+            "enum": ["decrease", "reject"]
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "tested_by": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/conceptId" },
+      "uniqueItems": true
+    },
+    "produces": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/conceptId" },
+      "uniqueItems": true
+    },
+    "requires": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/conceptId" },
+      "uniqueItems": true
+    },
+    "preferred_tools": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/conceptId" },
+      "uniqueItems": true
+    },
+    "risk": {
+      "type": "string",
+      "enum": ["read_only", "low", "state_changing", "high"]
+    },
+    "prerequisites": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/conceptId" },
+      "uniqueItems": true
+    },
+    "related_to": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/conceptId" },
+      "uniqueItems": true
+    },
+    "common_misconceptions": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "search_terms": {
+      "type": "array",
+      "items": { "type": "string" },
+      "uniqueItems": true
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "conceptId": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*(\\.[a-z0-9_]+)+$"
+    }
+  }
+}
