@@ -1,0 +1,7 @@
+id: observation.network.tls_protocol_negotiation_error
+kind: observation
+title: TLS protocol negotiation error observed
+summary: A TLS handshake failed after transport connectivity because client and server could not negotiate a mutually supported TLS protocol version.
+explanation:
+  short: Captures a non-certificate TLS handshake failure caused by protocol-version incompatibility.
+  detailed: Record whether TCP was established, the client and server TLS version constraints, the runtime or OpenSSL SSL error class/reason/message, and whether a TLS session was created. This observation is distinct from certificate verification errors because certificate trust or identity is not the failing mechanism.
