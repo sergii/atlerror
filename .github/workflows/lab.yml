@@ -73,6 +73,9 @@ jobs:
           - name: network-connection-refused-python-linux
             manifest: experiments/network/tcp-connection-refused-python.yaml
             result: experiment.network.connection_refused.python_linux.json
+          - name: network-connect-timeout-python-linux
+            manifest: experiments/network/tcp-connect-timeout-python.yaml
+            result: experiment.network.connection_timeout.python_linux.json
 
     name: ${{ matrix.name }}
 
