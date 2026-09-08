@@ -1,0 +1,26 @@
+id: probe.workload.inspect_concurrency
+kind: probe
+title: Inspect workload concurrency
+summary: Compare the number of simultaneously in-flight work units with an equivalent baseline.
+
+explanation:
+  short: This probe tests whether a larger concurrent working set plausibly explains elevated memory.
+  detailed: Choose the concurrency measure that matches the diagnosed boundary, such as active HTTP requests, jobs, sessions, or message handlers, and correlate it with memory over time.
+
+produces:
+  - observation.workload.concurrency
+
+requires:
+  - capability.metrics.query
+
+preferred_tools:
+  - tool.opentelemetry
+  - tool.prometheus
+  - tool.datadog
+
+risk: read_only
+
+search_terms:
+  - inspect request concurrency
+  - inflight workload metrics
+  - concurrency memory diagnostics
