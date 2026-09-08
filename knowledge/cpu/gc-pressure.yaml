@@ -1,0 +1,33 @@
+id: hypothesis.gc.pressure
+kind: hypothesis
+title: Garbage collection pressure
+summary: Increased allocation or heap-management work is causing the runtime to spend more CPU in garbage collection.
+
+explanation:
+  short: More allocations can make the runtime perform garbage collection more often or for longer periods.
+  detailed: GC pressure is often secondary to allocation-heavy application behavior. Diagnosis should correlate CPU with allocation rate, GC frequency, pause time, heap growth, and application profiles rather than treating GC as the root cause by default.
+
+predictions:
+  - observation: observation.runtime.gc_cpu_share
+    expected: above_baseline
+    strength: strong
+  - observation: observation.runtime.allocation_rate
+    expected: above_baseline
+    strength: moderate
+
+falsifiers:
+  - observation: observation.runtime.gc_cpu_share
+    condition: not_above_baseline
+    effect: decrease
+
+tested_by:
+  - probe.runtime.inspect_gc_metrics
+
+common_misconceptions:
+  - Garbage collection is always the root cause rather than a consequence of allocation-heavy code.
+
+search_terms:
+  - gc high cpu
+  - garbage collection cpu
+  - allocation pressure
+  - ruby gc cpu
