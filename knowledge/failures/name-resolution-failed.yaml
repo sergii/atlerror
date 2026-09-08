@@ -7,13 +7,17 @@ explanation:
   detailed: Name resolution failures include authoritative negative answers such as NXDOMAIN, resolver timeouts, malformed responses, policy failures, or local resolver configuration problems. Diagnose the resolver outcome separately from connection refused, reset, or connect timeout because those occur later in the lifecycle.
 may_indicate:
   - hypothesis.network.dns_resolution_failure
+  - hypothesis.network.dns_resolver_timeout
 common_misconceptions:
   - A DNS failure is the same as a TCP connection timeout.
   - A reachable IP address proves the configured hostname resolves correctly.
   - NXDOMAIN proves the authoritative DNS provider is unavailable; it can be a valid negative answer for a missing name.
+  - NXDOMAIN and resolver timeout are equivalent; one is an explicit negative response and the other is absence of a usable response before the deadline.
 search_terms:
   - DNS resolution failed
   - NXDOMAIN
   - name or service not known
   - EAI_NONAME
   - resolver failure
+  - DNS timeout
+  - resolver timeout
