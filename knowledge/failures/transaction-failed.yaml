@@ -3,14 +3,17 @@ kind: symptom
 title: Transaction failed
 summary: A database-backed operation or transaction did not commit successfully and returned or surfaced a failure.
 explanation:
-  short: A transaction failure is an outcome; the mechanism may be a deadlock, constraint violation, timeout, serialization failure, connection loss, or another database error.
-  detailed: Diagnose the concrete database error and transaction state before assigning a cause. Deadlocks are one specific mechanism in which a cyclic lock dependency forces the database to abort a participant.
+  short: A transaction failure is an outcome; the mechanism may be a deadlock, serialization failure, constraint violation, timeout, connection loss, or another database error.
+  detailed: Diagnose the concrete database error and transaction state before assigning a cause. Deadlocks and serialization failures are distinct mechanisms: PostgreSQL commonly reports SQLSTATE 40P01 for deadlock detection and 40001 when a serializable transaction must be retried from a fresh snapshot.
 may_indicate:
   - hypothesis.database.deadlock
+  - hypothesis.database.serialization_failure
 common_misconceptions:
   - Every transaction failure is a deadlock.
+  - SQLSTATE 40P01 and 40001 describe the same database mechanism.
   - Retrying a failed transaction proves the underlying mechanism has been removed.
 search_terms:
   - transaction failed
   - database transaction aborted
   - postgres 40P01
+  - postgres 40001
