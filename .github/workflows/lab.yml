@@ -34,6 +34,9 @@ jobs:
           - name: cpu-busy-loop-ruby
             manifest: experiments/cpu/busy-loop-ruby.yaml
             result: experiment.cpu.busy_loop.ruby.json
+          - name: traffic-increase-ruby-http
+            manifest: experiments/cpu/traffic-increase-ruby-http.yaml
+            result: experiment.traffic.increase.ruby_http.json
 
     name: ${{ matrix.name }}
 
