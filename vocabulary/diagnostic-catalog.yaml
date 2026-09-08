@@ -7,6 +7,10 @@ code_format:
   mechanism: <domain-prefix><family-number>.<topic-number>
   lab: <mechanism-code>-L<lab-number>
 
+metadata_sources:
+  facets_and_coverage: vocabulary/diagnostic-profiles.yaml
+  code_history: vocabulary/diagnostic-code-history.yaml
+
 stability:
   - Canonical semantic IDs remain authoritative and machine-stable.
   - Short catalog codes are navigation aliases and MUST NOT replace canonical IDs in semantic relationships.
@@ -240,9 +244,14 @@ entries:
   - code: D2.3
     kind: mechanism
     title: Serialization failure
+    canonical_id: hypothesis.database.serialization_failure
     symptoms: [S4]
-    coverage: planned
-    planned_labs: [D2.3-L1]
+    coverage: empirical
+    claims:
+      - claim.database.serialization_failure.concurrent_serializable_update_aborts_transaction
+    experiments:
+      - code: D2.3-L1
+        id: experiment.database.serialization_failure.python_postgres
 
   - code: D2.4
     kind: mechanism
