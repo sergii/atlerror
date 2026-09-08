@@ -64,6 +64,9 @@ jobs:
           - name: database-connection-pool-exhaustion-python-postgres
             manifest: experiments/database/connection-pool-exhaustion-python-postgres.yaml
             result: experiment.database.connection_pool_exhaustion.python_postgres.json
+          - name: database-connection-admission-exhaustion-python-postgres
+            manifest: experiments/database/connection-admission-exhaustion-python-postgres.yaml
+            result: experiment.database.connection_admission_exhaustion.python_postgres.json
 
     name: ${{ matrix.name }}
 
