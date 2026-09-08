@@ -1,0 +1,19 @@
+id: claim.kernel.work.ruby_syscall_storm_raises_system_cpu_share
+kind: claim
+title: Ruby syscall storm raises system CPU share
+statement: In Ruby on Linux, repeatedly performing filesystem metadata syscalls can increase the share of process CPU time spent in system mode compared with a mostly user-space compute baseline.
+hypothesis: hypothesis.kernel.work
+predictions:
+  - observation: observation.cpu.system_share
+    expected: materially_above_user_compute_baseline
+    strength: strong
+  - observation: observation.cpu.utilization
+    expected: sustained_during_intervention
+    strength: moderate
+scope:
+  runtime: ruby
+  os: linux
+limitations:
+  - This validates one syscall-heavy filesystem mechanism and does not imply that every high-system-CPU incident is caused by filesystem metadata calls.
+  - Exact user/system CPU ratios depend on kernel, filesystem, libc, Ruby build, virtualization, and scheduler behavior.
+  - Other kernel mechanisms such as networking, interrupts, context switching, and block I/O require separate claims and experiments.
