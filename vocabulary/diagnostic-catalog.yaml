@@ -1,0 +1,285 @@
+version: 0.1
+
+purpose: Human-oriented hierarchical aliases for navigating symptoms, fault mechanisms, semantic coverage, and empirical labs. Canonical semantic IDs remain the source of identity.
+
+code_format:
+  symptom: S<number>
+  mechanism: <domain-prefix><family-number>.<topic-number>
+  lab: <mechanism-code>-L<lab-number>
+
+stability:
+  - Canonical semantic IDs remain authoritative and machine-stable.
+  - Short catalog codes are navigation aliases and MUST NOT replace canonical IDs in semantic relationships.
+  - Published short codes should not be reused for a different meaning.
+  - If a topic is reclassified, prefer an alias/deprecation record rather than silently reusing its old code.
+
+domains:
+  - prefix: R
+    title: Resource and runtime
+    description: CPU, memory, runtime resource pressure, saturation, and process-level resource mechanisms.
+  - prefix: D
+    title: Database and persistence
+    description: Query execution, locking, isolation, transactions, pooling, replication, and consistency.
+  - prefix: N
+    title: Network and transport
+    description: Network latency, loss, resets, routing, DNS, TLS, and transport-level failures.
+  - prefix: Q
+    title: Queue and messaging
+    description: Queueing delay, backlog, delivery semantics, consumers, retries, and asynchronous processing.
+  - prefix: E
+    title: External dependencies
+    description: Downstream services, third-party APIs, quotas, throttling, and dependency availability.
+  - prefix: A
+    title: Application and logic
+    description: Exceptions, crashes, correctness bugs, races, invalid state, and application-level failure mechanisms.
+  - prefix: I
+    title: Infrastructure and operating system
+    description: Hosts, containers, orchestration, scheduler, kernel, deploy, configuration, and environment failures.
+  - prefix: F
+    title: Filesystem and storage
+    description: Filesystem and block-storage latency, capacity, permissions, corruption, and persistence failures outside databases.
+  - prefix: X
+    title: Security and identity
+    description: Authentication, authorization, credentials, certificates, policy, and security-control failures.
+
+families:
+  - code: R1
+    title: CPU
+    domain: R
+  - code: R2
+    title: Memory
+    domain: R
+  - code: D1
+    title: Query execution
+    domain: D
+  - code: D2
+    title: Locking, transactions, and isolation
+    domain: D
+  - code: D3
+    title: Connections and pooling
+    domain: D
+  - code: D4
+    title: Replication and consistency
+    domain: D
+  - code: N1
+    title: Network latency and delivery
+    domain: N
+  - code: N2
+    title: Connections and transport lifecycle
+    domain: N
+  - code: N3
+    title: Name resolution and secure transport
+    domain: N
+  - code: Q1
+    title: Queueing and backlog
+    domain: Q
+  - code: Q2
+    title: Delivery semantics
+    domain: Q
+  - code: E1
+    title: Dependency latency
+    domain: E
+  - code: E2
+    title: Dependency availability and errors
+    domain: E
+
+entries:
+  - code: S1
+    kind: symptom
+    title: High CPU
+    canonical_id: symptom.cpu.high
+    routes_to: [R1.1, R1.2, R1.3, R1.4]
+
+  - code: S2
+    kind: symptom
+    title: High memory
+    canonical_id: symptom.memory.high
+    routes_to: [R2.1, R2.2, R2.3, R2.4]
+
+  - code: S3
+    kind: symptom
+    title: High latency
+    canonical_id: symptom.latency.high
+    routes_to: [E1.1, D1.1, D2.1, R1.5, Q1.1]
+
+  - code: S4
+    kind: symptom
+    title: Transaction failed
+    canonical_id: symptom.transaction.failed
+    routes_to: [D2.2, D2.3, D2.4]
+
+  - code: R1.1
+    kind: mechanism
+    title: Traffic-driven CPU load
+    canonical_id: hypothesis.traffic.increase
+    symptoms: [S1]
+    coverage: empirical
+    claims:
+      - claim.traffic.increase.fixed_cost_http_raises_cpu
+    experiments:
+      - code: R1.1-L1
+        id: experiment.traffic.increase.ruby_http
+
+  - code: R1.2
+    kind: mechanism
+    title: Busy loop
+    canonical_id: hypothesis.cpu.busy_loop
+    symptoms: [S1]
+    coverage: empirical
+    claims:
+      - claim.cpu.busy_loop.ruby_consumes_one_core
+    experiments:
+      - code: R1.2-L1
+        id: experiment.cpu.busy_loop.ruby
+
+  - code: R1.3
+    kind: mechanism
+    title: Garbage collection pressure
+    canonical_id: hypothesis.gc.pressure
+    symptoms: [S1]
+    coverage: empirical
+    claims:
+      - claim.gc.pressure.ruby_allocation_storm_raises_gc_work
+    experiments:
+      - code: R1.3-L1
+        id: experiment.gc.pressure.ruby
+
+  - code: R1.4
+    kind: mechanism
+    title: Kernel/system CPU work
+    canonical_id: hypothesis.kernel.work
+    symptoms: [S1]
+    coverage: empirical
+    claims:
+      - claim.kernel.work.ruby_syscall_storm_raises_system_cpu_share
+    experiments:
+      - code: R1.4-L1
+        id: experiment.kernel.work.ruby
+
+  - code: R1.5
+    kind: mechanism
+    title: CPU saturation causing latency
+    canonical_id: hypothesis.latency.cpu_saturation
+    symptoms: [S3]
+    coverage: semantic
+
+  - code: R2.1
+    kind: mechanism
+    title: Retained live objects
+    canonical_id: hypothesis.memory.retention
+    symptoms: [S2]
+    coverage: empirical
+    claims:
+      - claim.memory.retention.ruby_live_set_and_rss_grow
+    experiments:
+      - code: R2.1-L1
+        id: experiment.memory.retention.ruby
+
+  - code: R2.2
+    kind: mechanism
+    title: Allocation pressure
+    canonical_id: hypothesis.memory.allocation_pressure
+    symptoms: [S2]
+    coverage: semantic
+
+  - code: R2.3
+    kind: mechanism
+    title: Cache growth
+    canonical_id: hypothesis.cache.growth
+    symptoms: [S2]
+    coverage: semantic
+
+  - code: R2.4
+    kind: mechanism
+    title: Increased workload concurrency
+    canonical_id: hypothesis.workload.concurrency
+    symptoms: [S2]
+    coverage: semantic
+
+  - code: D1.1
+    kind: mechanism
+    title: Synchronous database query delay
+    canonical_id: hypothesis.latency.database
+    symptoms: [S3]
+    coverage: empirical
+    claims:
+      - claim.latency.database.query_delay_propagates_upstream
+    experiments:
+      - code: D1.1-L1
+        id: experiment.latency.database.query_delay_python_postgres
+
+  - code: D1.2
+    kind: mechanism
+    title: Query plan or index inefficiency
+    coverage: planned
+
+  - code: D2.1
+    kind: mechanism
+    title: Lock contention / row lock wait
+    canonical_id: hypothesis.database.lock_contention
+    symptoms: [S3]
+    coverage: empirical
+    claims:
+      - claim.database.lock_contention.row_lock_wait_propagates_upstream
+    experiments:
+      - code: D2.1-L1
+        id: experiment.latency.database.lock_wait_python_postgres
+
+  - code: D2.2
+    kind: mechanism
+    title: Deadlock
+    canonical_id: hypothesis.database.deadlock
+    symptoms: [S4]
+    coverage: empirical
+    claims:
+      - claim.database.deadlock.cycle_aborts_transaction
+    experiments:
+      - code: D2.2-L1
+        id: experiment.database.deadlock.python_postgres
+
+  - code: D2.3
+    kind: mechanism
+    title: Serialization failure
+    symptoms: [S4]
+    coverage: planned
+    planned_labs: [D2.3-L1]
+
+  - code: D2.4
+    kind: mechanism
+    title: Isolation anomaly / write skew
+    symptoms: [S4]
+    coverage: planned
+    planned_labs: [D2.4-L1]
+
+  - code: Q1.1
+    kind: mechanism
+    title: Queueing delay
+    canonical_id: hypothesis.latency.queueing
+    symptoms: [S3]
+    coverage: semantic
+
+  - code: E1.1
+    kind: mechanism
+    title: Slow external dependency
+    canonical_id: hypothesis.latency.external_dependency
+    symptoms: [S3]
+    coverage: empirical
+    claims:
+      - claim.latency.external_dependency.delay_propagates_upstream
+    experiments:
+      - code: E1.1-L1
+        id: experiment.latency.external_dependency.ruby_http
+
+planned_examples:
+  - code: N1.1
+    title: Network latency
+  - code: N1.2
+    title: Packet loss
+  - code: N2.1
+    title: Connection reset / timeout
+  - code: N3.1
+    title: DNS resolution failure
+  - code: E2.1
+    title: External dependency error / unavailability
+  - code: Q2.1
+    title: Duplicate delivery
