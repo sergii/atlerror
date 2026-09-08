@@ -1,0 +1,36 @@
+services:
+  app:
+    build: .
+    command: ["ruby", "app.rb"]
+    environment:
+      WORK_ITERATIONS: "80000"
+    cpus: 1.0
+    mem_limit: 128m
+    healthcheck:
+      test:
+        - CMD
+        - ruby
+        - -rnet/http
+        - -e
+        - "exit(Net::HTTP.get_response(URI('http://127.0.0.1:3000/health')).is_a?(Net::HTTPSuccess) ? 0 : 1)"
+      interval: 1s
+      timeout: 2s
+      retries: 20
+      start_period: 1s
+
+  probe:
+    build: .
+    command: ["ruby", "probe.rb"]
+    environment:
+      TARGET_URL: http://app:3000
+      BASELINE_RPS: "8"
+      INTERVENTION_RPS: "70"
+      RECOVERY_RPS: "8"
+      WINDOW_SECONDS: "2.5"
+      MIN_RPS_MULTIPLIER: "3.0"
+      MIN_CPU_DELTA: "0.15"
+      MIN_INTERVENTION_CPU: "0.20"
+      MAX_RECOVERY_CPU_RATIO: "0.60"
+    depends_on:
+      app:
+        condition: service_healthy
