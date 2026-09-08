@@ -1,0 +1,30 @@
+id: hypothesis.network.dns_resolution_failure
+kind: hypothesis
+title: DNS name resolution failure
+summary: The client cannot obtain a usable address for the configured endpoint name because name resolution returns a negative or otherwise unusable resolver result before transport establishment begins.
+predictions:
+  - observation: observation.network.dns_resolution_error
+    expected: resolver_negative_or_name_not_found_error_present
+    strength: strong
+falsifiers:
+  - observation: observation.network.dns_resolution_error
+    condition: absent_when_endpoint_connection_fails
+    effect: decrease
+tested_by:
+  - probe.network.resolve_name
+related_to:
+  - symptom.network.name_resolution_failed
+  - symptom.database.connection_failed
+  - system_entity.application_service
+  - system_entity.dns_resolver
+  - boundary.application.dns_resolver
+common_misconceptions:
+  - DNS resolution failure and TCP connect timeout are the same lifecycle phase; DNS must normally produce an address before TCP establishment can begin.
+  - NXDOMAIN means the DNS server is down; it is usually an explicit negative answer stating that the queried name does not exist in the relevant namespace.
+  - A successful connection to a literal IP proves DNS is healthy; the hostname path may still be broken.
+search_terms:
+  - DNS resolution failure
+  - NXDOMAIN
+  - EAI_NONAME
+  - name or service not known
+  - getaddrinfo failed
