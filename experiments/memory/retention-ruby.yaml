@@ -1,0 +1,16 @@
+id: experiment.memory.retention.ruby
+kind: experiment
+title: Ruby retained objects increase live heap and RSS
+description: Retain a controlled set of reachable Ruby objects, measure post-GC live objects and RSS, release the references, and record recovery.
+claims:
+  - claim.memory.retention.ruby_live_set_and_rss_grow
+runner:
+  type: docker
+  build_context: lab/memory-retention
+  image: atlerror-memory-retention
+  docker_args:
+    - --memory=256m
+expected_result: supports
+limitations:
+  - The experiment is synthetic and single-process.
+  - It validates a mechanism, not the prevalence of that mechanism in production incidents.
