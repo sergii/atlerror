@@ -1,0 +1,19 @@
+id: claim.network.connection_reset.peer_rst_surfaces_econnreset
+kind: claim
+title: Peer TCP reset surfaces as a transport reset error
+statement: When a reachable TCP peer accepts a connection and then abortively closes it with an RST before normal protocol completion, a Linux client can observe an explicit ECONNRESET transport error; a subsequent normal connection can succeed once the reset intervention is removed.
+hypothesis: hypothesis.network.connection_reset
+predictions:
+  - observation: observation.network.connection_reset
+    expected: linux_client_reports_econnreset_during_rst_intervention
+    strength: strong
+system_entities:
+  - system_entity.application_service
+  - system_entity.external_dependency
+scope:
+  runtime: python
+  os: linux
+limitations:
+  - Validates one Linux TCP reset path produced by an abortive peer close using SO_LINGER.
+  - Does not identify the origin of resets in real distributed systems; peers, proxies, load balancers, kernels, and middleboxes can all be candidates.
+  - Does not cover connection refusal, timeout, packet loss, DNS, TLS, or application-protocol failures.
