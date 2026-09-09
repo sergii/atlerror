@@ -119,6 +119,15 @@ baseline = attempt(CLIENT_CERT, CLIENT_KEY, "clientAuth")
 intervention = attempt(WRONG_EKU_CERT, WRONG_EKU_KEY, "serverAuth_only")
 recovery = attempt(CLIENT_CERT, CLIENT_KEY, "clientAuth")
 
+client_auth_rejection_surface = (
+    intervention.get("error_class") == "SSLError"
+    or (
+        intervention.get("error_class") == "ConnectionResetError"
+        and intervention.get("errno") == 104
+        and intervention.get("phase") == "application_data"
+    )
+)
+
 assertions = {
     "baseline_cert_permits_ssl_client": valid_purpose["ssl_client"] == "yes",
     "baseline_mtls_succeeds": baseline["usable_secure_session"] and baseline.get("application_response") == "ok",
@@ -130,7 +139,7 @@ assertions = {
     "intervention_tcp_connects": intervention["tcp_connected"],
     "intervention_server_certificate_verification_does_not_fail": not intervention["server_certificate_verification_failed"],
     "intervention_cannot_use_secure_application_session": not intervention["usable_secure_session"],
-    "intervention_surfaces_tls_error": intervention.get("error_class") == "SSLError",
+    "intervention_surfaces_client_auth_rejection": client_auth_rejection_surface,
     "recovery_mtls_succeeds": recovery["usable_secure_session"] and recovery.get("application_response") == "ok",
 }
 
@@ -168,10 +177,10 @@ evidence = {
     },
     "assertions": assertions,
     "result": result,
-    "interpretation": "Both client certificates chain to the same trusted lab CA and are presented to the same reachable TLS 1.3 peer. The baseline certificate is valid for SSL client authentication and produces usable protected traffic. Replacing only its Extended Key Usage with serverAuth makes the certificate unsuitable for SSL client authentication and prevents a usable mTLS session; restoring clientAuth recovers.",
+    "interpretation": "Both client certificates chain to the same trusted lab CA and are presented to the same reachable TLS 1.3 peer. The baseline certificate is valid for SSL client authentication and produces usable protected traffic. Replacing only its Extended Key Usage with serverAuth makes the certificate unsuitable for SSL client authentication and prevents a usable mTLS session. Depending on OpenSSL alert timing, the client can observe an SSL error or an ECONNRESET while attempting protected application I/O; restoring clientAuth recovers.",
     "limitations": [
         "The invalid-EKU condition is synthetic and controlled.",
-        "TLS alert timing and exact error wording can vary by OpenSSL/runtime; certificate purpose plus unusable protected-session outcome are the primary evidence.",
+        "TLS client-auth rejection can surface as an SSL alert or as ECONNRESET on protected I/O depending on OpenSSL/runtime timing; certificate purpose plus unusable protected-session outcome are the primary evidence.",
         "This does not cover expiration, revocation, key-usage-only failures, policy OIDs, malformed chains, or authorization after successful mTLS.",
     ],
 }
