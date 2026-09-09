@@ -1,0 +1,10 @@
+id: symptom.messaging.duplicate_business_effect_observed
+kind: symptom
+title: Duplicate business effect observed
+summary: One logical business event appears to have produced the protected application side effect more than once.
+explanation:
+  short: The business outcome was duplicated, regardless of whether the broker redelivered or the producer published twice.
+  detailed: Duplicate effects are an application-visible symptom, not a broker-delivery diagnosis. They can result from redelivery of one broker message, duplicate publication of one business event as multiple broker messages, caller retries, or unrelated application bugs.
+may_indicate:
+  - hypothesis.messaging.duplicate_delivery
+  - hypothesis.messaging.duplicate_publication
