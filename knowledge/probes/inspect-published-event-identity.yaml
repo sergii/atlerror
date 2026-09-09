@@ -1,0 +1,13 @@
+id: probe.queue.inspect_published_event_identity
+kind: probe
+title: Inspect broker message and business event identities
+summary: Inspect delivered broker entries and correlate their broker message IDs, stable business event IDs, delivery counts, acknowledgements, and resulting business-effect count.
+produces:
+  - observation.queue.distinct_messages_same_event_identity
+  - observation.queue.message_redelivered
+  - observation.application.duplicate_side_effect
+requires:
+  - capability.queue.inspect_delivery
+preferred_tools:
+  - tool.redis
+risk: read_only

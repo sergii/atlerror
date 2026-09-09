@@ -1,0 +1,35 @@
+id: hypothesis.messaging.duplicate_publication
+kind: hypothesis
+title: Duplicate message publication
+summary: A producer or upstream publishing path emits the same logical business event more than once as distinct broker messages, so consumers can process duplicate business work even without broker redelivery.
+predictions:
+  - observation: observation.queue.distinct_messages_same_event_identity
+    expected: present
+    strength: strong
+  - observation: observation.application.duplicate_side_effect
+    expected: possible_without_idempotency
+    strength: moderate
+falsifiers:
+  - observation: observation.queue.distinct_messages_same_event_identity
+    condition: absent
+    effect: decrease
+tested_by:
+  - probe.queue.inspect_published_event_identity
+related_to:
+  - symptom.messaging.duplicate_business_effect_observed
+  - hypothesis.messaging.duplicate_delivery
+  - observation.queue.message_redelivered
+  - system_entity.message_broker
+  - system_entity.message_consumer
+  - boundary.message_broker.consumer
+common_misconceptions:
+  - Every duplicated business effect is broker redelivery; a producer can publish one business event as two distinct broker messages.
+  - Different broker message IDs imply different business operations; transport identity and business event identity are separate layers.
+  - Idempotency should key only on broker message ID; producer duplicates often require deduplication by a stable business event or operation identity.
+search_terms:
+  - duplicate publish
+  - duplicate publication
+  - producer retry
+  - publisher retry
+  - duplicate event
+  - same event different message id

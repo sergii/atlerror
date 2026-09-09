@@ -1,0 +1,8 @@
+id: rule.messaging.duplicate_publication.absent
+hypothesis: hypothesis.messaging.duplicate_publication
+when:
+  observation: observation.queue.distinct_messages_same_event_identity
+  operator: absent
+effect:
+  confidence: decrease
+explanation: If there are not multiple distinct broker message identities for the same stable business event, reduce confidence in duplicate publication and investigate broker redelivery, caller retry, or other application mechanisms instead.
