@@ -1,0 +1,8 @@
+id: rule.messaging.duplicate_delivery.absent
+hypothesis: hypothesis.messaging.duplicate_delivery
+when:
+  observation: observation.queue.message_redelivered
+  operator: absent
+effect:
+  confidence: decrease
+explanation: If stable message identity and broker or consumer delivery history do not show the same message being delivered more than once, reduce confidence in broker redelivery and investigate duplicate production, repeated caller actions, or application-side retries instead.
