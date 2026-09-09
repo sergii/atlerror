@@ -37,6 +37,9 @@ capabilities:
   - id: capability.database.inspect_connections
     title: Inspect database connection admission and sessions
     description: Read database connection limits, active sessions, reserved admission policy, and connection-establishment errors without mutating application data.
+  - id: capability.network.measure_latency
+    title: Measure network transport latency
+    description: Measure connection establishment or request exchange timing across a network boundary, separating transport-path delay from target-side processing when evidence permits.
   - id: capability.network.inspect_connection_error
     title: Inspect network connection error
     description: Attempt a controlled network connection and capture transport-layer establishment or teardown errors such as reset, refusal, timeout, and their OS/runtime error metadata.
