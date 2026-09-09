@@ -5,3 +5,4 @@ when:
   operator: absent
 effect:
   confidence: decrease
+explanation: If no explicit downstream HTTP error response is observed, confidence decreases that the failure is an application-level external dependency service error; investigate transport, timeout, or other failure surfaces instead.
