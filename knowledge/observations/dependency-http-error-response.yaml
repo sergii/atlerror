@@ -1,0 +1,6 @@
+id: observation.dependency.http_error_response
+kind: observation
+title: Downstream HTTP error response
+summary: A downstream HTTP request completed with an explicit error status instead of a successful response.
+explanation:
+  short: Captures application-protocol failure evidence such as HTTP 5xx from a reachable dependency.
