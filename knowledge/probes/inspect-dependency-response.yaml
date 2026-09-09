@@ -1,0 +1,9 @@
+id: probe.http.inspect_dependency_response
+kind: probe
+title: Inspect downstream HTTP response
+summary: Perform or inspect a controlled downstream HTTP request and capture status, response completion, and protocol-level failure metadata.
+produces:
+  - observation.dependency.http_error_response
+requires:
+  - capability.http.inspect_response
+risk: read_only
