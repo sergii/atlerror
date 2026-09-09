@@ -1,0 +1,29 @@
+services:
+  server:
+    build: .
+    command: ["python", "server.py"]
+    environment:
+      PORT: "9000"
+      HANDLER_DELAY_SECONDS: "0.005"
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import json,socket; s=socket.create_connection(('127.0.0.1',9000),timeout=1); s.sendall(b'ping\\n'); r=json.loads(s.makefile('rb').readline()); assert r['status']=='pong'; s.close()"
+      interval: 1s
+      timeout: 2s
+      retries: 15
+
+  probe:
+    build: .
+    cap_add:
+      - NET_ADMIN
+    command: ["python", "probe.py"]
+    environment:
+      TARGET_HOST: server
+      TARGET_PORT: "9000"
+      INTERFACE: eth0
+      NETEM_DELAY_MS: "120"
+      SAMPLES: "5"
+      SOCKET_TIMEOUT_SECONDS: "3"
