@@ -24,10 +24,15 @@ related_to:
 common_misconceptions:
   - A trusted server certificate is sufficient for mutual TLS; mTLS also requires the server to authenticate an acceptable client certificate.
   - Missing client certificates are the same as server-certificate trust failures; they involve opposite authentication directions and different remediation.
-  - Disabling server certificate verification repairs a missing client certificate; it does not satisfy a server-side client-authentication policy.
+  - A client certificate signed by a trusted CA is automatically acceptable for mTLS; its intended usage such as clientAuth can also be required.
+  - Disabling server certificate verification repairs a missing or unacceptable client certificate; it does not satisfy a server-side client-authentication policy.
 search_terms:
   - mutual TLS client certificate required
   - mTLS client certificate missing
   - TLS certificate required alert
   - peer did not return a certificate
   - client certificate authentication failed
+  - client certificate unknown ca
+  - client certificate extended key usage
+  - clientAuth EKU
+  - unsuitable certificate purpose
