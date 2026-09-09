@@ -1,0 +1,7 @@
+id: observation.queue.message_dead_lettered
+kind: observation
+title: Message moved to dead-letter storage
+summary: A repeatedly failing message is removed from the active delivery path after a retry threshold and preserved in a dead-letter stream or queue with failure metadata.
+explanation:
+  short: Captures containment after retry exhaustion.
+  detailed: Dead-lettering is a handling policy, not the root cause. It should preserve enough identity and failure context to distinguish the original poison message from unrelated delivery failures and to support later inspection or replay.

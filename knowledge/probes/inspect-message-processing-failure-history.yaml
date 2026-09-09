@@ -1,0 +1,12 @@
+id: probe.queue.inspect_processing_failure_history
+kind: probe
+title: Inspect repeated message failures and dead-letter outcome
+summary: Correlate stable message identity, delivery-attempt history, deterministic processing errors, pending or acknowledgement state, and dead-letter placement.
+produces:
+  - observation.queue.message_repeatedly_failed
+  - observation.queue.message_dead_lettered
+requires:
+  - capability.queue.inspect_delivery
+preferred_tools:
+  - tool.redis
+risk: read_only

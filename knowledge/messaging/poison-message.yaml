@@ -1,0 +1,34 @@
+id: hypothesis.messaging.poison_message
+kind: hypothesis
+title: Poison message
+summary: One stable message repeatedly triggers the same deterministic processing failure, causing redelivery without successful completion until a retry or dead-letter policy intervenes.
+predictions:
+  - observation: observation.queue.message_repeatedly_failed
+    expected: same_message_identity_fails_across_multiple_delivery_attempts
+    strength: strong
+  - observation: observation.queue.message_dead_lettered
+    expected: present_after_retry_threshold_when_dlq_policy_enabled
+    strength: moderate
+falsifiers:
+  - observation: observation.queue.message_repeatedly_failed
+    condition: absent
+    effect: decrease
+tested_by:
+  - probe.queue.inspect_processing_failure_history
+related_to:
+  - symptom.messaging.processing_repeatedly_failed
+  - hypothesis.messaging.duplicate_delivery
+  - system_entity.message_broker
+  - system_entity.message_consumer
+  - boundary.message_broker.consumer
+common_misconceptions:
+  - Any message that fails once is a poison message; poison-message evidence requires repeated failure correlated to one stable message identity.
+  - Dead-lettering is the root cause; it is a containment policy for a message that cannot complete successfully under the current handler and data.
+  - Repeated failures across many different messages prove poison input; they may instead indicate a broken consumer, dependency outage, or bad deployment.
+search_terms:
+  - poison message
+  - poison pill message
+  - retry exhaustion
+  - dead letter queue
+  - dlq
+  - repeated consumer failure

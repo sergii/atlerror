@@ -166,6 +166,12 @@ entries:
     canonical_id: symptom.messaging.duplicate_business_effect_observed
     routes_to: [Q2.1, Q2.3]
 
+  - code: S14
+    kind: symptom
+    title: Message processing repeatedly failed
+    canonical_id: symptom.messaging.processing_repeatedly_failed
+    routes_to: [Q2.4]
+
   - code: R1.1
     kind: mechanism
     title: Traffic-driven CPU load
@@ -499,6 +505,18 @@ entries:
     experiments:
       - code: Q2.3-L1
         id: experiment.messaging.duplicate_publication.redis_streams_python
+
+  - code: Q2.4
+    kind: mechanism
+    title: Poison message / repeated deterministic processing failure
+    canonical_id: hypothesis.messaging.poison_message
+    symptoms: [S14]
+    coverage: empirical
+    claims:
+      - claim.messaging.poison_message.repeated_failure_reaches_dead_letter_policy
+    experiments:
+      - code: Q2.4-L1
+        id: experiment.messaging.poison_message.redis_streams_python
 
   - code: E1.1
     kind: mechanism

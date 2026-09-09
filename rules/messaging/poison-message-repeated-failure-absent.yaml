@@ -1,0 +1,8 @@
+id: rule.messaging.poison_message.repeated_failure_absent
+hypothesis: hypothesis.messaging.poison_message
+when:
+  observation: observation.queue.message_repeatedly_failed
+  operator: absent
+effect:
+  confidence: decrease
+explanation: If one stable message identity is not actually failing across repeated delivery attempts, reduce confidence in poison-message handling and investigate one-off processing errors, duplicate publication, broker redelivery without deterministic failure, or broader consumer/dependency faults.
