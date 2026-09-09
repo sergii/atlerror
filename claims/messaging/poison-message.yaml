@@ -1,0 +1,21 @@
+id: claim.messaging.poison_message.repeated_failure_reaches_dead_letter_policy
+kind: claim
+title: Poison message repeatedly fails until dead-letter containment
+statement: When one stable message deterministically fails processing, leaving it unacknowledged can cause the same broker entry to be delivered repeatedly with increasing attempt metadata and no successful business effect. A retry-threshold policy can then preserve that failed message in dead-letter storage and acknowledge the original entry so it stops circulating on the active consumer path.
+hypothesis: hypothesis.messaging.poison_message
+predictions:
+  - observation: observation.queue.message_repeatedly_failed
+    expected: same_message_identity_fails_on_multiple_delivery_attempts
+    strength: strong
+  - observation: observation.queue.message_dead_lettered
+    expected: present_after_retry_threshold
+    strength: moderate
+system_entities:
+  - system_entity.message_broker
+  - system_entity.message_consumer
+boundaries:
+  - boundary.message_broker.consumer
+limitations:
+  - Dead-lettering is a consumer or broker policy and does not establish why the payload is unprocessable.
+  - Retry thresholds, backoff, visibility rules, and native DLQ behavior differ across brokers and frameworks.
+  - A repeated error can be caused by an external dependency or broken deployment; stable message identity plus deterministic input-specific failure is needed to strengthen the poison-message diagnosis.
