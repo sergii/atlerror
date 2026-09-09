@@ -1,0 +1,12 @@
+id: probe.queue.inspect_ack_effect_ordering
+kind: probe
+title: Inspect acknowledgement and durable-effect ordering
+summary: Inspect one stable message identity across broker acknowledgement or pending state and the corresponding durable application effect to determine whether acknowledgement became durable before the effect.
+produces:
+  - observation.queue.acknowledged_without_durable_effect
+  - observation.application.expected_side_effect_missing
+requires:
+  - capability.queue.inspect_delivery
+preferred_tools:
+  - tool.redis
+risk: read_only

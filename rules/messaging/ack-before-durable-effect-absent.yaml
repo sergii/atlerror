@@ -1,0 +1,8 @@
+id: rule.messaging.acknowledged_before_durable_effect.absent
+hypothesis: hypothesis.messaging.acknowledged_before_durable_effect
+when:
+  observation: observation.queue.acknowledged_without_durable_effect
+  operator: absent
+effect:
+  confidence: decrease
+explanation: If the message remains pending or redeliverable until after the durable business effect exists, reduce confidence in acknowledgement-before-effect as the cause and investigate transaction rollback, handler failure, duplicate suppression, publication, or other messaging mechanisms.

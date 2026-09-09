@@ -1,0 +1,34 @@
+id: hypothesis.messaging.acknowledged_before_durable_effect
+kind: hypothesis
+title: Acknowledged before durable effect
+summary: A consumer durably acknowledges a message before its required business effect is durable, so a later crash or omitted effect can leave the broker with no redeliverable work while the expected application state is missing.
+predictions:
+  - observation: observation.queue.acknowledged_without_durable_effect
+    expected: present
+    strength: strong
+  - observation: observation.application.expected_side_effect_missing
+    expected: present
+    strength: strong
+falsifiers:
+  - observation: observation.queue.acknowledged_without_durable_effect
+    condition: absent
+    effect: decrease
+tested_by:
+  - probe.queue.inspect_ack_effect_ordering
+related_to:
+  - symptom.messaging.expected_effect_missing
+  - hypothesis.messaging.duplicate_delivery
+  - system_entity.message_broker
+  - system_entity.message_consumer
+  - boundary.message_broker.consumer
+common_misconceptions:
+  - Message loss requires the broker payload to disappear; effective loss can occur when the payload remains stored but the consumer group has acknowledged it and will not redeliver it.
+  - Acknowledge first is safer because it avoids duplicate delivery; it trades duplicate risk for loss risk unless message handling and acknowledgement are coupled by stronger semantics.
+  - Processing the effect before acknowledgement is sufficient by itself; without idempotency, a crash after the effect and before ACK can instead produce Q2.1 duplicate delivery and duplicate effects.
+search_terms:
+  - ack before commit
+  - acknowledge before effect
+  - effective message loss
+  - consumer message loss
+  - missing effect after ack
+  - inbox pattern

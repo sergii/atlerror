@@ -1,0 +1,7 @@
+id: observation.application.expected_side_effect_missing
+kind: observation
+title: Expected durable business effect missing
+summary: The durable application state that should result from processing a known message is absent.
+explanation:
+  short: The message's expected business state change did not become durable.
+  detailed: This observation should be checked independently from broker acknowledgement. It can arise from acknowledgement ordering, transaction rollback, application errors, duplicate suppression mistakes, or other causes, so it is not by itself proof of message loss.
