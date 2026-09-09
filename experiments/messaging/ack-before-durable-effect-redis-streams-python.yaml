@@ -1,0 +1,17 @@
+id: experiment.messaging.acknowledged_before_durable_effect.redis_streams_python
+kind: experiment
+title: Redis Streams ACK before durable effect creates effective loss window
+aims: []
+claims:
+  - claim.messaging.acknowledged_before_durable_effect.ack_suppresses_redelivery_before_effect
+description: Use a Redis Streams consumer group to compare normal effect-before-ACK processing with an intervention that XACKs a delivery before its business effect exists, then show that the acknowledged entry is no longer pending or redeliverable even though the effect is absent. Recover by making an idempotent effect durable before ACK, omitting ACK once, and showing that redelivery safely completes without duplicating the effect.
+runner:
+  type: docker_compose
+  compose_file: lab/messaging-ack-before-durable-effect/compose.yml
+  setup_service: redis
+  evidence_service: probe
+expected_result: supports
+limitations:
+  - The broker is Redis Streams in a synthetic Docker environment; other brokers expose acknowledgement, offsets, visibility, and redelivery differently.
+  - The failure windows are represented deterministically by omitting the next state transition rather than terminating a worker nondeterministically.
+  - Recovery uses a Redis-backed atomic idempotency guard colocated with the synthetic side effect; production systems may need transactional inbox/outbox patterns or database transactions spanning their durable business state.
