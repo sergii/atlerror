@@ -148,6 +148,12 @@ entries:
     canonical_id: symptom.external_dependency.rate_limited
     routes_to: [E2.2]
 
+  - code: S11
+    kind: symptom
+    title: Duplicate message delivery observed
+    canonical_id: symptom.messaging.duplicate_delivery_observed
+    routes_to: [Q2.1]
+
   - code: R1.1
     kind: mechanism
     title: Traffic-driven CPU load
@@ -446,6 +452,18 @@ entries:
     symptoms: [S3]
     coverage: semantic
 
+  - code: Q2.1
+    kind: mechanism
+    title: Duplicate message delivery / redelivery
+    canonical_id: hypothesis.messaging.duplicate_delivery
+    symptoms: [S11]
+    coverage: empirical
+    claims:
+      - claim.messaging.duplicate_delivery.unacked_message_is_redelivered
+    experiments:
+      - code: Q2.1-L1
+        id: experiment.messaging.duplicate_delivery.redis_streams_python
+
   - code: E1.1
     kind: mechanism
     title: Slow external dependency
@@ -487,5 +505,3 @@ planned_examples:
     title: Network latency
   - code: N1.2
     title: Packet loss
-  - code: Q2.1
-    title: Duplicate delivery
