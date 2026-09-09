@@ -1,0 +1,16 @@
+id: experiment.messaging.poison_message.redis_streams_python
+kind: experiment
+title: Redis Streams poison message repeatedly fails and is dead-lettered after retry threshold
+claims:
+  - claim.messaging.poison_message.repeated_failure_reaches_dead_letter_policy
+description: Use a Redis Streams consumer group with one valid message and one deterministically invalid message. Show the valid message succeeds once, while the poison message remains pending, is repeatedly claimed as the same stream entry, fails with the same application error through three delivery attempts, produces no business effect, and is then copied to a dead-letter stream with failure metadata before the original entry is acknowledged. Finally verify a subsequent valid message can still be processed normally.
+runner:
+  type: docker_compose
+  compose_file: lab/messaging-poison-message/compose.yml
+  setup_service: redis
+  evidence_service: probe
+expected_result: supports
+limitations:
+  - Redis Streams does not provide a native dead-letter queue policy; the lab implements retry-threshold and dead-letter transfer in the synthetic consumer.
+  - The poison condition is deterministic invalid input in a controlled Python handler and does not cover transient dependency failures or nondeterministic bugs.
+  - Retry timing and backoff are not modeled; the experiment isolates repeated failure, stable identity, delivery count, and dead-letter containment.
