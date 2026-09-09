@@ -1,0 +1,7 @@
+id: rule.network.transport_latency.normal
+hypothesis: hypothesis.network.transport_latency
+when:
+  observation: observation.network.transport_latency
+  operator: not_above_baseline
+effect:
+  confidence: decrease
