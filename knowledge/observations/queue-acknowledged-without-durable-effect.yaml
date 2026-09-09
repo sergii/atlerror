@@ -1,0 +1,7 @@
+id: observation.queue.acknowledged_without_durable_effect
+kind: observation
+title: Message acknowledged while durable effect is absent
+summary: Broker acknowledgement state shows a delivery is complete or no longer pending while the expected durable business effect is still absent.
+explanation:
+  short: The broker considers the work acknowledged before the business result became durable.
+  detailed: Strong evidence combines stable message identity, acknowledgement or pending-state history, and an independently inspected durable effect. Payload retention in the broker does not negate this observation if the consumer group will no longer redeliver the acknowledged entry.
