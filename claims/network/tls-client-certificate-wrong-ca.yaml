@@ -1,0 +1,21 @@
+id: claim.network.tls_client_certificate_authentication_failure.wrong_ca_client_cert_rejected
+kind: claim
+title: Client certificate from an untrusted CA is rejected by an mTLS server
+statement: When a reachable TLS 1.3 server requires client certificates signed by its configured trust anchor, a valid client certificate signed by that trusted CA permits protected application traffic while an otherwise valid client certificate signed by a different CA does not produce a usable mutual-TLS session.
+hypothesis: hypothesis.network.tls_client_certificate_authentication_failure
+predictions:
+  - observation: observation.network.tls_client_certificate_authentication_error
+    expected: tcp_and_tls_negotiation_reach_client_auth_but_wrong_ca_client_certificate_is_rejected
+    strength: strong
+system_entities:
+  - system_entity.application_service
+  - system_entity.external_dependency
+boundaries:
+  - boundary.application.external_dependency_tls
+scope:
+  runtime: python
+  os: linux
+limitations:
+  - Validates one controlled TLS 1.3 client-certificate trust-anchor mismatch using Python and OpenSSL.
+  - The presented intervention certificate is otherwise valid for clientAuth and differs primarily by issuer/trust anchor.
+  - Does not cover expiration, revocation, wrong EKU, client identity authorization, certificate-chain ordering, or every TLS implementation error surface.

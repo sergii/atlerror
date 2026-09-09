@@ -59,4 +59,37 @@ openssl x509 -req \
   -sha256 \
   -extfile /tmp/client.ext >/dev/null 2>&1
 
-rm -f /certs/server.csr /certs/client.csr /certs/ca.srl /tmp/server.ext /tmp/client.ext
+# A second, independent CA signs an otherwise valid clientAuth certificate.
+# The server does not trust this CA; N3.6-L2 uses it to isolate client-certificate trust-anchor mismatch.
+openssl req -x509 -newkey rsa:2048 -nodes \
+  -keyout /certs/rogue-ca.key \
+  -out /certs/rogue-ca.crt \
+  -days 1 \
+  -subj "/CN=Atlerror N3.6 Rogue CA" \
+  -addext "basicConstraints=critical,CA:TRUE" \
+  -addext "keyUsage=critical,keyCertSign,cRLSign" \
+  -addext "subjectKeyIdentifier=hash" >/dev/null 2>&1
+
+openssl req -newkey rsa:2048 -nodes \
+  -keyout /certs/wrong-ca-client.key \
+  -out /certs/wrong-ca-client.csr \
+  -subj "/CN=atlerror-client" >/dev/null 2>&1
+
+openssl x509 -req \
+  -in /certs/wrong-ca-client.csr \
+  -CA /certs/rogue-ca.crt \
+  -CAkey /certs/rogue-ca.key \
+  -CAcreateserial \
+  -out /certs/wrong-ca-client.crt \
+  -days 1 \
+  -sha256 \
+  -extfile /tmp/client.ext >/dev/null 2>&1
+
+rm -f \
+  /certs/server.csr \
+  /certs/client.csr \
+  /certs/wrong-ca-client.csr \
+  /certs/ca.srl \
+  /certs/rogue-ca.srl \
+  /tmp/server.ext \
+  /tmp/client.ext
