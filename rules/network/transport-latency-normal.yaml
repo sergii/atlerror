@@ -1,0 +1,8 @@
+id: rule.network.transport_latency.normal
+hypothesis: hypothesis.network.transport_latency
+when:
+  observation: observation.network.transport_latency
+  operator: not_above_baseline
+effect:
+  confidence: decrease
+explanation: If transport-boundary timing is not above its expected baseline, network transport latency is a weaker explanation and target processing, database waits, queueing, compute, or other latency mechanisms should remain candidates.

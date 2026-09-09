@@ -1,0 +1,7 @@
+id: observation.network.transport_latency
+kind: observation
+title: Network transport latency above baseline
+summary: Connection establishment or request exchange timing shows material delay attributable to the transport path rather than target-side processing.
+explanation:
+  short: The communication path is slower than its expected baseline even though the target's own processing time remains comparable.
+  detailed: Transport latency is isolated by measuring timing at the network boundary and comparing it with server-side work. Increased TCP establishment and byte-exchange time with stable target processing supports a network-path delay rather than a slow application, database operation, or queue wait. The observation does not by itself identify the physical hop, interface, route, congestion source, or packet-level cause.

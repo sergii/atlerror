@@ -1,0 +1,35 @@
+id: hypothesis.network.transport_latency
+kind: hypothesis
+title: Network transport latency
+summary: The network transport path is adding material delay independently of application, database, dependency processing, or queue wait time.
+predictions:
+  - observation: observation.network.transport_latency
+    expected: above_baseline
+    strength: strong
+  - observation: observation.http.request_latency
+    expected: above_baseline_when_transport_is_on_critical_path
+    strength: strong
+falsifiers:
+  - observation: observation.network.transport_latency
+    condition: not_above_baseline
+    effect: decrease
+tested_by:
+  - probe.network.measure_transport_latency
+  - probe.http.measure_request_latency
+related_to:
+  - symptom.latency.high
+  - hypothesis.latency.external_dependency
+  - hypothesis.latency.database
+  - hypothesis.latency.queueing
+  - system_entity.application_service
+  - system_entity.external_dependency
+  - boundary.application.external_dependency
+common_misconceptions:
+  - Slow end-to-end requests prove the downstream application itself is slow; transport delay can dominate while server processing time remains normal.
+  - Network transport latency and queueing delay are the same mechanism; queueing is time spent waiting before useful work begins, while transport latency is delay across the communication path.
+search_terms:
+  - network latency
+  - transport latency
+  - tcp latency
+  - round trip delay
+  - rtt

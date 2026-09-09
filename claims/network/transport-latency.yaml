@@ -1,0 +1,21 @@
+id: claim.network.transport_latency.netem_delay_increases_transport_timing
+kind: claim
+title: Injected Linux transport delay increases client timing without slowing target processing
+statement: When a fixed Linux netem delay is added to the client transport path while target-side processing remains unchanged, TCP connection establishment and request exchange latency increase materially and fall again after the transport delay is removed.
+hypothesis: hypothesis.network.transport_latency
+predictions:
+  - observation: observation.network.transport_latency
+    expected: connection_and_exchange_latency_rise_while_target_processing_stays_comparable
+    strength: strong
+system_entities:
+  - system_entity.application_service
+  - system_entity.external_dependency
+boundaries:
+  - boundary.application.external_dependency
+scope:
+  runtime: python
+  os: linux
+limitations:
+  - Validates deterministic Linux traffic-control delay inside Docker rather than a specific physical network path.
+  - Uses client-side egress delay to isolate transport timing and does not identify which production hop would be responsible.
+  - Does not model packet loss, reordering, congestion-window dynamics, or asymmetric latency.
