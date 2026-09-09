@@ -1,0 +1,6 @@
+id: observation.dependency.http_rate_limit_response
+kind: observation
+title: Downstream HTTP rate-limit response
+summary: A downstream HTTP request completed with explicit throttling evidence such as status 429 and optional retry or quota metadata.
+explanation:
+  short: Captures a completed dependency response that indicates caller throttling or quota enforcement rather than lower-layer transport failure.
