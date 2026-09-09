@@ -209,7 +209,7 @@ entries:
     symptoms: [S1]
     coverage: empirical
     claims:
-      - claim.gc_pressure.ruby_allocation_storm_raises_gc_work
+      - claim.gc.pressure.ruby_allocation_storm_raises_gc_work
     experiments:
       - code: R1.3-L1
         id: experiment.gc.pressure.ruby
