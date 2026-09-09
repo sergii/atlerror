@@ -417,9 +417,12 @@ entries:
     coverage: empirical
     claims:
       - claim.network.tls_client_certificate_authentication_failure.missing_client_cert_blocks_mtls
+      - claim.network.tls_client_certificate_authentication_failure.wrong_ca_client_cert_rejected
     experiments:
       - code: N3.6-L1
         id: experiment.network.tls_client_certificate_authentication.python_linux
+      - code: N3.6-L2
+        id: experiment.network.tls_client_certificate_wrong_ca.python_linux
 
   - code: Q1.1
     kind: mechanism
