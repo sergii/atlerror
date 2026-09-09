@@ -1,0 +1,16 @@
+id: experiment.messaging.duplicate_delivery.redis_streams_python
+kind: experiment
+title: Redis Streams redelivers unacknowledged work and idempotency suppresses duplicate effects
+claims:
+  - claim.messaging.duplicate_delivery.unacked_message_is_redelivered
+description: Use a Redis Streams consumer group to process one message normally, then process a second message without acknowledging it so another consumer claims and redelivers the same stream entry. Show that a naive handler duplicates the side effect, then repeat the same redelivery pattern with an idempotency guard so two deliveries produce one business effect.
+runner:
+  type: docker_compose
+  compose_file: lab/messaging-duplicate-delivery/compose.yml
+  setup_service: redis
+  evidence_service: probe
+expected_result: supports
+limitations:
+  - The broker is Redis Streams in a synthetic Docker environment; other brokers expose redelivery and acknowledgement state differently.
+  - Recovery uses a Redis-backed atomic idempotency guard colocated with the synthetic side effect; production side effects may require transactional inbox, outbox, deduplication storage, or provider-specific idempotency guarantees.
+  - The experiment models crash-after-side-effect-before-ack behavior deterministically rather than killing a real worker process at an arbitrary instruction boundary.
