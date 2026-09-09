@@ -1,0 +1,21 @@
+id: claim.messaging.duplicate_delivery.unacked_message_is_redelivered
+kind: claim
+title: Unacknowledged message can be redelivered and idempotency can suppress duplicate effects
+statement: Under at-least-once delivery semantics, if a consumer applies a side effect but the message is not durably acknowledged, the same stable message identity can be delivered again. A non-idempotent handler can apply the business effect twice, while an idempotent handler can accept the redelivery but apply the effect only once.
+hypothesis: hypothesis.messaging.duplicate_delivery
+predictions:
+  - observation: observation.queue.message_redelivered
+    expected: same_message_identity_delivered_twice_after_missing_ack
+    strength: strong
+  - observation: observation.application.duplicate_side_effect
+    expected: present_without_idempotency_and_absent_with_idempotency
+    strength: strong
+system_entities:
+  - system_entity.message_broker
+  - system_entity.message_consumer
+boundaries:
+  - boundary.message_broker.consumer
+limitations:
+  - The claim does not imply that every at-least-once delivery results in redelivery.
+  - Duplicate business effects depend on handler semantics and are not required evidence for duplicate delivery.
+  - Idempotency implementations differ; this claim does not prescribe one storage or transaction design for production systems.
