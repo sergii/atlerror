@@ -1,0 +1,21 @@
+id: claim.messaging.duplicate_publication.distinct_messages_same_event_can_duplicate_effect
+kind: claim
+title: Duplicate publication can duplicate a business effect without broker redelivery
+statement: If the same stable business event is published more than once as distinct broker messages, a consumer can receive each broker message once and still execute the same business effect more than once. An idempotency guard keyed by the stable business event identity can accept both distinct messages while applying the protected effect only once.
+hypothesis: hypothesis.messaging.duplicate_publication
+predictions:
+  - observation: observation.queue.distinct_messages_same_event_identity
+    expected: two_distinct_broker_messages_share_one_event_identity
+    strength: strong
+  - observation: observation.application.duplicate_side_effect
+    expected: present_without_idempotency_and_absent_with_event_id_idempotency
+    strength: strong
+system_entities:
+  - system_entity.message_broker
+  - system_entity.message_consumer
+boundaries:
+  - boundary.message_broker.consumer
+limitations:
+  - The claim does not identify why duplicate publication occurred; producer retry, outbox replay, upstream duplication, or application bugs can all create distinct messages for one event.
+  - Distinct broker message IDs are necessary evidence for this discriminator but business-event identity must also be stable and meaningful.
+  - Idempotency keyed only by broker message ID will not suppress producer duplicates that use different broker identities.
