@@ -1,0 +1,7 @@
+id: observation.queue.distinct_messages_same_event_identity
+kind: observation
+title: Distinct broker messages share one business event identity
+summary: Two or more different broker message identities carry the same stable business event identity.
+explanation:
+  short: Captures duplicate publication separately from broker redelivery.
+  detailed: Duplicate publication evidence requires distinct broker message IDs or entries that each represent the same stable business event or idempotency identity. The same broker message ID delivered repeatedly is redelivery instead, while different business event identities are not duplicate publication.
