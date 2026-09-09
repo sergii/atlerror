@@ -15,12 +15,15 @@ import yaml
 ROOT = Path(__file__).resolve().parents[1]
 EXPERIMENTS_DIR = ROOT / "experiments"
 
-GLOBAL_INPUTS = {
-    ".github/workflows/lab.yml",
+FULL_MATRIX_INPUTS = {
     "scripts/run_lab.py",
-    "scripts/select_labs.py",
     "schema/experiment.schema.json",
     "schema/empirical-evidence.schema.json",
+}
+
+SMOKE_INPUTS = {
+    ".github/workflows/lab.yml",
+    "scripts/select_labs.py",
 }
 
 
@@ -109,13 +112,13 @@ def path_is_under(path: str, root: str) -> bool:
 
 def select_labs(labs: list[Lab], changed_files: list[str]) -> list[Lab]:
     changed = set(changed_files)
-    if changed & GLOBAL_INPUTS:
+    if changed & FULL_MATRIX_INPUTS:
         return labs
 
-    selected: list[Lab] = []
+    selected: dict[str, Lab] = {}
     for lab in labs:
         if lab.manifest in changed:
-            selected.append(lab)
+            selected[lab.manifest] = lab
             continue
 
         if any(
@@ -123,9 +126,13 @@ def select_labs(labs: list[Lab], changed_files: list[str]) -> list[Lab]:
             for changed_path in changed_files
             for dependency_root in lab.dependency_roots
         ):
-            selected.append(lab)
+            selected[lab.manifest] = lab
 
-    return selected
+    if changed & SMOKE_INPUTS and labs:
+        smoke_lab = labs[0]
+        selected.setdefault(smoke_lab.manifest, smoke_lab)
+
+    return [selected[key] for key in sorted(selected)]
 
 
 def matrix_json(labs: list[Lab]) -> str:
