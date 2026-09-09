@@ -97,6 +97,9 @@ jobs:
           - name: network-mtls-wrong-ca-client-certificate-python-linux
             manifest: experiments/network/tls-client-certificate-wrong-ca-python.yaml
             result: experiment.network.tls_client_certificate_wrong_ca.python_linux.json
+          - name: network-mtls-invalid-eku-client-certificate-python-linux
+            manifest: experiments/network/tls-client-certificate-invalid-eku-python.yaml
+            result: experiment.network.tls_client_certificate_invalid_eku.python_linux.json
 
     name: ${{ matrix.name }}
 
