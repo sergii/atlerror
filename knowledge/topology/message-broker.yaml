@@ -1,0 +1,7 @@
+id: system_entity.message_broker
+kind: system_entity
+title: Message broker
+summary: A queue or messaging system that stores or routes messages and may redeliver unacknowledged work according to its delivery semantics.
+entity_type: queue
+explanation:
+  short: The broker owns message delivery state such as pending, acknowledgement, and redelivery metadata.
