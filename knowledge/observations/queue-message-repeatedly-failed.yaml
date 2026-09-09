@@ -1,0 +1,7 @@
+id: observation.queue.message_repeatedly_failed
+kind: observation
+title: Same message repeatedly fails processing
+summary: One stable message identity is delivered multiple times and each processing attempt fails with the same deterministic application-level error.
+explanation:
+  short: Correlates repeated delivery attempts with repeated failure for one message.
+  detailed: Strong evidence includes a stable broker or business message identity, increasing delivery-attempt metadata, and the same deterministic failure class across attempts. Repeated failures of unrelated messages can indicate a broader consumer or dependency problem instead of one poison message.
