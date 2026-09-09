@@ -55,6 +55,9 @@ jobs:
           - name: messaging-duplicate-delivery-redis-streams-python
             manifest: experiments/messaging/duplicate-delivery-redis-streams-python.yaml
             result: experiment.messaging.duplicate_delivery.redis_streams_python.json
+          - name: messaging-ack-before-durable-effect-redis-streams-python
+            manifest: experiments/messaging/ack-before-durable-effect-redis-streams-python.yaml
+            result: experiment.messaging.acknowledged_before_durable_effect.redis_streams_python.json
           - name: latency-database-python-postgres
             manifest: experiments/latency/database-query-delay-python-postgres.yaml
             result: experiment.latency.database.query_delay_python_postgres.json
