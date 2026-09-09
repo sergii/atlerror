@@ -1,0 +1,9 @@
+id: probe.network.measure_transport_latency
+kind: probe
+title: Measure network transport latency
+summary: Measure connection establishment and request exchange timing across a network boundary while separating target-side processing time when that evidence is available.
+produces:
+  - observation.network.transport_latency
+requires:
+  - capability.network.measure_latency
+risk: low
