@@ -5,3 +5,4 @@ when:
   operator: not_above_baseline
 effect:
   confidence: decrease
+explanation: If transport-boundary timing is not above its expected baseline, network transport latency is a weaker explanation and target processing, database waits, queueing, compute, or other latency mechanisms should remain candidates.
