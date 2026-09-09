@@ -1,0 +1,7 @@
+id: observation.queue.message_redelivered
+kind: observation
+title: Message redelivered
+summary: The same stable message identity is delivered to a consumer more than once.
+explanation:
+  short: Captures repeated delivery attempts for one logical message.
+  detailed: Redelivery evidence should preserve a stable message or event identity plus delivery-attempt or broker pending/claim metadata. Repeated handler invocation without stable message identity is not sufficient to prove broker redelivery.
