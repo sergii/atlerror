@@ -1,0 +1,7 @@
+id: rule.external_dependency.service_error.absent
+hypothesis: hypothesis.external_dependency.service_error
+when:
+  observation: observation.dependency.http_error_response
+  operator: absent
+effect:
+  confidence: decrease
