@@ -1,0 +1,7 @@
+id: observation.network.packet_loss
+kind: observation
+title: Network packet delivery below baseline
+summary: A controlled probe observes fewer successful packet deliveries than its expected baseline across the same network boundary.
+explanation:
+  short: The measured delivery ratio has fallen because packets or their expected replies are missing.
+  detailed: Packet loss is identified by comparing sent and successfully returned probe units across a stable target and path. Missing delivery is distinct from explicit transport reset or refusal signals. A receive deadline may be used by the probe to decide that an individual unit was not returned, but the diagnostic observation is the aggregate delivery deficit rather than the deadline itself. Reliable transports may require retransmission telemetry because they can mask loss from the application.
