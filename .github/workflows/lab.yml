@@ -49,6 +49,9 @@ jobs:
           - name: external-dependency-http-503-ruby
             manifest: experiments/external-dependency/http-503-ruby.yaml
             result: experiment.external_dependency.service_error.ruby_http.json
+          - name: external-dependency-http-429-rate-limit-ruby
+            manifest: experiments/external-dependency/http-429-rate-limit-ruby.yaml
+            result: experiment.external_dependency.rate_limiting.ruby_http.json
           - name: latency-database-python-postgres
             manifest: experiments/latency/database-query-delay-python-postgres.yaml
             result: experiment.latency.database.query_delay_python_postgres.json

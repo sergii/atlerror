@@ -1,0 +1,32 @@
+id: hypothesis.external_dependency.rate_limiting
+kind: hypothesis
+title: External dependency rate limiting
+summary: A reachable downstream dependency is intentionally rejecting otherwise valid requests because the caller exceeded an enforced request-rate, quota, or concurrency policy.
+predictions:
+  - observation: observation.dependency.http_rate_limit_response
+    expected: present
+    strength: strong
+falsifiers:
+  - observation: observation.dependency.http_rate_limit_response
+    condition: absent
+    effect: decrease
+tested_by:
+  - probe.http.inspect_dependency_rate_limit
+related_to:
+  - symptom.external_dependency.request_failed
+  - symptom.external_dependency.rate_limited
+  - hypothesis.external_dependency.service_error
+  - system_entity.application_service
+  - system_entity.external_dependency
+  - boundary.application.external_dependency
+common_misconceptions:
+  - Rate limiting means the dependency is unhealthy; a healthy service can intentionally reject requests after a policy threshold is exceeded.
+  - A 429 is equivalent to a 503; they are distinct application-protocol outcomes with different causal implications and retry guidance.
+  - Increasing retry frequency is a safe response to throttling; retries can amplify rate-limit pressure unless bounded by backoff, Retry-After, idempotency, and retry budgets.
+search_terms:
+  - dependency rate limiting
+  - HTTP 429
+  - too many requests
+  - Retry-After
+  - quota exceeded
+  - throttling

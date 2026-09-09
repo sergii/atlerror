@@ -140,7 +140,13 @@ entries:
     kind: symptom
     title: External dependency request failed
     canonical_id: symptom.external_dependency.request_failed
-    routes_to: [E2.1]
+    routes_to: [E2.1, E2.2]
+
+  - code: S10
+    kind: symptom
+    title: External dependency rate limited
+    canonical_id: symptom.external_dependency.rate_limited
+    routes_to: [E2.2]
 
   - code: R1.1
     kind: mechanism
@@ -463,6 +469,18 @@ entries:
     experiments:
       - code: E2.1-L1
         id: experiment.external_dependency.service_error.ruby_http
+
+  - code: E2.2
+    kind: mechanism
+    title: External dependency rate limiting / HTTP 429
+    canonical_id: hypothesis.external_dependency.rate_limiting
+    symptoms: [S9, S10]
+    coverage: empirical
+    claims:
+      - claim.external_dependency.rate_limiting.http_429_after_threshold
+    experiments:
+      - code: E2.2-L1
+        id: experiment.external_dependency.rate_limiting.ruby_http
 
 planned_examples:
   - code: N1.1
