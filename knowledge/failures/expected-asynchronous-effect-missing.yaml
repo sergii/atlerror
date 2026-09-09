@@ -1,0 +1,17 @@
+id: symptom.messaging.expected_effect_missing
+kind: symptom
+title: Expected asynchronous effect missing
+summary: A message-driven workflow was expected to produce a durable business effect, but that effect is absent after the message was consumed or acknowledged.
+explanation:
+  short: The asynchronous work appears consumed, but its expected durable result is missing.
+  detailed: This symptom is broader than broker message deletion. A broker may still retain the payload while the consumer group has already acknowledged it and therefore will not redeliver it. Diagnosis must inspect acknowledgement state, delivery history, and the durable business effect separately.
+may_indicate:
+  - hypothesis.messaging.acknowledged_before_durable_effect
+common_misconceptions:
+  - A missing asynchronous effect proves the broker lost or deleted the message; the consumer may have acknowledged work before making the effect durable.
+  - An acknowledged message proves the business transaction completed; acknowledgement and business durability are separate state transitions unless explicitly coupled.
+search_terms:
+  - missing async effect
+  - acknowledged message lost
+  - ack before commit
+  - consumer processed but state missing
