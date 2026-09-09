@@ -19,6 +19,9 @@ jobs:
         run: |
           from pathlib import Path
 
+          def lines(*items):
+              return "\n".join(items) + "\n"
+
           def replace_once(path, old, new):
               p = Path(path)
               text = p.read_text()
@@ -28,112 +31,112 @@ jobs:
                   raise SystemExit(f"anchor not found in {path}")
               p.write_text(text.replace(old, new, 1))
 
-          replace_once(
-              "vocabulary/diagnostic-catalog.yaml",
-              """  - code: S11
-    kind: symptom
-    title: Duplicate message delivery observed
-    canonical_id: symptom.messaging.duplicate_delivery_observed
-    routes_to: [Q2.1]
-
-  - code: R1.1
-""",
-              """  - code: S11
-    kind: symptom
-    title: Duplicate message delivery observed
-    canonical_id: symptom.messaging.duplicate_delivery_observed
-    routes_to: [Q2.1]
-
-  - code: S12
-    kind: symptom
-    title: Expected asynchronous effect missing
-    canonical_id: symptom.messaging.expected_effect_missing
-    routes_to: [Q2.2]
-
-  - code: R1.1
-""",
+          s11 = lines(
+              "  - code: S11",
+              "    kind: symptom",
+              "    title: Duplicate message delivery observed",
+              "    canonical_id: symptom.messaging.duplicate_delivery_observed",
+              "    routes_to: [Q2.1]",
+              "",
+              "  - code: R1.1",
           )
-
-          replace_once(
-              "vocabulary/diagnostic-catalog.yaml",
-              """  - code: Q2.1
-    kind: mechanism
-    title: Duplicate message delivery / redelivery
-    canonical_id: hypothesis.messaging.duplicate_delivery
-    symptoms: [S11]
-    coverage: empirical
-    claims:
-      - claim.messaging.duplicate_delivery.unacked_message_is_redelivered
-    experiments:
-      - code: Q2.1-L1
-        id: experiment.messaging.duplicate_delivery.redis_streams_python
-
-  - code: E1.1
-""",
-              """  - code: Q2.1
-    kind: mechanism
-    title: Duplicate message delivery / redelivery
-    canonical_id: hypothesis.messaging.duplicate_delivery
-    symptoms: [S11]
-    coverage: empirical
-    claims:
-      - claim.messaging.duplicate_delivery.unacked_message_is_redelivered
-    experiments:
-      - code: Q2.1-L1
-        id: experiment.messaging.duplicate_delivery.redis_streams_python
-
-  - code: Q2.2
-    kind: mechanism
-    title: Acknowledged before durable effect / effective message loss
-    canonical_id: hypothesis.messaging.acknowledged_before_durable_effect
-    symptoms: [S12]
-    coverage: empirical
-    claims:
-      - claim.messaging.acknowledged_before_durable_effect.ack_suppresses_redelivery_before_effect
-    experiments:
-      - code: Q2.2-L1
-        id: experiment.messaging.acknowledged_before_durable_effect.redis_streams_python
-
-  - code: E1.1
-""",
+          s12 = lines(
+              "  - code: S11",
+              "    kind: symptom",
+              "    title: Duplicate message delivery observed",
+              "    canonical_id: symptom.messaging.duplicate_delivery_observed",
+              "    routes_to: [Q2.1]",
+              "",
+              "  - code: S12",
+              "    kind: symptom",
+              "    title: Expected asynchronous effect missing",
+              "    canonical_id: symptom.messaging.expected_effect_missing",
+              "    routes_to: [Q2.2]",
+              "",
+              "  - code: R1.1",
           )
+          replace_once("vocabulary/diagnostic-catalog.yaml", s11, s12)
 
-          replace_once(
-              "vocabulary/diagnostic-profiles.yaml",
-              """  - code: Q2.1
-    facets: {domains: [queue_messaging, application], concerns: [delivery, reliability, correctness], resources: [queue], layers: [messaging, application]}
-    coverage: {semantic: complete, predictions: complete, falsification: complete, probes: complete, rules: complete, human_explanation: complete, agent_action: partial}
-    empirical: {synthetic_labs: 1, runtimes: [python], production_evidence: none}
-  - code: E1.1
-""",
-              """  - code: Q2.1
-    facets: {domains: [queue_messaging, application], concerns: [delivery, reliability, correctness], resources: [queue], layers: [messaging, application]}
-    coverage: {semantic: complete, predictions: complete, falsification: complete, probes: complete, rules: complete, human_explanation: complete, agent_action: partial}
-    empirical: {synthetic_labs: 1, runtimes: [python], production_evidence: none}
-  - code: Q2.2
-    facets: {domains: [queue_messaging, application], concerns: [delivery, reliability, correctness], resources: [queue], layers: [messaging, application]}
-    coverage: {semantic: complete, predictions: complete, falsification: complete, probes: complete, rules: complete, human_explanation: complete, agent_action: partial}
-    empirical: {synthetic_labs: 1, runtimes: [python], production_evidence: none}
-  - code: E1.1
-""",
+          q21 = lines(
+              "  - code: Q2.1",
+              "    kind: mechanism",
+              "    title: Duplicate message delivery / redelivery",
+              "    canonical_id: hypothesis.messaging.duplicate_delivery",
+              "    symptoms: [S11]",
+              "    coverage: empirical",
+              "    claims:",
+              "      - claim.messaging.duplicate_delivery.unacked_message_is_redelivered",
+              "    experiments:",
+              "      - code: Q2.1-L1",
+              "        id: experiment.messaging.duplicate_delivery.redis_streams_python",
+              "",
+              "  - code: E1.1",
           )
+          q22 = lines(
+              "  - code: Q2.1",
+              "    kind: mechanism",
+              "    title: Duplicate message delivery / redelivery",
+              "    canonical_id: hypothesis.messaging.duplicate_delivery",
+              "    symptoms: [S11]",
+              "    coverage: empirical",
+              "    claims:",
+              "      - claim.messaging.duplicate_delivery.unacked_message_is_redelivered",
+              "    experiments:",
+              "      - code: Q2.1-L1",
+              "        id: experiment.messaging.duplicate_delivery.redis_streams_python",
+              "",
+              "  - code: Q2.2",
+              "    kind: mechanism",
+              "    title: Acknowledged before durable effect / effective message loss",
+              "    canonical_id: hypothesis.messaging.acknowledged_before_durable_effect",
+              "    symptoms: [S12]",
+              "    coverage: empirical",
+              "    claims:",
+              "      - claim.messaging.acknowledged_before_durable_effect.ack_suppresses_redelivery_before_effect",
+              "    experiments:",
+              "      - code: Q2.2-L1",
+              "        id: experiment.messaging.acknowledged_before_durable_effect.redis_streams_python",
+              "",
+              "  - code: E1.1",
+          )
+          replace_once("vocabulary/diagnostic-catalog.yaml", q21, q22)
 
-          replace_once(
-              ".github/workflows/lab.yml",
-              """          - name: messaging-duplicate-delivery-redis-streams-python
-            manifest: experiments/messaging/duplicate-delivery-redis-streams-python.yaml
-            result: experiment.messaging.duplicate_delivery.redis_streams_python.json
-          - name: latency-database-python-postgres
-""",
-              """          - name: messaging-duplicate-delivery-redis-streams-python
-            manifest: experiments/messaging/duplicate-delivery-redis-streams-python.yaml
-            result: experiment.messaging.duplicate_delivery.redis_streams_python.json
-          - name: messaging-ack-before-durable-effect-redis-streams-python
-            manifest: experiments/messaging/ack-before-durable-effect-redis-streams-python.yaml
-            result: experiment.messaging.acknowledged_before_durable_effect.redis_streams_python.json
-          - name: latency-database-python-postgres
-""",
+          p21 = lines(
+              "  - code: Q2.1",
+              "    facets: {domains: [queue_messaging, application], concerns: [delivery, reliability, correctness], resources: [queue], layers: [messaging, application]}",
+              "    coverage: {semantic: complete, predictions: complete, falsification: complete, probes: complete, rules: complete, human_explanation: complete, agent_action: partial}",
+              "    empirical: {synthetic_labs: 1, runtimes: [python], production_evidence: none}",
+              "  - code: E1.1",
           )
+          p22 = lines(
+              "  - code: Q2.1",
+              "    facets: {domains: [queue_messaging, application], concerns: [delivery, reliability, correctness], resources: [queue], layers: [messaging, application]}",
+              "    coverage: {semantic: complete, predictions: complete, falsification: complete, probes: complete, rules: complete, human_explanation: complete, agent_action: partial}",
+              "    empirical: {synthetic_labs: 1, runtimes: [python], production_evidence: none}",
+              "  - code: Q2.2",
+              "    facets: {domains: [queue_messaging, application], concerns: [delivery, reliability, correctness], resources: [queue], layers: [messaging, application]}",
+              "    coverage: {semantic: complete, predictions: complete, falsification: complete, probes: complete, rules: complete, human_explanation: complete, agent_action: partial}",
+              "    empirical: {synthetic_labs: 1, runtimes: [python], production_evidence: none}",
+              "  - code: E1.1",
+          )
+          replace_once("vocabulary/diagnostic-profiles.yaml", p21, p22)
+
+          j21 = lines(
+              "          - name: messaging-duplicate-delivery-redis-streams-python",
+              "            manifest: experiments/messaging/duplicate-delivery-redis-streams-python.yaml",
+              "            result: experiment.messaging.duplicate_delivery.redis_streams_python.json",
+              "          - name: latency-database-python-postgres",
+          )
+          j22 = lines(
+              "          - name: messaging-duplicate-delivery-redis-streams-python",
+              "            manifest: experiments/messaging/duplicate-delivery-redis-streams-python.yaml",
+              "            result: experiment.messaging.duplicate_delivery.redis_streams_python.json",
+              "          - name: messaging-ack-before-durable-effect-redis-streams-python",
+              "            manifest: experiments/messaging/ack-before-durable-effect-redis-streams-python.yaml",
+              "            result: experiment.messaging.acknowledged_before_durable_effect.redis_streams_python.json",
+              "          - name: latency-database-python-postgres",
+          )
+          replace_once(".github/workflows/lab.yml", j21, j22)
       - name: Commit projection edits
         run: |
           git config user.name "atlerror-ci"
