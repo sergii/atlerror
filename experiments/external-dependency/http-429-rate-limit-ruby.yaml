@@ -1,0 +1,16 @@
+id: experiment.external_dependency.rate_limiting.ruby_http
+kind: experiment
+title: Reachable dependency enforces request limit with HTTP 429
+claims:
+  - claim.external_dependency.rate_limiting.http_429_after_threshold
+description: Run a reachable downstream HTTP dependency with a deterministic two-request allowance, exceed that allowance to produce HTTP 429 with retry metadata, then reset the policy state and verify successful requests resume while transport and health remain available.
+runner:
+  type: docker_compose
+  compose_file: lab/external-dependency-rate-limit/compose.yml
+  setup_service: app
+  evidence_service: probe
+expected_result: supports
+limitations:
+  - The dependency and upstream application are synthetic Ruby processes on one Docker network.
+  - The rate-limit window is reset through a control endpoint for deterministic testing rather than wall-clock expiry.
+  - The experiment validates HTTP throttling semantics, not provider-specific quota algorithms, distributed counters, or the correctness of a production retry strategy.
