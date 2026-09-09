@@ -104,7 +104,7 @@ entries:
     kind: symptom
     title: High latency
     canonical_id: symptom.latency.high
-    routes_to: [E1.1, D1.1, D2.1, D3.1, R1.5, Q1.1]
+    routes_to: [N1.1, E1.1, D1.1, D2.1, D3.1, R1.5, Q1.1]
 
   - code: S4
     kind: symptom
@@ -349,6 +349,18 @@ entries:
       - code: D3.2-L1
         id: experiment.database.connection_admission_exhaustion.python_postgres
 
+  - code: N1.1
+    kind: mechanism
+    title: Network transport latency
+    canonical_id: hypothesis.network.transport_latency
+    symptoms: [S3]
+    coverage: empirical
+    claims:
+      - claim.network.transport_latency.netem_delay_increases_transport_timing
+    experiments:
+      - code: N1.1-L1
+        id: experiment.network.transport_latency.netem_python_linux
+
   - code: N2.1
     kind: mechanism
     title: TCP connection reset
@@ -555,7 +567,5 @@ entries:
         id: experiment.external_dependency.rate_limiting.ruby_http
 
 planned_examples:
-  - code: N1.1
-    title: Network latency
   - code: N1.2
     title: Packet loss
