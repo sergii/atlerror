@@ -1,0 +1,29 @@
+id: hypothesis.external_dependency.service_error
+kind: hypothesis
+title: External dependency service error
+summary: A reachable downstream dependency completes the application-protocol exchange but returns an explicit service-level failure response instead of a successful result.
+predictions:
+  - observation: observation.dependency.http_error_response
+    expected: present
+    strength: strong
+falsifiers:
+  - observation: observation.dependency.http_error_response
+    condition: absent
+    effect: decrease
+tested_by:
+  - probe.http.inspect_dependency_response
+related_to:
+  - symptom.external_dependency.request_failed
+  - system_entity.application_service
+  - system_entity.external_dependency
+  - boundary.application.external_dependency
+  - hypothesis.latency.external_dependency
+common_misconceptions:
+  - An HTTP 5xx dependency response is equivalent to DNS, TCP, or TLS failure; it occurs after those lower-layer prerequisites have succeeded far enough for an HTTP response to arrive.
+  - A reachable dependency is necessarily healthy; reachability and successful service execution are different properties.
+  - Every dependency failure should be retried automatically; retry policy depends on operation semantics, status, idempotency, and provider guidance.
+search_terms:
+  - external dependency service error
+  - downstream HTTP 503
+  - dependency 5xx
+  - service unavailable downstream
