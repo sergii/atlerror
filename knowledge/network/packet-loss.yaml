@@ -6,12 +6,16 @@ predictions:
   - observation: observation.network.packet_loss
     expected: above_baseline
     strength: strong
+  - observation: observation.network.tcp_retransmissions
+    expected: above_baseline_when_tcp_recovers_missing_delivery
+    strength: strong
 falsifiers:
   - observation: observation.network.packet_loss
     condition: not_above_baseline
     effect: decrease
 tested_by:
   - probe.network.measure_packet_delivery
+  - probe.network.inspect_tcp_retransmissions
 related_to:
   - symptom.network.packet_loss_observed
   - hypothesis.network.transport_latency

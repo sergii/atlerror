@@ -91,6 +91,9 @@ jobs:
           - name: network-packet-loss-netem-python-linux
             manifest: experiments/network/packet-loss-netem-python.yaml
             result: experiment.network.packet_loss.netem_python_linux.json
+          - name: network-packet-loss-tcp-retransmissions-python-linux
+            manifest: experiments/network/packet-loss-tcp-retransmissions-python.yaml
+            result: experiment.network.packet_loss.tcp_retransmissions_python_linux.json
           - name: network-connection-reset-python-linux
             manifest: experiments/network/tcp-connection-reset-python.yaml
             result: experiment.network.connection_reset.python_linux.json

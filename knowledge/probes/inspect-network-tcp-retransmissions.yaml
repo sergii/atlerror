@@ -1,0 +1,9 @@
+id: probe.network.inspect_tcp_retransmissions
+kind: probe
+title: Inspect TCP retransmissions
+summary: Read transport-level TCP retransmission counters or equivalent connection telemetry and compare them with an appropriate baseline around a controlled workload.
+produces:
+  - observation.network.tcp_retransmissions
+requires:
+  - capability.network.inspect_tcp_retransmissions
+risk: low

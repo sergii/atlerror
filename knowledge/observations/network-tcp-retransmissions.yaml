@@ -1,0 +1,7 @@
+id: observation.network.tcp_retransmissions
+kind: observation
+title: TCP retransmissions above baseline
+summary: The operating system reports more TCP segment retransmissions than expected for the same transport path and workload.
+explanation:
+  short: TCP had to resend data because previously transmitted segments were not acknowledged in time.
+  detailed: TCP retransmission is recovery behavior, not packet loss itself. It is supporting evidence that reliable transport encountered missing or excessively delayed delivery. Retransmission can preserve application-level success while increasing completion time, which is why a successful request does not rule out packet loss. Retransmission counters should be interpreted together with packet-drop telemetry, path measurements, and timeout or reset outcomes.

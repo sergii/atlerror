@@ -1,0 +1,27 @@
+id: claim.network.packet_loss.partial_loss_causes_tcp_retransmissions
+kind: claim
+title: Partial Linux packet loss causes TCP retransmissions while the transfer still succeeds
+statement: When a healthy TCP connection is established before a controlled partial Linux netem egress-loss intervention, the transfer can still complete successfully while TCP retransmission counters and qdisc drop counters increase and transfer completion time rises relative to baseline.
+hypothesis: hypothesis.network.packet_loss
+predictions:
+  - observation: observation.network.packet_loss
+    expected: qdisc_reports_partial_packet_drop_during_transfer
+    strength: strong
+  - observation: observation.network.tcp_retransmissions
+    expected: retransmission_counter_increases_during_partial_loss
+    strength: strong
+  - observation: observation.network.transport_latency
+    expected: transfer_completion_time_increases_while_connection_remains_established
+    strength: strong
+system_entities:
+  - system_entity.application_service
+  - system_entity.external_dependency
+boundaries:
+  - boundary.application.external_dependency
+scope:
+  runtime: python
+  os: linux
+limitations:
+  - Uses synthetic Linux netem loss inside Docker rather than a physical production network path.
+  - The exact number of dropped and retransmitted segments can vary because partial netem loss is probabilistic.
+  - Retransmission is supporting evidence for missing or excessively delayed delivery and is not by itself proof of the physical root cause of loss.

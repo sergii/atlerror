@@ -1,0 +1,16 @@
+id: experiment.network.packet_loss.tcp_retransmissions_python_linux
+kind: experiment
+title: TCP recovery under controlled partial Linux packet loss
+claims:
+  - claim.network.packet_loss.partial_loss_causes_tcp_retransmissions
+description: Establish a healthy TCP connection before intervention, transfer a fixed payload at baseline, then apply controlled partial Linux netem egress loss only after the intervention connection is already established. Verify that the payload still arrives, qdisc drop counters increase, TCP retransmission counters rise, and completion time increases. Remove the qdisc and verify a successful recovery transfer.
+runner:
+  type: docker_compose
+  compose_file: lab/network-packet-loss-tcp-retransmissions/compose.yml
+  setup_service: server
+  evidence_service: probe
+expected_result: supports
+limitations:
+  - Uses synthetic partial Linux netem loss in Docker rather than a physical production path.
+  - Partial loss is probabilistic, so exact drop and retransmission counts are not expected to be identical across runs.
+  - The connection is deliberately established before intervention to separate packet-loss recovery from TCP connection-establishment timeout.
