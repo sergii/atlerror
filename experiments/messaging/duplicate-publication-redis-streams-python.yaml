@@ -1,0 +1,16 @@
+id: experiment.messaging.duplicate_publication.redis_streams_python
+kind: experiment
+title: Redis Streams receives two distinct messages for one business event
+claims:
+  - claim.messaging.duplicate_publication.distinct_messages_same_event_can_duplicate_effect
+description: Publish one business event once as a baseline, then publish the same stable business event identity twice as two distinct Redis Stream entries and show that each entry is delivered once while a naive consumer duplicates the side effect. Repeat the duplicate publication pattern with an event-identity idempotency guard so two distinct broker messages produce one business effect.
+runner:
+  type: docker_compose
+  compose_file: lab/messaging-duplicate-publication/compose.yml
+  setup_service: redis
+  evidence_service: probe
+expected_result: supports
+limitations:
+  - The broker is Redis Streams in a synthetic Docker environment; other brokers assign message identities and expose delivery metadata differently.
+  - The experiment directly creates two publications and does not reproduce a particular producer retry protocol, acknowledgement loss, outbox replay, or upstream duplication mechanism.
+  - Recovery uses a Redis-backed atomic idempotency guard colocated with the synthetic side effect; production systems may require database uniqueness, transactional inboxes, or provider-specific idempotency contracts.
