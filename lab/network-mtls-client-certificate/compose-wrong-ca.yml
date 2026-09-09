@@ -1,0 +1,19 @@
+services:
+  tls:
+    build: .
+    command: ["python", "/lab/server.py"]
+    healthcheck:
+      test: ["CMD-SHELL", "python -c 'import socket; s=socket.create_connection((\"127.0.0.1\",9443),0.5); s.close()' || exit 1"]
+      interval: 1s
+      timeout: 1s
+      retries: 20
+    networks: [labnet]
+  probe:
+    build: .
+    command: ["python", "/lab/probe-wrong-ca.py"]
+    depends_on:
+      tls:
+        condition: service_healthy
+    networks: [labnet]
+networks:
+  labnet: {}
