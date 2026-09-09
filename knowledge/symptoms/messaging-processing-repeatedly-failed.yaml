@@ -1,0 +1,15 @@
+id: symptom.messaging.processing_repeatedly_failed
+kind: symptom
+title: Message processing repeatedly failed
+summary: The same stable message identity fails processing across multiple delivery attempts instead of completing successfully.
+may_indicate:
+  - hypothesis.messaging.poison_message
+explanation:
+  short: Repeated failures for one message can indicate an input that the consumer cannot process successfully.
+  detailed: Repeated processing failure should be correlated by stable message identity and delivery history. A single failure is not enough to establish a poison-message pattern, and repeated failures across different messages can instead indicate a broader consumer or dependency outage.
+search_terms:
+  - poison message
+  - repeated message failure
+  - retry exhaustion
+  - dead letter
+  - dlq
