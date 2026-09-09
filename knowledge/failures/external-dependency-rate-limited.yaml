@@ -1,0 +1,20 @@
+id: symptom.external_dependency.rate_limited
+kind: symptom
+title: External dependency rate limited
+summary: A reachable downstream dependency rejects a request because the caller exceeded a quota, request-rate, or concurrency policy rather than because the service or transport is unavailable.
+explanation:
+  short: The dependency completed the HTTP exchange but rejected the request with explicit throttling evidence such as HTTP 429.
+  detailed: Rate limiting is a policy or capacity-control outcome, not the same as an HTTP 5xx service error, DNS failure, connection refusal, TLS failure, or timeout. Inspect status and rate-limit metadata such as Retry-After and provider-specific quota headers before choosing backoff or retry behavior.
+may_indicate:
+  - hypothesis.external_dependency.rate_limiting
+common_misconceptions:
+  - HTTP 429 means the dependency is down; a rate-limited dependency may be healthy and intentionally enforcing policy.
+  - Every 429 should be retried immediately; clients should respect provider guidance, Retry-After, idempotency, and retry budgets.
+  - HTTP 429 and HTTP 503 are the same mechanism; both are completed HTTP failures but one expresses throttling policy while the other can express service failure or unavailability.
+search_terms:
+  - HTTP 429
+  - too many requests
+  - rate limited
+  - throttled dependency
+  - Retry-After
+  - quota exceeded
