@@ -157,14 +157,14 @@ evidence = {
         "tls_versions": ["TLSv1.3"],
         "trusted_server_and_client_ca_file": CA_FILE,
     },
-    "certificate_purpose": {
-        "baseline": valid_purpose,
-        "intervention": wrong_eku_purpose,
-    },
     "observations": {
         "baseline": baseline,
         "intervention": intervention,
         "recovery": recovery,
+        "certificate_purpose": {
+            "baseline": valid_purpose,
+            "intervention": wrong_eku_purpose,
+        },
     },
     "assertions": assertions,
     "result": result,
