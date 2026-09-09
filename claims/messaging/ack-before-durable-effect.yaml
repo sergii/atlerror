@@ -1,0 +1,21 @@
+id: claim.messaging.acknowledged_before_durable_effect.ack_suppresses_redelivery_before_effect
+kind: claim
+title: Acknowledging before durable effect can suppress redelivery and lose the effect
+statement: In a consumer group, if a delivery is durably acknowledged before its required business effect becomes durable, the broker can remove that delivery from pending or redelivery eligibility while the effect is still absent. If execution stops in that window, the expected effect can be effectively lost. Making the effect durable with an idempotency guard before acknowledgement allows a later redelivery to recover safely without duplicating the effect.
+hypothesis: hypothesis.messaging.acknowledged_before_durable_effect
+predictions:
+  - observation: observation.queue.acknowledged_without_durable_effect
+    expected: acknowledged_and_not_redeliverable_while_effect_absent
+    strength: strong
+  - observation: observation.application.expected_side_effect_missing
+    expected: present_after_ack_first_failure_window
+    strength: strong
+system_entities:
+  - system_entity.message_broker
+  - system_entity.message_consumer
+boundaries:
+  - boundary.message_broker.consumer
+limitations:
+  - The claim describes effective loss from the consumer group's perspective and does not require the broker to physically delete the message payload.
+  - Broker acknowledgement, visibility, offset, and redelivery semantics differ across Redis Streams, Kafka, NATS JetStream, SQS, RabbitMQ, and other systems.
+  - Making the effect durable before ACK can reintroduce duplicate-delivery exposure; idempotency or transactional inbox semantics are needed when exactly-once business effects matter.
