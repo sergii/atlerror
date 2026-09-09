@@ -1,0 +1,31 @@
+id: hypothesis.messaging.duplicate_delivery
+kind: hypothesis
+title: Duplicate message delivery
+summary: A broker redelivers the same logical message because the prior delivery was not durably acknowledged, so one message identity reaches a consumer more than once.
+predictions:
+  - observation: observation.queue.message_redelivered
+    expected: same_message_identity_delivered_more_than_once
+    strength: strong
+falsifiers:
+  - observation: observation.queue.message_redelivered
+    condition: absent
+    effect: decrease
+tested_by:
+  - probe.queue.inspect_delivery_history
+related_to:
+  - symptom.messaging.duplicate_delivery_observed
+  - observation.application.duplicate_side_effect
+  - system_entity.message_broker
+  - system_entity.message_consumer
+  - boundary.message_broker.consumer
+common_misconceptions:
+  - Duplicate delivery guarantees duplicate business effects; idempotent consumers can receive the same message multiple times while applying the effect once.
+  - At-least-once delivery means every message is normally duplicated; it means the system may redeliver when acknowledgement state is uncertain or absent.
+  - Two messages with different stable identities prove broker redelivery; they may instead be duplicate production by the publisher.
+search_terms:
+  - duplicate delivery
+  - message redelivery
+  - at least once
+  - unacked message
+  - pending message claim
+  - idempotent consumer
