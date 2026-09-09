@@ -160,6 +160,12 @@ entries:
     canonical_id: symptom.messaging.expected_effect_missing
     routes_to: [Q2.2]
 
+  - code: S13
+    kind: symptom
+    title: Duplicate business effect observed
+    canonical_id: symptom.messaging.duplicate_business_effect_observed
+    routes_to: [Q2.1, Q2.3]
+
   - code: R1.1
     kind: mechanism
     title: Traffic-driven CPU load
@@ -462,7 +468,7 @@ entries:
     kind: mechanism
     title: Duplicate message delivery / redelivery
     canonical_id: hypothesis.messaging.duplicate_delivery
-    symptoms: [S11]
+    symptoms: [S11, S13]
     coverage: empirical
     claims:
       - claim.messaging.duplicate_delivery.unacked_message_is_redelivered
@@ -481,6 +487,18 @@ entries:
     experiments:
       - code: Q2.2-L1
         id: experiment.messaging.acknowledged_before_durable_effect.redis_streams_python
+
+  - code: Q2.3
+    kind: mechanism
+    title: Duplicate message publication
+    canonical_id: hypothesis.messaging.duplicate_publication
+    symptoms: [S13]
+    coverage: empirical
+    claims:
+      - claim.messaging.duplicate_publication.distinct_messages_same_event_can_duplicate_effect
+    experiments:
+      - code: Q2.3-L1
+        id: experiment.messaging.duplicate_publication.redis_streams_python
 
   - code: E1.1
     kind: mechanism
