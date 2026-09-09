@@ -5,130 +5,70 @@ on:
     branches: [main]
     paths:
       - "lab/**"
-      - "claims/**"
       - "experiments/**"
-      - "schema/**"
+      - "schema/experiment.schema.json"
+      - "schema/empirical-evidence.schema.json"
       - "scripts/run_lab.py"
-      - "knowledge/**"
+      - "scripts/select_labs.py"
       - ".github/workflows/lab.yml"
   pull_request:
     paths:
       - "lab/**"
-      - "claims/**"
       - "experiments/**"
-      - "schema/**"
+      - "schema/experiment.schema.json"
+      - "schema/empirical-evidence.schema.json"
       - "scripts/run_lab.py"
-      - "knowledge/**"
+      - "scripts/select_labs.py"
       - ".github/workflows/lab.yml"
 
+concurrency:
+  group: empirical-labs-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
+  select:
+    name: Select changed labs
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.select.outputs.matrix }}
+      has_labs: ${{ steps.select.outputs.has_labs }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Install selector dependencies
+        run: python -m pip install --disable-pip-version-check PyYAML
+      - name: Select affected empirical labs
+        id: select
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          matrix="$(python scripts/select_labs.py --base "$BASE_SHA" --head "$HEAD_SHA")"
+          echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
+
+          if [ "$matrix" = '{"include":[]}' ]; then
+            echo "has_labs=false" >> "$GITHUB_OUTPUT"
+            echo "No empirical labs are affected by this change." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "has_labs=true" >> "$GITHUB_OUTPUT"
+            echo "Running only empirical labs affected by this change." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
   experiment:
+    name: ${{ matrix.name }}
+    needs: select
+    if: needs.select.outputs.has_labs == 'true'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
-      matrix:
-        include:
-          - name: memory-retention-ruby
-            manifest: experiments/memory/retention-ruby.yaml
-            result: experiment.memory.retention.ruby.json
-          - name: cpu-busy-loop-ruby
-            manifest: experiments/cpu/busy-loop-ruby.yaml
-            result: experiment.cpu.busy_loop.ruby.json
-          - name: traffic-increase-ruby-http
-            manifest: experiments/cpu/traffic-increase-ruby-http.yaml
-            result: experiment.traffic.increase.ruby_http.json
-          - name: gc-pressure-ruby
-            manifest: experiments/cpu/gc-pressure-ruby.yaml
-            result: experiment.gc.pressure.ruby.json
-          - name: kernel-work-ruby
-            manifest: experiments/cpu/kernel-work-ruby.yaml
-            result: experiment.kernel.work.ruby.json
-          - name: latency-external-dependency-ruby-http
-            manifest: experiments/latency/external-dependency-ruby-http.yaml
-            result: experiment.latency.external_dependency.ruby_http.json
-          - name: external-dependency-http-503-ruby
-            manifest: experiments/external-dependency/http-503-ruby.yaml
-            result: experiment.external_dependency.service_error.ruby_http.json
-          - name: external-dependency-http-429-rate-limit-ruby
-            manifest: experiments/external-dependency/http-429-rate-limit-ruby.yaml
-            result: experiment.external_dependency.rate_limiting.ruby_http.json
-          - name: messaging-duplicate-delivery-redis-streams-python
-            manifest: experiments/messaging/duplicate-delivery-redis-streams-python.yaml
-            result: experiment.messaging.duplicate_delivery.redis_streams_python.json
-          - name: messaging-ack-before-durable-effect-redis-streams-python
-            manifest: experiments/messaging/ack-before-durable-effect-redis-streams-python.yaml
-            result: experiment.messaging.acknowledged_before_durable_effect.redis_streams_python.json
-          - name: messaging-duplicate-publication-redis-streams-python
-            manifest: experiments/messaging/duplicate-publication-redis-streams-python.yaml
-            result: experiment.messaging.duplicate_publication.redis_streams_python.json
-          - name: messaging-poison-message-redis-streams-python
-            manifest: experiments/messaging/poison-message-redis-streams-python.yaml
-            result: experiment.messaging.poison_message.redis_streams_python.json
-          - name: latency-database-python-postgres
-            manifest: experiments/latency/database-query-delay-python-postgres.yaml
-            result: experiment.latency.database.query_delay_python_postgres.json
-          - name: latency-database-lock-wait-python-postgres
-            manifest: experiments/latency/database-lock-wait-python-postgres.yaml
-            result: experiment.latency.database.lock_wait_python_postgres.json
-          - name: database-deadlock-python-postgres
-            manifest: experiments/database/deadlock-python-postgres.yaml
-            result: experiment.database.deadlock.python_postgres.json
-          - name: database-serialization-failure-python-postgres
-            manifest: experiments/database/serialization-failure-python-postgres.yaml
-            result: experiment.database.serialization_failure.python_postgres.json
-          - name: database-write-skew-python-postgres
-            manifest: experiments/database/write-skew-python-postgres.yaml
-            result: experiment.database.isolation_anomaly.write_skew_python_postgres.json
-          - name: database-connection-pool-exhaustion-python-postgres
-            manifest: experiments/database/connection-pool-exhaustion-python-postgres.yaml
-            result: experiment.database.connection_pool_exhaustion.python_postgres.json
-          - name: database-connection-admission-exhaustion-python-postgres
-            manifest: experiments/database/connection-admission-exhaustion-python-postgres.yaml
-            result: experiment.database.connection_admission_exhaustion.python_postgres.json
-          - name: network-transport-latency-netem-python-linux
-            manifest: experiments/network/transport-latency-netem-python.yaml
-            result: experiment.network.transport_latency.netem_python_linux.json
-          - name: network-packet-loss-netem-python-linux
-            manifest: experiments/network/packet-loss-netem-python.yaml
-            result: experiment.network.packet_loss.netem_python_linux.json
-          - name: network-packet-loss-tcp-retransmissions-python-linux
-            manifest: experiments/network/packet-loss-tcp-retransmissions-python.yaml
-            result: experiment.network.packet_loss.tcp_retransmissions_python_linux.json
-          - name: network-connection-reset-python-linux
-            manifest: experiments/network/tcp-connection-reset-python.yaml
-            result: experiment.network.connection_reset.python_linux.json
-          - name: network-connection-refused-python-linux
-            manifest: experiments/network/tcp-connection-refused-python.yaml
-            result: experiment.network.connection_refused.python_linux.json
-          - name: network-connect-timeout-python-linux
-            manifest: experiments/network/tcp-connect-timeout-python.yaml
-            result: experiment.network.connection_timeout.python_linux.json
-          - name: network-dns-resolution-python-linux
-            manifest: experiments/network/dns-resolution-failure-python.yaml
-            result: experiment.network.dns_resolution_failure.python_linux.json
-          - name: network-dns-resolver-timeout-python-linux
-            manifest: experiments/network/dns-resolver-timeout-python.yaml
-            result: experiment.network.dns_resolver_timeout.python_linux.json
-          - name: network-tls-certificate-verification-python-linux
-            manifest: experiments/network/tls-certificate-verification-python.yaml
-            result: experiment.network.tls_certificate_verification.python_linux.json
-          - name: network-tls-protocol-negotiation-python-linux
-            manifest: experiments/network/tls-protocol-negotiation-python.yaml
-            result: experiment.network.tls_protocol_negotiation.python_linux.json
-          - name: network-tls-cipher-negotiation-python-linux
-            manifest: experiments/network/tls-cipher-negotiation-python.yaml
-            result: experiment.network.tls_cipher_negotiation.python_linux.json
-          - name: network-mtls-client-certificate-python-linux
-            manifest: experiments/network/tls-client-certificate-authentication-python.yaml
-            result: experiment.network.tls_client_certificate_authentication.python_linux.json
-          - name: network-mtls-wrong-ca-client-certificate-python-linux
-            manifest: experiments/network/tls-client-certificate-wrong-ca-python.yaml
-            result: experiment.network.tls_client_certificate_wrong_ca.python_linux.json
-          - name: network-mtls-invalid-eku-client-certificate-python-linux
-            manifest: experiments/network/tls-client-certificate-invalid-eku-python.yaml
-            result: experiment.network.tls_client_certificate_invalid_eku.python_linux.json
-
-    name: ${{ matrix.name }}
+      matrix: ${{ fromJSON(needs.select.outputs.matrix) }}
 
     steps:
       - name: Checkout
