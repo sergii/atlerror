@@ -120,31 +120,14 @@ jobs:
               "  - code: E1.1",
           )
           replace_once("vocabulary/diagnostic-profiles.yaml", p21, p22)
-
-          j21 = lines(
-              "          - name: messaging-duplicate-delivery-redis-streams-python",
-              "            manifest: experiments/messaging/duplicate-delivery-redis-streams-python.yaml",
-              "            result: experiment.messaging.duplicate_delivery.redis_streams_python.json",
-              "          - name: latency-database-python-postgres",
-          )
-          j22 = lines(
-              "          - name: messaging-duplicate-delivery-redis-streams-python",
-              "            manifest: experiments/messaging/duplicate-delivery-redis-streams-python.yaml",
-              "            result: experiment.messaging.duplicate_delivery.redis_streams_python.json",
-              "          - name: messaging-ack-before-durable-effect-redis-streams-python",
-              "            manifest: experiments/messaging/ack-before-durable-effect-redis-streams-python.yaml",
-              "            result: experiment.messaging.acknowledged_before_durable_effect.redis_streams_python.json",
-              "          - name: latency-database-python-postgres",
-          )
-          replace_once(".github/workflows/lab.yml", j21, j22)
       - name: Commit projection edits
         run: |
           git config user.name "atlerror-ci"
           git config user.email "atlerror-ci@users.noreply.github.com"
-          git add vocabulary/diagnostic-catalog.yaml vocabulary/diagnostic-profiles.yaml .github/workflows/lab.yml
+          git add vocabulary/diagnostic-catalog.yaml vocabulary/diagnostic-profiles.yaml
           if git diff --cached --quiet; then
             echo "No projection changes needed"
           else
-            git commit -m "Wire Q2.2 into catalog and empirical matrix"
+            git commit -m "Wire Q2.2 into catalog projections"
             git push
           fi
