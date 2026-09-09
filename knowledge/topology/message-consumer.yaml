@@ -1,0 +1,7 @@
+id: system_entity.message_consumer
+kind: system_entity
+title: Message consumer
+summary: A worker or service that receives messages from a broker, executes application handling, and acknowledges successful processing according to the broker contract.
+entity_type: worker
+explanation:
+  short: The consumer is where delivery attempts become handler invocations and business side effects.

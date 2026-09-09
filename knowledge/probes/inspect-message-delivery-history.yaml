@@ -1,0 +1,12 @@
+id: probe.queue.inspect_delivery_history
+kind: probe
+title: Inspect message delivery and acknowledgement history
+summary: Inspect broker and consumer evidence for stable message identity, delivery attempts, pending or claimed state, acknowledgements, and resulting business-effect count.
+produces:
+  - observation.queue.message_redelivered
+  - observation.application.duplicate_side_effect
+requires:
+  - capability.queue.inspect_delivery
+preferred_tools:
+  - tool.redis
+risk: read_only

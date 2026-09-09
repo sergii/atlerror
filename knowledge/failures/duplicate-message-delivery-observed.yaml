@@ -1,0 +1,17 @@
+id: symptom.messaging.duplicate_delivery_observed
+kind: symptom
+title: Duplicate message delivery observed
+summary: The same logical message identity is observed being delivered to consumers more than once.
+explanation:
+  short: A message was delivered again rather than only once.
+  detailed: Duplicate delivery is a delivery-semantics symptom. It should be separated from duplicate business effects because an idempotent consumer can safely receive the same message more than once while applying its side effect only once.
+may_indicate:
+  - hypothesis.messaging.duplicate_delivery
+common_misconceptions:
+  - Duplicate delivery necessarily means duplicate business state; idempotent handling can absorb redelivery without duplicating the effect.
+  - A broker redelivery is the same as an application producing two distinct messages; stable message identity is needed to distinguish them.
+search_terms:
+  - duplicate message delivery
+  - message redelivery
+  - at least once delivery
+  - consumer redelivery

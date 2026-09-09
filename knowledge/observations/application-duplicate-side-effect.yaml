@@ -1,0 +1,7 @@
+id: observation.application.duplicate_side_effect
+kind: observation
+title: Duplicate business side effect
+summary: The same logical event causes the protected business effect to be applied more than once.
+explanation:
+  short: Captures duplicated state change separately from duplicate message delivery.
+  detailed: A duplicate side effect can result from redelivery plus a non-idempotent handler, but it is not required by redelivery. Consumers with effective deduplication or idempotency can observe multiple deliveries while applying the business effect once.

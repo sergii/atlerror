@@ -49,3 +49,6 @@ capabilities:
   - id: capability.queue.inspect
     title: Inspect queue waits
     description: Measure queueing delay, backlog, or time spent waiting before work begins.
+  - id: capability.queue.inspect_delivery
+    title: Inspect message delivery and acknowledgement history
+    description: Read stable message identity, delivery attempts, pending or claimed state, acknowledgement metadata, consumer ownership, and related delivery evidence without mutating message state.

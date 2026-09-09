@@ -1,0 +1,7 @@
+id: boundary.message_broker.consumer
+kind: boundary
+title: Message broker to consumer delivery boundary
+summary: The messaging boundary across which a broker delivers or redelivers a logical message to a consumer and receives acknowledgement state.
+source: system_entity.message_broker
+target: system_entity.message_consumer
+protocol: message_delivery
