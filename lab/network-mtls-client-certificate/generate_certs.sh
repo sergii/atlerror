@@ -85,11 +85,38 @@ openssl x509 -req \
   -sha256 \
   -extfile /tmp/client.ext >/dev/null 2>&1
 
+# N3.6-L3 keeps the trusted issuer but makes the leaf certificate unsuitable for client authentication.
+# It is signed by the same trusted CA and has serverAuth instead of clientAuth in Extended Key Usage.
+openssl req -newkey rsa:2048 -nodes \
+  -keyout /certs/wrong-eku-client.key \
+  -out /certs/wrong-eku-client.csr \
+  -subj "/CN=atlerror-client" >/dev/null 2>&1
+
+cat > /tmp/wrong-eku-client.ext <<'EOF'
+basicConstraints=critical,CA:FALSE
+keyUsage=critical,digitalSignature,keyEncipherment
+extendedKeyUsage=serverAuth
+authorityKeyIdentifier=keyid,issuer
+subjectKeyIdentifier=hash
+EOF
+
+openssl x509 -req \
+  -in /certs/wrong-eku-client.csr \
+  -CA /certs/ca.crt \
+  -CAkey /certs/ca.key \
+  -CAcreateserial \
+  -out /certs/wrong-eku-client.crt \
+  -days 1 \
+  -sha256 \
+  -extfile /tmp/wrong-eku-client.ext >/dev/null 2>&1
+
 rm -f \
   /certs/server.csr \
   /certs/client.csr \
   /certs/wrong-ca-client.csr \
+  /certs/wrong-eku-client.csr \
   /certs/ca.srl \
   /certs/rogue-ca.srl \
   /tmp/server.ext \
-  /tmp/client.ext
+  /tmp/client.ext \
+  /tmp/wrong-eku-client.ext
