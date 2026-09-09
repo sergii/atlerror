@@ -1,0 +1,18 @@
+id: claim.external_dependency.rate_limiting.http_429_after_threshold
+kind: claim
+title: Dependency quota threshold produces explicit HTTP 429 throttling
+statement: When a reachable HTTP dependency enforces a request limit, requests within the configured allowance can succeed while a later request in the same policy window completes with HTTP 429 and retry or quota metadata; after the policy state resets, successful requests can resume.
+hypothesis: hypothesis.external_dependency.rate_limiting
+predictions:
+  - observation: observation.dependency.http_rate_limit_response
+    expected: present_after_limit_is_exceeded
+    strength: strong
+system_entities:
+  - system_entity.application_service
+  - system_entity.external_dependency
+boundaries:
+  - boundary.application.external_dependency
+limitations:
+  - HTTP 429 is conventional rate-limit evidence but providers can express quotas through other status codes or protocol-specific errors.
+  - Retry-After is useful evidence when present but is not guaranteed by every rate-limited service.
+  - This claim does not determine whether retrying is semantically safe for a particular operation.
