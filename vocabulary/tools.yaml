@@ -36,3 +36,7 @@ tools:
   - id: tool.openssl
     title: OpenSSL
     provides: [capability.network.inspect_tls_handshake]
+
+  - id: tool.redis
+    title: Redis
+    provides: [capability.queue.inspect, capability.queue.inspect_delivery]
