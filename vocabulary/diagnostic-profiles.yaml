@@ -144,6 +144,10 @@ profiles:
     facets: {domains: [queue_messaging, application], concerns: [delivery, reliability, correctness], resources: [queue], layers: [messaging, application]}
     coverage: {semantic: complete, predictions: complete, falsification: complete, probes: complete, rules: complete, human_explanation: complete, agent_action: partial}
     empirical: {synthetic_labs: 1, runtimes: [python], production_evidence: none}
+  - code: Q2.4
+    facets: {domains: [queue_messaging, application], concerns: [delivery, reliability, correctness, availability], resources: [queue], layers: [messaging, application]}
+    coverage: {semantic: complete, predictions: complete, falsification: complete, probes: complete, rules: complete, human_explanation: complete, agent_action: partial}
+    empirical: {synthetic_labs: 1, runtimes: [python], production_evidence: none}
   - code: E1.1
     facets: {domains: [external_dependency, network], concerns: [performance, availability], resources: [network], layers: [external_service, transport, application]}
     coverage: {semantic: complete, predictions: complete, falsification: complete, probes: complete, rules: complete, human_explanation: partial, agent_action: none}
