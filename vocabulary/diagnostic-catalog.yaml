@@ -172,6 +172,12 @@ entries:
     canonical_id: symptom.messaging.processing_repeatedly_failed
     routes_to: [Q2.4]
 
+  - code: S15
+    kind: symptom
+    title: Network packet loss observed
+    canonical_id: symptom.network.packet_loss_observed
+    routes_to: [N1.2]
+
   - code: R1.1
     kind: mechanism
     title: Traffic-driven CPU load
@@ -203,7 +209,7 @@ entries:
     symptoms: [S1]
     coverage: empirical
     claims:
-      - claim.gc.pressure.ruby_allocation_storm_raises_gc_work
+      - claim.gc_pressure.ruby_allocation_storm_raises_gc_work
     experiments:
       - code: R1.3-L1
         id: experiment.gc.pressure.ruby
@@ -360,6 +366,18 @@ entries:
     experiments:
       - code: N1.1-L1
         id: experiment.network.transport_latency.netem_python_linux
+
+  - code: N1.2
+    kind: mechanism
+    title: Network packet loss
+    canonical_id: hypothesis.network.packet_loss
+    symptoms: [S15]
+    coverage: empirical
+    claims:
+      - claim.network.packet_loss.netem_drop_reduces_delivery
+    experiments:
+      - code: N1.2-L1
+        id: experiment.network.packet_loss.netem_python_linux
 
   - code: N2.1
     kind: mechanism
@@ -566,6 +584,4 @@ entries:
       - code: E2.2-L1
         id: experiment.external_dependency.rate_limiting.ruby_http
 
-planned_examples:
-  - code: N1.2
-    title: Packet loss
+planned_examples: []
