@@ -16,6 +16,9 @@ capabilities:
   - id: capability.http.measure_latency
     title: Measure HTTP latency
     description: Measure end-to-end or downstream HTTP request duration.
+  - id: capability.http.inspect_response
+    title: Inspect HTTP response outcome
+    description: Perform or inspect an HTTP request and capture connection completion, response status, response metadata, and application-protocol error outcomes without conflating them with lower-layer transport failures.
   - id: capability.database.query_metrics
     title: Read database query latency
     description: Measure or retrieve database query timing and wait information.

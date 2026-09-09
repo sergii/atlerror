@@ -136,6 +136,12 @@ entries:
     canonical_id: symptom.network.tls_handshake_failed
     routes_to: [N3.3, N3.4, N3.5, N3.6]
 
+  - code: S9
+    kind: symptom
+    title: External dependency request failed
+    canonical_id: symptom.external_dependency.request_failed
+    routes_to: [E2.1]
+
   - code: R1.1
     kind: mechanism
     title: Traffic-driven CPU load
@@ -446,12 +452,22 @@ entries:
       - code: E1.1-L1
         id: experiment.latency.external_dependency.ruby_http
 
+  - code: E2.1
+    kind: mechanism
+    title: External dependency service error / HTTP 5xx
+    canonical_id: hypothesis.external_dependency.service_error
+    symptoms: [S9]
+    coverage: empirical
+    claims:
+      - claim.external_dependency.service_error.http_503_surfaces_upstream_failure
+    experiments:
+      - code: E2.1-L1
+        id: experiment.external_dependency.service_error.ruby_http
+
 planned_examples:
   - code: N1.1
     title: Network latency
   - code: N1.2
     title: Packet loss
-  - code: E2.1
-    title: External dependency error / unavailability
   - code: Q2.1
     title: Duplicate delivery

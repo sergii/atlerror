@@ -1,0 +1,21 @@
+id: claim.external_dependency.service_error.http_503_surfaces_upstream_failure
+kind: claim
+title: Reachable dependency HTTP 503 surfaces as an upstream failure
+statement: When a synchronous downstream HTTP dependency remains reachable but changes its work response from success to HTTP 503 Service Unavailable, the caller can receive and classify that explicit dependency failure even though lower-layer connectivity remains intact.
+hypothesis: hypothesis.external_dependency.service_error
+predictions:
+  - observation: observation.dependency.http_error_response
+    expected: explicit_http_503_from_reachable_dependency
+    strength: strong
+system_entities:
+  - system_entity.application_service
+  - system_entity.external_dependency
+boundaries:
+  - boundary.application.external_dependency
+scope:
+  runtime: ruby
+  os: linux
+limitations:
+  - Validates one controlled HTTP 503 failure from a synthetic synchronous dependency.
+  - Does not establish that every HTTP 5xx has the same cause, retry policy, or upstream mapping.
+  - Does not cover DNS, TCP, TLS, HTTP timeout, malformed response, rate limiting, or application-specific non-5xx failure semantics.

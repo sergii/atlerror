@@ -1,0 +1,19 @@
+id: symptom.external_dependency.request_failed
+kind: symptom
+title: External dependency request failed
+summary: A downstream dependency request completed far enough to produce an application-protocol failure response instead of a successful result.
+explanation:
+  short: The dependency was reachable, but the downstream request failed at the application protocol or service layer.
+  detailed: External dependency request failures should be separated from DNS, TCP, and TLS establishment failures. A reachable HTTP service can return a 5xx response such as 503 Service Unavailable even when name resolution, transport connectivity, and HTTP exchange all succeed.
+may_indicate:
+  - hypothesis.external_dependency.service_error
+common_misconceptions:
+  - A dependency returning HTTP 503 is the same as a TCP connection refusal; the former is an application-protocol response from a reachable service.
+  - Every downstream failure is a timeout; explicit HTTP error responses provide different evidence and remediation paths.
+  - Successful TCP connectivity proves the dependency operation succeeded; the service can still reject or fail the request after connection establishment.
+search_terms:
+  - downstream 503
+  - external dependency 5xx
+  - service unavailable dependency
+  - upstream dependency error
+  - HTTP 503 downstream

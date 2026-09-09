@@ -1,0 +1,8 @@
+id: rule.external_dependency.service_error.absent
+hypothesis: hypothesis.external_dependency.service_error
+when:
+  observation: observation.dependency.http_error_response
+  operator: absent
+effect:
+  confidence: decrease
+explanation: If no explicit downstream HTTP error response is observed, confidence decreases that the failure is an application-level external dependency service error; investigate transport, timeout, or other failure surfaces instead.
