@@ -1,0 +1,9 @@
+id: probe.network.measure_packet_delivery
+kind: probe
+title: Measure network packet delivery
+summary: Send controlled probe units across a network boundary and compare sent versus successfully returned units to estimate delivery ratio and packet loss.
+produces:
+  - observation.network.packet_loss
+requires:
+  - capability.network.measure_packet_delivery
+risk: low

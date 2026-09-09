@@ -1,0 +1,32 @@
+id: hypothesis.network.packet_loss
+kind: hypothesis
+title: Network packet loss
+summary: Packets traversing a network path are being dropped before delivery, reducing the observed delivery ratio and potentially causing retransmission, deadline expiry, or higher-layer failure.
+predictions:
+  - observation: observation.network.packet_loss
+    expected: above_baseline
+    strength: strong
+falsifiers:
+  - observation: observation.network.packet_loss
+    condition: not_above_baseline
+    effect: decrease
+tested_by:
+  - probe.network.measure_packet_delivery
+related_to:
+  - symptom.network.packet_loss_observed
+  - hypothesis.network.transport_latency
+  - hypothesis.network.connection_timeout
+  - hypothesis.network.connection_reset
+  - system_entity.application_service
+  - system_entity.external_dependency
+  - boundary.application.external_dependency
+common_misconceptions:
+  - Packet loss and a timeout are the same mechanism; packet loss is missing delivery, while a timeout is a deadline outcome that may be caused by loss or by other conditions.
+  - Packet loss and a connection reset are equivalent; a reset is an explicit transport signal, while loss is absence of delivery.
+  - Any packet loss must immediately surface as an application error; reliable transports may hide transient loss through retransmission at the cost of additional latency.
+search_terms:
+  - packet loss
+  - dropped packets
+  - delivery ratio
+  - retransmission
+  - network blackhole

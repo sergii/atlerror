@@ -1,0 +1,8 @@
+id: rule.network.packet_loss.normal
+hypothesis: hypothesis.network.packet_loss
+when:
+  observation: observation.network.packet_loss
+  operator: not_above_baseline
+effect:
+  confidence: decrease
+explanation: If controlled packet delivery remains at its expected baseline and there is no independent retransmission or drop evidence, packet loss becomes a weaker explanation than latency, timeout, reset, application processing, or other mechanisms.

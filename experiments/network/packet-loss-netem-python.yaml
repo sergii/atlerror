@@ -1,0 +1,16 @@
+id: experiment.network.packet_loss.netem_python_linux
+kind: experiment
+title: Linux packet loss under deterministic netem egress drop
+claims:
+  - claim.network.packet_loss.netem_drop_reduces_delivery
+description: Run a healthy UDP echo target and measure complete baseline delivery from a probe container. Apply a 100 percent Linux netem egress-loss qdisc inside the controlled probe container, repeat the same sequenced datagram probes, verify that delivery falls to zero while qdisc drop counters increase, remove the qdisc, and verify complete recovery.
+runner:
+  type: docker_compose
+  compose_file: lab/network-packet-loss/compose.yml
+  setup_service: server
+  evidence_service: probe
+expected_result: supports
+limitations:
+  - Uses deterministic 100 percent egress loss for a stable empirical signal rather than a probabilistic partial-loss model.
+  - Demonstrates UDP packet delivery loss; TCP can mask transient packet loss with retransmission.
+  - Uses NET_ADMIN only inside the synthetic probe container to configure Linux traffic control.

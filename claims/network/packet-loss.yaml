@@ -1,0 +1,21 @@
+id: claim.network.packet_loss.netem_drop_reduces_delivery
+kind: claim
+title: Injected Linux packet loss reduces delivery and recovers after removal
+statement: When Linux netem is configured to drop all client egress probe packets while the target remains healthy, the measured packet delivery ratio falls from complete baseline delivery to zero and returns to complete delivery after the loss rule is removed.
+hypothesis: hypothesis.network.packet_loss
+predictions:
+  - observation: observation.network.packet_loss
+    expected: delivery_ratio_drops_under_netem_loss_and_recovers_after_removal
+    strength: strong
+system_entities:
+  - system_entity.application_service
+  - system_entity.external_dependency
+boundaries:
+  - boundary.application.external_dependency
+scope:
+  runtime: python
+  os: linux
+limitations:
+  - Uses a deterministic 100 percent UDP egress-loss intervention to establish the mechanism clearly rather than modeling a realistic partial-loss distribution.
+  - Validates packet delivery loss inside Linux/Docker traffic control and does not identify which physical production hop would drop packets.
+  - UDP exposes missing delivery directly; TCP may mask transient loss through retransmission and requires additional transport evidence in production.

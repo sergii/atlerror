@@ -1,0 +1,19 @@
+id: symptom.network.packet_loss_observed
+kind: symptom
+title: Network packet loss observed
+summary: A controlled network probe or transport signal indicates that packets are not being delivered at the expected rate.
+explanation:
+  short: Some packets sent across the network path do not arrive or do not produce the expected reply.
+  detailed: >-
+    Packet loss is an observed delivery deficit rather than a deadline, reset, refusal, or application error by itself. It can be measured directly with controlled probes or inferred from transport retransmission and packet-drop telemetry. Higher-layer symptoms depend on protocol behavior: UDP exposes missing delivery directly, while TCP may retransmit and convert transient loss into latency before an application sees a timeout or failure.
+may_indicate:
+  - hypothesis.network.packet_loss
+common_misconceptions:
+  - A request timeout proves packet loss; timeouts can also come from routing, overload, application stalls, firewall policy, or other causes.
+  - A successful TCP request proves there was no packet loss; retransmission can conceal loss from the application.
+search_terms:
+  - packet loss observed
+  - dropped packets
+  - missing datagrams
+  - retransmissions
+  - delivery ratio
