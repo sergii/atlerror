@@ -1,0 +1,9 @@
+id: probe.http.inspect_dependency_rate_limit
+kind: probe
+title: Inspect downstream rate-limit response
+summary: Perform or inspect a controlled downstream HTTP request and capture status plus retry or quota metadata that distinguish throttling from service and transport failures.
+produces:
+  - observation.dependency.http_rate_limit_response
+requires:
+  - capability.http.inspect_response
+risk: read_only
