@@ -104,7 +104,7 @@ entries:
     kind: symptom
     title: High latency
     canonical_id: symptom.latency.high
-    routes_to: [N1.1, E1.1, D1.1, D2.1, D3.1, R1.5, Q1.1]
+    routes_to: [N1.1, N1.3, E1.1, D1.1, D2.1, D3.1, R1.5, Q1.1]
 
   - code: S4
     kind: symptom
@@ -177,6 +177,12 @@ entries:
     title: Network packet loss observed
     canonical_id: symptom.network.packet_loss_observed
     routes_to: [N1.2]
+
+  - code: S16
+    kind: symptom
+    title: Network jitter observed
+    canonical_id: symptom.network.jitter_observed
+    routes_to: [N1.3]
 
   - code: R1.1
     kind: mechanism
@@ -381,6 +387,18 @@ entries:
         id: experiment.network.packet_loss.netem_python_linux
       - code: N1.2-L2
         id: experiment.network.packet_loss.tcp_retransmissions_python_linux
+
+  - code: N1.3
+    kind: mechanism
+    title: Network transport jitter
+    canonical_id: hypothesis.network.jitter
+    symptoms: [S16, S3]
+    coverage: empirical
+    claims:
+      - claim.network.jitter.netem_variable_delay_widens_timing_distribution
+    experiments:
+      - code: N1.3-L1
+        id: experiment.network.jitter.netem_python_linux
 
   - code: N2.1
     kind: mechanism
