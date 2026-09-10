@@ -1,0 +1,7 @@
+id: observation.network.jitter
+kind: observation
+title: Network delay variation above baseline
+summary: Repeated transport timing samples show materially greater dispersion or tail spread than the expected baseline for the same path and workload.
+explanation:
+  short: Network timing is unstable across comparable samples rather than merely shifted by a fixed amount.
+  detailed: Jitter is distributional evidence. Useful signals include standard deviation, inter-percentile spread such as p95 minus p50, and repeated tail excursions. Interpret those signals against a comparable baseline and alongside delivery and target-processing evidence. A fixed transport delay can raise every sample while preserving low dispersion, whereas jitter widens the timing distribution even if every packet still arrives.
