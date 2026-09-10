@@ -1,0 +1,24 @@
+id: claim.network.packet_reordering.netem_reorder_changes_arrival_sequence_without_loss
+kind: claim
+title: Injected Linux packet reordering changes UDP arrival sequence without packet loss
+statement: When deterministic Linux netem reordering is applied to a stable UDP path, burst probes observe materially more sequence inversions than baseline while every probe datagram is still delivered, and ordered delivery returns after the intervention is removed.
+hypothesis: hypothesis.network.packet_reordering
+predictions:
+  - observation: observation.network.packet_reordering
+    expected: sequence_inversions_rise_under_netem_reorder_and_recover_after_removal
+    strength: strong
+  - observation: observation.network.packet_loss
+    expected: not_above_baseline
+    strength: strong
+system_entities:
+  - system_entity.application_service
+  - system_entity.external_dependency
+boundaries:
+  - boundary.application.external_dependency
+scope:
+  runtime: python
+  os: linux
+limitations:
+  - Validates synthetic Linux traffic-control packet reordering inside Docker rather than a physical production network path.
+  - Uses UDP so packet order is directly observable; TCP applications normally receive an ordered byte stream even when IP packets were reordered.
+  - The exact inversion count is intentionally not treated as portable because host scheduling and queue timing can affect the specific reordered sequence.

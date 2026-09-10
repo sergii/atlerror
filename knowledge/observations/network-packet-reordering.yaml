@@ -1,0 +1,7 @@
+id: observation.network.packet_reordering
+kind: observation
+title: Network packet arrival order differs from send order
+summary: Sequence-aware probes observe one or more packet-order inversions or equivalent transport reordering signals above the expected baseline.
+explanation:
+  short: Packets are arriving in a different sequence from the sequence in which they were transmitted.
+  detailed: Reordering is measured independently from delivery completeness. A controlled probe can send uniquely sequenced datagrams in a burst and count pairwise inversions or displaced positions in the arrival sequence. Reliable transports may conceal the arrival order from application code, so equivalent transport telemetry can be used when direct datagram ordering is unavailable.

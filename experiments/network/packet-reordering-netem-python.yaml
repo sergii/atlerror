@@ -1,0 +1,16 @@
+id: experiment.network.packet_reordering.netem_python_linux
+kind: experiment
+title: UDP packet reordering under controlled Linux netem intervention
+claims:
+  - claim.network.packet_reordering.netem_reorder_changes_arrival_sequence_without_loss
+description: Send repeated bursts of uniquely sequenced UDP echo probes against a stable target, record baseline receive order, apply Linux tc netem reordering on the probe container egress path, repeat the bursts, then remove the qdisc and measure recovery. Support the reordering claim only when sequence inversions rise materially during intervention while delivery remains complete and ordered delivery returns after recovery.
+runner:
+  type: docker_compose
+  compose_file: lab/network-packet-reordering/compose.yml
+  setup_service: server
+  evidence_service: probe
+expected_result: supports
+limitations:
+  - Uses synthetic Linux netem reordering inside Docker rather than a physical production path.
+  - Uses UDP bursts to expose receive order directly and does not model TCP reordering recovery or congestion-control behavior.
+  - Assertions target the ordering pattern and complete delivery rather than an exact reordered sequence.
