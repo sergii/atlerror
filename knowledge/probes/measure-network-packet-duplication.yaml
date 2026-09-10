@@ -1,0 +1,9 @@
+id: probe.network.measure_packet_duplication
+kind: probe
+title: Measure network packet duplication
+summary: Send controlled uniquely identified probe units across the same network boundary and count repeated copies of each identity while independently tracking missing delivery and order.
+produces:
+  - observation.network.packet_duplication
+requires:
+  - capability.network.measure_packet_duplication
+risk: low
