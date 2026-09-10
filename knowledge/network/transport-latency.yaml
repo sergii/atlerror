@@ -18,6 +18,7 @@ tested_by:
   - probe.http.measure_request_latency
 related_to:
   - symptom.latency.high
+  - hypothesis.network.jitter
   - hypothesis.latency.external_dependency
   - hypothesis.latency.database
   - hypothesis.latency.queueing
@@ -27,6 +28,7 @@ related_to:
 common_misconceptions:
   - Slow end-to-end requests prove the downstream application itself is slow; transport delay can dominate while server processing time remains normal.
   - Network transport latency and queueing delay are the same mechanism; queueing is time spent waiting before useful work begins, while transport latency is delay across the communication path.
+  - High transport latency and jitter are identity-equivalent; a path can be uniformly slow with low timing variance, or have a normal median with unstable tail latency.
 search_terms:
   - network latency
   - transport latency

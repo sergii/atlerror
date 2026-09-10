@@ -1,0 +1,10 @@
+id: probe.network.measure_jitter
+kind: probe
+title: Measure network jitter
+summary: Send repeated controlled probes across the same network boundary and compare timing dispersion and tail spread with an appropriate baseline while tracking delivery.
+produces:
+  - observation.network.jitter
+  - observation.network.transport_latency
+requires:
+  - capability.network.measure_jitter
+risk: low

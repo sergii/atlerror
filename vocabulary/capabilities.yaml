@@ -40,6 +40,9 @@ capabilities:
   - id: capability.network.measure_latency
     title: Measure network transport latency
     description: Measure connection establishment or request exchange timing across a network boundary, separating transport-path delay from target-side processing when evidence permits.
+  - id: capability.network.measure_jitter
+    title: Measure network jitter
+    description: Measure timing variation across repeated comparable network probes, including dispersion and tail spread, while tracking delivery and using an appropriate baseline.
   - id: capability.network.measure_packet_delivery
     title: Measure network packet delivery
     description: Send controlled probe units across a network boundary and compare sent versus successfully returned units to estimate delivery ratio and packet loss.

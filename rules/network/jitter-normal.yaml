@@ -1,0 +1,8 @@
+id: rule.network.jitter.normal
+hypothesis: hypothesis.network.jitter
+when:
+  observation: observation.network.jitter
+  operator: not_above_baseline
+effect:
+  confidence: decrease
+explanation: If repeated transport timings do not show materially greater dispersion or tail spread than a comparable baseline, network jitter is a weaker explanation even when average latency is elevated; fixed transport delay or other latency mechanisms should remain candidates.
