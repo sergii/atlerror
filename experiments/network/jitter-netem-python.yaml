@@ -1,0 +1,16 @@
+id: experiment.network.jitter.netem_python_linux
+kind: experiment
+title: Network jitter under controlled Linux netem delay variation
+claims:
+  - claim.network.jitter.netem_variable_delay_widens_timing_distribution
+description: Run repeated sequential UDP echo probes against a stable target, record a baseline timing distribution, apply controlled variable Linux tc netem egress delay to the probe container, repeat the same sample set, then remove the qdisc and measure recovery. Support the jitter claim only when timing dispersion and tail spread rise materially during intervention while delivery remains complete and then tighten after recovery.
+runner:
+  type: docker_compose
+  compose_file: lab/network-jitter/compose.yml
+  setup_service: server
+  evidence_service: probe
+expected_result: supports
+limitations:
+  - Uses synthetic Linux netem delay variation inside Docker rather than a physical production path.
+  - Sequential UDP echo probes isolate transport timing but do not reproduce TCP retransmission or congestion-window behavior.
+  - Jitter is distributional, so the lab uses many samples and compares intervention with baseline and recovery rather than asserting an exact per-packet delay sequence.
