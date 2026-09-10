@@ -115,7 +115,7 @@ profiles:
   - code: N1.6
     facets: {domains: [network, infrastructure_os], concerns: [delivery, reliability, correctness], resources: [network], layers: [transport, operating_system, application]}
     coverage: {semantic: complete, predictions: complete, falsification: complete, probes: complete, rules: complete, human_explanation: complete, agent_action: partial}
-    empirical: {synthetic_labs: 1, runtimes: [python], production_evidence: none}
+    empirical: {synthetic_labs: 2, runtimes: [python], production_evidence: none}
   - code: N2.1
     facets: {domains: [network], concerns: [availability, reliability], resources: [network], layers: [transport, operating_system]}
     coverage: {semantic: complete, predictions: complete, falsification: complete, probes: complete, rules: complete, human_explanation: complete, agent_action: partial}

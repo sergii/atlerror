@@ -1,0 +1,28 @@
+services:
+  server:
+    build: .
+    command: ["python", "server.py"]
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import socket; s=socket.create_connection(('127.0.0.1',9000),2); s.close()"
+      interval: 1s
+      timeout: 2s
+      retries: 15
+
+  probe:
+    build: .
+    command: ["python", "probe.py"]
+    cap_add:
+      - NET_ADMIN
+    environment:
+      TARGET_HOST: server
+      TARGET_PORT: "9000"
+      NETWORK_INTERFACE: eth0
+      CORRUPT_PERCENT: "3"
+      NETEM_SEED: "424242"
+      PAYLOAD_BYTES: "2097152"
+      CHUNK_BYTES: "65536"
+      SOCKET_TIMEOUT_SECONDS: "20"

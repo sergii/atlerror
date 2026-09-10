@@ -1,0 +1,25 @@
+id: claim.network.packet_corruption.checksum_rejection_causes_tcp_retransmissions
+kind: claim
+title: Corrupted TCP segments are rejected by checksum validation and retransmitted
+statement: When controlled Linux netem corruption is applied to an already-established TCP transfer with transmit checksum offload disabled, the receiver records TCP checksum or input errors, the sender records retransmissions, and the reliable transfer still completes with the exact original payload bytes.
+hypothesis: hypothesis.network.packet_corruption
+predictions:
+  - observation: observation.network.tcp_retransmissions
+    expected: retransmission_counter_increases_while_tcp_recovers_checksum_rejected_segments
+    strength: strong
+  - observation: observation.network.packet_loss
+    expected: application_delivery_can_remain_complete_because_tcp_masks_rejected_segments
+    strength: moderate
+system_entities:
+  - system_entity.application_service
+  - system_entity.external_dependency
+boundaries:
+  - boundary.application.external_dependency
+scope:
+  runtime: python
+  os: linux
+limitations:
+  - Validates synthetic Linux traffic-control corruption inside Docker rather than a physical production network path.
+  - Explicitly disables sender transmit checksum offload so netem corruption occurs after a valid software checksum has been computed and can be rejected by the receiver.
+  - Uses receiver TCP InErrs or InCsumErrors plus sender RetransSegs as evidence of integrity rejection and recovery; exact counters vary by kernel packetization and recovery behavior.
+  - Does not identify a physical corruption source such as a NIC, cable, switch, radio link, or memory fault.

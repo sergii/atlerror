@@ -450,9 +450,12 @@ entries:
     coverage: empirical
     claims:
       - claim.network.packet_corruption.netem_corrupt_changes_udp_payload_integrity
+      - claim.network.packet_corruption.checksum_rejection_causes_tcp_retransmissions
     experiments:
       - code: N1.6-L1
         id: experiment.network.packet_corruption.netem_python_linux
+      - code: N1.6-L2
+        id: experiment.network.packet_corruption.tcp_checksum_retransmissions_python_linux
 
   - code: N2.1
     kind: mechanism

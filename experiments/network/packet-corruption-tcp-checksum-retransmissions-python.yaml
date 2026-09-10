@@ -1,0 +1,16 @@
+id: experiment.network.packet_corruption.tcp_checksum_retransmissions_python_linux
+kind: experiment
+title: TCP checksum rejection and retransmission under controlled Linux packet corruption
+claims:
+  - claim.network.packet_corruption.checksum_rejection_causes_tcp_retransmissions
+description: Establish a healthy TCP connection and exchange the transfer header before intervention, disable sender transmit checksum offload, then apply seeded partial Linux netem corruption only while sending a fixed payload. Verify that the receiver records TCP checksum or input errors, the sender retransmission counter rises, and TCP still delivers the exact original payload. Remove the qdisc and verify a clean recovery transfer.
+runner:
+  type: docker_compose
+  compose_file: lab/network-packet-corruption-tcp-retransmissions/compose.yml
+  setup_service: server
+  evidence_service: probe
+expected_result: supports
+limitations:
+  - Uses synthetic Linux netem corruption in Docker rather than a physical production path.
+  - Explicitly disables transmit checksum offload so corrupted packets retain stale checksums and receiver integrity checks can reject them.
+  - Exact checksum-error and retransmission counts depend on packetization and TCP recovery behavior and are not expected to be identical across runs.

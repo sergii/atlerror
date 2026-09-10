@@ -4,10 +4,13 @@ title: Network packet corruption
 summary: The network path is altering packet contents in transit so received bytes no longer match the bytes that were transmitted, or integrity checks reject the altered packet before application delivery.
 predictions:
   - observation: observation.network.packet_corruption
-    expected: above_baseline
+    expected: above_baseline_when_corrupted_bytes_reach_the_probe
     strength: strong
   - observation: observation.network.packet_loss
     expected: may_increase_when_integrity_checks_reject_corrupted_packets
+    strength: moderate
+  - observation: observation.network.tcp_retransmissions
+    expected: may_increase_when_tcp_recovers_checksum_rejected_segments
     strength: moderate
 falsifiers:
   - observation: observation.network.packet_corruption
@@ -15,6 +18,7 @@ falsifiers:
     effect: decrease
 tested_by:
   - probe.network.measure_packet_integrity
+  - probe.network.inspect_tcp_retransmissions
 related_to:
   - symptom.network.packet_corruption_observed
   - hypothesis.network.packet_loss
@@ -26,6 +30,7 @@ related_to:
 common_misconceptions:
   - Packet corruption is the same mechanism as packet loss; corruption can cause apparent loss when checksums reject damaged packets, but the causal mechanism is altered packet contents.
   - Corrupted bytes must be visible to application code; transport or link integrity checks often discard damaged packets before the application can observe them.
+  - Exact application payload delivery rules out packet corruption; reliable transport can reject corrupted segments, retransmit them, and still deliver an exact payload.
 search_terms:
   - packet corruption
   - corrupted packet
@@ -33,3 +38,5 @@ search_terms:
   - checksum failure
   - payload corruption
   - bit flip network
+  - tcp checksum error
+  - tcp retransmission corruption
