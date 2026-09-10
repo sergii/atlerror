@@ -1,0 +1,36 @@
+id: hypothesis.network.packet_duplication
+kind: hypothesis
+title: Network packet duplication
+summary: The network path is delivering one or more additional copies of the same transmitted packet or datagram identity.
+predictions:
+  - observation: observation.network.packet_duplication
+    expected: above_baseline
+    strength: strong
+  - observation: observation.network.packet_loss
+    expected: may_remain_at_baseline
+    strength: moderate
+falsifiers:
+  - observation: observation.network.packet_duplication
+    condition: not_above_baseline
+    effect: decrease
+tested_by:
+  - probe.network.measure_packet_duplication
+related_to:
+  - symptom.network.packet_duplication_observed
+  - hypothesis.network.packet_loss
+  - hypothesis.network.packet_reordering
+  - hypothesis.network.jitter
+  - hypothesis.messaging.duplicate_delivery
+  - hypothesis.messaging.duplicate_publication
+  - system_entity.application_service
+  - system_entity.external_dependency
+  - boundary.application.external_dependency
+common_misconceptions:
+  - Duplicate application work proves the network duplicated a packet; retries, message redelivery, or duplicate publication can create duplicate effects at higher layers.
+  - TCP applications should receive duplicate bytes when the network duplicates TCP segments; TCP sequence semantics normally suppress duplicate segment payload before application delivery.
+search_terms:
+  - packet duplication
+  - duplicate packets
+  - duplicate datagrams
+  - repeated packets
+  - network duplicate delivery
