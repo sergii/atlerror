@@ -1,0 +1,17 @@
+id: causal.network.packet_loss.tcp_retransmissions
+kind: causal_edge
+source: hypothesis.network.packet_loss
+target: observation.network.tcp_retransmissions
+relation: causes
+strength: strong
+conditions:
+  - Missing delivery affects data on an active TCP transfer.
+  - TCP recovery remains possible before the application deadline or connection failure.
+evidence:
+  claims:
+    - claim.network.packet_loss.partial_loss_causes_tcp_retransmissions
+  experiments:
+    - experiment.network.packet_loss.tcp_retransmissions_python_linux
+explanation: Missing TCP segments create sequence gaps or missing acknowledgments that drive reliable transport recovery and retransmission.
+limitations:
+  - Retransmissions can also arise from reordering, corruption, or spurious timeout behavior, so the observation alone does not prove packet loss.
