@@ -23,7 +23,6 @@ services:
       NETWORK_INTERFACE: eth0
       BASE_DELAY_MS: "30"
       JITTER_MS: "20"
-      NETEM_SEED: "424242"
       SAMPLES: "60"
       WARMUP_SAMPLES: "5"
       SOCKET_TIMEOUT_SECONDS: "2"
