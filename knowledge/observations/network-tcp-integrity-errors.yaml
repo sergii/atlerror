@@ -1,0 +1,7 @@
+id: observation.network.tcp_integrity_errors
+kind: observation
+title: TCP integrity errors above baseline
+summary: The receiving TCP stack records checksum or equivalent input-integrity errors above baseline while processing traffic on the observed path.
+explanation:
+  short: The receiver rejected one or more TCP segments because transport integrity validation failed.
+  detailed: TCP integrity counters such as Linux InCsumErrors or corroborating InErrs can expose corrupted segments that never become application bytes. This observation is stronger evidence for corruption than application-level missing delivery alone, but counter scope and checksum-offload behavior must be understood before attribution.
