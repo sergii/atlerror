@@ -1,0 +1,34 @@
+id: hypothesis.network.jitter
+kind: hypothesis
+title: Network transport jitter
+summary: The network path is introducing material variation in transport delay across otherwise comparable samples.
+predictions:
+  - observation: observation.network.jitter
+    expected: above_baseline
+    strength: strong
+  - observation: observation.network.transport_latency
+    expected: tail_spread_above_baseline_even_when_median_shift_is_not_diagnostic
+    strength: moderate
+falsifiers:
+  - observation: observation.network.jitter
+    condition: not_above_baseline
+    effect: decrease
+tested_by:
+  - probe.network.measure_jitter
+related_to:
+  - symptom.network.jitter_observed
+  - symptom.latency.high
+  - hypothesis.network.transport_latency
+  - hypothesis.network.packet_loss
+  - system_entity.application_service
+  - system_entity.external_dependency
+  - boundary.application.external_dependency
+common_misconceptions:
+  - Jitter is simply high latency; jitter describes variability, while latency describes elapsed transport time.
+  - Jitter requires packet loss; delivery can remain complete while timing variance increases.
+search_terms:
+  - network jitter
+  - latency jitter
+  - delay variation
+  - rtt variance
+  - p95 p50 spread
