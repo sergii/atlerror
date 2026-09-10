@@ -1,0 +1,24 @@
+id: claim.network.jitter.netem_variable_delay_widens_timing_distribution
+kind: claim
+title: Injected Linux delay variation widens transport timing distribution without causing packet loss
+statement: When controlled variable Linux netem delay is added to a stable network path, repeated probe timings show materially greater dispersion and tail spread than baseline while all probe responses continue to arrive, and the distribution tightens again after the intervention is removed.
+hypothesis: hypothesis.network.jitter
+predictions:
+  - observation: observation.network.jitter
+    expected: timing_dispersion_and_p95_minus_p50_spread_rise_above_baseline
+    strength: strong
+  - observation: observation.network.packet_loss
+    expected: not_above_baseline
+    strength: strong
+system_entities:
+  - system_entity.application_service
+  - system_entity.external_dependency
+boundaries:
+  - boundary.application.external_dependency
+scope:
+  runtime: python
+  os: linux
+limitations:
+  - Validates synthetic Linux traffic-control delay variation inside Docker rather than a physical production network path.
+  - Uses sequential UDP echo probes to isolate per-sample transport timing and does not model application concurrency or TCP congestion control.
+  - Distribution metrics depend on sample count and environment noise, so production thresholds require an environment-specific baseline.
