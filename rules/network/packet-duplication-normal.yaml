@@ -1,0 +1,8 @@
+id: rule.network.packet_duplication.normal
+hypothesis: hypothesis.network.packet_duplication
+when:
+  observation: observation.network.packet_duplication
+  operator: not_above_baseline
+effect:
+  confidence: decrease
+explanation: If sequence-aware probes observe no excess copies of stable packet identities and equivalent transport telemetry shows no duplicate delivery signal, network packet duplication is a weaker explanation; retries, message redelivery, duplicate publication, packet loss, reordering, or other mechanisms should remain separate candidates.
