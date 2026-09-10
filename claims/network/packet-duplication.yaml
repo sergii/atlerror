@@ -1,0 +1,24 @@
+id: claim.network.packet_duplication.netem_duplicate_repeats_udp_identity_without_loss
+kind: claim
+title: Injected Linux packet duplication repeats UDP identities without packet loss
+statement: When deterministic Linux netem packet duplication is applied to a stable UDP path, sequence-aware probes observe materially more repeated copies of the same datagram identities than baseline while every unique probe identity remains delivered, and duplicate delivery disappears after the intervention is removed.
+hypothesis: hypothesis.network.packet_duplication
+predictions:
+  - observation: observation.network.packet_duplication
+    expected: duplicate_copies_rise_under_netem_duplicate_and_recover_after_removal
+    strength: strong
+  - observation: observation.network.packet_loss
+    expected: not_above_baseline
+    strength: strong
+system_entities:
+  - system_entity.application_service
+  - system_entity.external_dependency
+boundaries:
+  - boundary.application.external_dependency
+scope:
+  runtime: python
+  os: linux
+limitations:
+  - Validates synthetic Linux traffic-control packet duplication inside Docker rather than a physical production network path.
+  - Uses UDP so duplicate datagrams are directly observable; TCP normally suppresses duplicate segment payload before application delivery.
+  - The exact duplicate ratio is intentionally not treated as portable because queue pressure, socket buffers, or downstream packet handling can affect which extra copies remain observable.

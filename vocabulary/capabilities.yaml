@@ -49,6 +49,9 @@ capabilities:
   - id: capability.network.measure_packet_order
     title: Measure network packet order
     description: Send uniquely sequenced probe units across a network boundary and compare send order with receive order while independently tracking missing and duplicate delivery.
+  - id: capability.network.measure_packet_duplication
+    title: Measure network packet duplication
+    description: Send uniquely identified probe units across a network boundary and count repeated copies of each identity while independently tracking unique delivery completeness and order.
   - id: capability.network.inspect_tcp_retransmissions
     title: Inspect TCP retransmissions
     description: Read transport-level TCP retransmission counters or equivalent connection telemetry around a controlled workload and compare them with an appropriate baseline.

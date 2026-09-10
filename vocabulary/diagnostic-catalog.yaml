@@ -190,6 +190,12 @@ entries:
     canonical_id: symptom.network.packet_reordering_observed
     routes_to: [N1.4]
 
+  - code: S18
+    kind: symptom
+    title: Duplicate network delivery observed
+    canonical_id: symptom.network.packet_duplication_observed
+    routes_to: [N1.5]
+
   - code: R1.1
     kind: mechanism
     title: Traffic-driven CPU load
@@ -417,6 +423,18 @@ entries:
     experiments:
       - code: N1.4-L1
         id: experiment.network.packet_reordering.netem_python_linux
+
+  - code: N1.5
+    kind: mechanism
+    title: Network packet duplication
+    canonical_id: hypothesis.network.packet_duplication
+    symptoms: [S18]
+    coverage: empirical
+    claims:
+      - claim.network.packet_duplication.netem_duplicate_repeats_udp_identity_without_loss
+    experiments:
+      - code: N1.5-L1
+        id: experiment.network.packet_duplication.netem_python_linux
 
   - code: N2.1
     kind: mechanism

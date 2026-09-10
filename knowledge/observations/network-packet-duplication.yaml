@@ -1,0 +1,7 @@
+id: observation.network.packet_duplication
+kind: observation
+title: Network packet identity observed more than once
+summary: Sequence-aware probes observe additional copies of one or more transmitted packet identities above the expected baseline.
+explanation:
+  short: The receiver observes more than one copy of the same probe identity.
+  detailed: Packet duplication is measured independently from unique delivery completeness and arrival order. A controlled probe can send uniquely identified datagrams, count how many copies of each identity return, and report duplicate copies separately from missing identities. Reliable transports may conceal duplicate packets from application code, so packet capture or transport counters can provide equivalent evidence when direct datagram duplication is unavailable.

@@ -1,0 +1,19 @@
+id: symptom.network.packet_duplication_observed
+kind: symptom
+title: Duplicate network delivery observed
+summary: A sequence-aware probe or transport signal indicates that one or more packet identities are arriving more than once across the same network boundary.
+explanation:
+  short: Delivery succeeds, but at least one transmitted packet identity is observed multiple times.
+  detailed: >-
+    Packet duplication is a transport delivery anomaly, not packet loss, reordering, jitter, or an application retry by itself. A controlled datagram probe can attach a stable sequence identity to each transmitted unit and count extra copies independently from missing units and arrival order. UDP exposes duplicate datagrams directly. TCP normally suppresses duplicate segment payload before application delivery, so transport-level duplication may instead appear through duplicate acknowledgements, repeated segment counters, packet capture, or extra transport recovery work.
+may_indicate:
+  - hypothesis.network.packet_duplication
+common_misconceptions:
+  - A duplicated business effect proves network packet duplication; retries and higher-layer duplicate publication or redelivery can produce the same business symptom.
+  - An application receiving each TCP byte only once proves no packet duplication occurred; TCP intentionally deduplicates repeated segment sequence ranges.
+search_terms:
+  - packet duplication observed
+  - duplicate packets
+  - duplicate datagrams
+  - repeated packet sequence
+  - duplicated network delivery
