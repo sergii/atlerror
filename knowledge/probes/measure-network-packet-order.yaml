@@ -1,0 +1,9 @@
+id: probe.network.measure_packet_order
+kind: probe
+title: Measure network packet arrival order
+summary: Send controlled bursts of uniquely sequenced probe units across the same network boundary and compare receive order with send order while independently tracking missing and duplicate delivery.
+produces:
+  - observation.network.packet_reordering
+requires:
+  - capability.network.measure_packet_order
+risk: low

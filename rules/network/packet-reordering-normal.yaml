@@ -1,0 +1,8 @@
+id: rule.network.packet_reordering.normal
+hypothesis: hypothesis.network.packet_reordering
+when:
+  observation: observation.network.packet_reordering
+  operator: not_above_baseline
+effect:
+  confidence: decrease
+explanation: If sequence-aware probes preserve send order and equivalent transport telemetry shows no excess reordering, network packet reordering is a weaker explanation; packet loss, jitter, latency, or higher-layer mechanisms should remain separate candidates.

@@ -1,0 +1,19 @@
+id: symptom.network.packet_reordering_observed
+kind: symptom
+title: Out-of-order network delivery observed
+summary: A controlled probe or transport signal indicates that packets or datagrams are arriving in a different order from the order in which they were sent.
+explanation:
+  short: Delivery is occurring, but the observed arrival sequence does not preserve the sender's sequence.
+  detailed: >-
+    Packet reordering is an ordering anomaly, not packet loss, jitter, a reset, or a timeout by itself. A probe can detect it by attaching monotonically increasing sequence numbers to a burst and comparing send order with arrival order. UDP can expose reordering directly. TCP normally restores an ordered byte stream to the application, so transport-level reordering may instead appear through duplicate acknowledgements, selective acknowledgements, reordering counters, or extra recovery work rather than out-of-order application bytes.
+may_indicate:
+  - hypothesis.network.packet_reordering
+common_misconceptions:
+  - Out-of-order delivery proves packet loss; packets can all arrive successfully but in a different order.
+  - A correctly ordered TCP byte stream proves the network did not reorder packets; TCP intentionally hides network packet ordering from the application.
+search_terms:
+  - packet reordering observed
+  - out of order packets
+  - out-of-order delivery
+  - reordered datagrams
+  - packet sequence inversion

@@ -1,0 +1,34 @@
+id: hypothesis.network.packet_reordering
+kind: hypothesis
+title: Network packet reordering
+summary: The network path is delivering packets in a materially different order from the order in which they were transmitted.
+predictions:
+  - observation: observation.network.packet_reordering
+    expected: above_baseline
+    strength: strong
+  - observation: observation.network.packet_loss
+    expected: may_remain_at_baseline
+    strength: moderate
+falsifiers:
+  - observation: observation.network.packet_reordering
+    condition: not_above_baseline
+    effect: decrease
+tested_by:
+  - probe.network.measure_packet_order
+related_to:
+  - symptom.network.packet_reordering_observed
+  - hypothesis.network.packet_loss
+  - hypothesis.network.jitter
+  - hypothesis.network.transport_latency
+  - system_entity.application_service
+  - system_entity.external_dependency
+  - boundary.application.external_dependency
+common_misconceptions:
+  - Reordering is another name for packet loss; all packets can be delivered while their arrival order changes.
+  - Reordering must be visible as out-of-order application data over TCP; TCP restores byte-stream order and can conceal transport reordering from the application.
+search_terms:
+  - packet reordering
+  - network reordering
+  - out of order packets
+  - reordered packets
+  - sequence inversion
