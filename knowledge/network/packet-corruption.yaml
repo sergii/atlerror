@@ -6,6 +6,9 @@ predictions:
   - observation: observation.network.packet_corruption
     expected: above_baseline_when_corrupted_bytes_reach_the_probe
     strength: strong
+  - observation: observation.network.tcp_integrity_errors
+    expected: above_baseline_when_tcp_checksum_validation_rejects_corrupted_segments
+    strength: strong
   - observation: observation.network.packet_loss
     expected: may_increase_when_integrity_checks_reject_corrupted_packets
     strength: moderate
@@ -18,6 +21,7 @@ falsifiers:
     effect: decrease
 tested_by:
   - probe.network.measure_packet_integrity
+  - probe.network.inspect_tcp_integrity_errors
   - probe.network.inspect_tcp_retransmissions
 related_to:
   - symptom.network.packet_corruption_observed

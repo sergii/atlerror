@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://atlerror.dev/schema/causal-edge.schema.json",
+  "title": "Atlerror Causal Edge",
+  "type": "object",
+  "required": ["id", "kind", "source", "target", "relation", "strength", "explanation"],
+  "properties": {
+    "id": {"type":"string","pattern":"^causal\\.[a-z0-9_]+(\\.[a-z0-9_]+)+$"},
+    "kind": {"const":"causal_edge"},
+    "source": {"$ref":"#/$defs/conceptId"},
+    "target": {"$ref":"#/$defs/conceptId"},
+    "relation": {"type":"string","enum":["causes","contributes_to"]},
+    "strength": {"type":"string","enum":["weak","moderate","strong"]},
+    "conditions": {"type":"array","items":{"type":"string","minLength":1},"uniqueItems":true},
+    "evidence": {
+      "type":"object",
+      "properties": {
+        "claims": {"type":"array","items":{"type":"string","pattern":"^claim\\.[a-z0-9_]+(\\.[a-z0-9_]+)+$"},"uniqueItems":true},
+        "experiments": {"type":"array","items":{"type":"string","pattern":"^experiment\\.[a-z0-9_]+(\\.[a-z0-9_]+)+$"},"uniqueItems":true}
+      },
+      "additionalProperties": false,
+      "minProperties": 1
+    },
+    "explanation": {"type":"string","minLength":1},
+    "limitations": {"type":"array","items":{"type":"string","minLength":1}}
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "conceptId": {"type":"string","pattern":"^[a-z][a-z0-9_]*(\\.[a-z0-9_]+)+$"}
+  }
+}

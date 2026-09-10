@@ -1,0 +1,19 @@
+id: causal.network.tcp_retransmissions.transport_latency
+kind: causal_edge
+source: observation.network.tcp_retransmissions
+target: observation.network.transport_latency
+relation: contributes_to
+strength: strong
+conditions:
+  - Application completion depends on data that must be retransmitted.
+  - Recovery delay is material relative to the healthy transfer baseline.
+evidence:
+  claims:
+    - claim.network.packet_loss.partial_loss_causes_tcp_retransmissions
+    - claim.network.packet_corruption.checksum_rejection_causes_tcp_retransmissions
+  experiments:
+    - experiment.network.packet_loss.tcp_retransmissions_python_linux
+    - experiment.network.packet_corruption.tcp_checksum_retransmissions_python_linux
+explanation: Reliable transport recovery adds waiting and additional transmission work, so retransmission can increase end-to-end transport completion time even when the application ultimately receives exact data.
+limitations:
+  - Very fast recovery can produce little measurable latency increase, so the causal contribution does not imply a fixed delay magnitude.

@@ -30,8 +30,8 @@ tools:
     provides: [capability.database.query_metrics, capability.database.inspect_locks, capability.database.inspect_errors, capability.database.inspect_state, capability.database.inspect_connections]
 
   - id: tool.socket_api
-    title: Operating system socket and resolver APIs
-    provides: [capability.network.measure_latency, capability.network.measure_jitter, capability.network.measure_packet_delivery, capability.network.measure_packet_order, capability.network.measure_packet_duplication, capability.network.measure_packet_integrity, capability.network.inspect_tcp_retransmissions, capability.network.inspect_connection_error, capability.network.resolve_name]
+    title: Operating system socket, transport counter, and resolver APIs
+    provides: [capability.network.measure_latency, capability.network.measure_jitter, capability.network.measure_packet_delivery, capability.network.measure_packet_order, capability.network.measure_packet_duplication, capability.network.measure_packet_integrity, capability.network.inspect_tcp_retransmissions, capability.network.inspect_tcp_integrity_errors, capability.network.inspect_connection_error, capability.network.resolve_name]
 
   - id: tool.openssl
     title: OpenSSL

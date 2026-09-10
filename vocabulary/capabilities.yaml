@@ -58,6 +58,9 @@ capabilities:
   - id: capability.network.inspect_tcp_retransmissions
     title: Inspect TCP retransmissions
     description: Read transport-level TCP retransmission counters or equivalent connection telemetry around a controlled workload and compare them with an appropriate baseline.
+  - id: capability.network.inspect_tcp_integrity_errors
+    title: Inspect TCP integrity errors
+    description: Read receiver-side TCP checksum or input-integrity counters around a controlled workload and compare them with an appropriate baseline while accounting for counter scope and checksum offload.
   - id: capability.network.inspect_connection_error
     title: Inspect network connection error
     description: Attempt a controlled network connection and capture transport-layer establishment or teardown errors such as reset, refusal, timeout, and their OS/runtime error metadata.

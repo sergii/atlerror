@@ -4,6 +4,9 @@ title: Corrupted TCP segments are rejected by checksum validation and retransmit
 statement: When controlled Linux netem corruption is applied to an already-established TCP transfer with transmit checksum offload disabled, the receiver records TCP checksum or input errors, the sender records retransmissions, and the reliable transfer still completes with the exact original payload bytes.
 hypothesis: hypothesis.network.packet_corruption
 predictions:
+  - observation: observation.network.tcp_integrity_errors
+    expected: receiver_integrity_error_counter_increases_when_corrupted_segments_are_rejected
+    strength: strong
   - observation: observation.network.tcp_retransmissions
     expected: retransmission_counter_increases_while_tcp_recovers_checksum_rejected_segments
     strength: strong

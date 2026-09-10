@@ -1,0 +1,17 @@
+id: causal.network.packet_corruption.tcp_integrity_errors
+kind: causal_edge
+source: hypothesis.network.packet_corruption
+target: observation.network.tcp_integrity_errors
+relation: causes
+strength: strong
+conditions:
+  - Corrupted TCP segments reach a receiver that validates transport checksums.
+  - Checksum offload behavior does not erase or recompute the corrupted segment evidence before validation.
+evidence:
+  claims:
+    - claim.network.packet_corruption.checksum_rejection_causes_tcp_retransmissions
+  experiments:
+    - experiment.network.packet_corruption.tcp_checksum_retransmissions_python_linux
+explanation: Packet corruption changes segment bytes after checksum calculation, so receiver-side transport integrity validation records checksum or input errors and rejects the damaged segment.
+limitations:
+  - Hardware offload and lower-layer integrity checks can move or hide where the rejection is observed.

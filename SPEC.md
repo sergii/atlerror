@@ -11,7 +11,7 @@ This document defines the minimal semantic contract used by Atlerror knowledge f
 Atlerror separates four concerns:
 
 1. **Vocabulary** - the language: concept kinds, relations, action classes, and semantic constraints.
-2. **Knowledge** - concrete facts expressed using that language.
+2. **Knowledge** - concrete facts expressed using that language, including explicit causal edges.
 3. **Rules** - deterministic inference over observations and hypotheses.
 4. **Projections** - generated views for people and software: docs, website pages, CLI, MCP, HTTP APIs, agent skills, or other adapters.
 
@@ -31,18 +31,23 @@ observation.http.request_rate
 probe.http.inspect_request_rate
 capability.cpu.profile
 tool.ebpf
+causal.network.packet_loss.tcp_retransmissions
 ```
 
 Product or repository names MUST NOT be embedded into semantic IDs.
 
 ## Minimal concept kinds
 
-The current executable slice uses only a subset of the planned model:
+The current executable slice uses:
 
 - `symptom`
 - `hypothesis`
 - `observation`
 - `probe`
+- `system_entity`
+- `boundary`
+
+Causal edges are first-class semantic records but are not concept nodes. They connect existing concepts and carry typed causal semantics, conditions, strength, and optional evidence references.
 
 The broader target model is documented in `RFC/0001-semantic-foundation.md`.
 
@@ -79,11 +84,48 @@ The minimal vocabulary supports these semantic relations:
 - `requires`: probe -> capability
 - `supports`: observation -> hypothesis
 - `contradicts`: observation -> hypothesis
+- `causes`: concept -> concept, represented by a causal edge record
+- `contributes_to`: concept -> concept, represented by a causal edge record
 - `related_to`: concept -> concept
 
 `may_indicate` MUST NOT be interpreted as causality.
 
 `supports` and `contradicts` SHOULD be treated as updates to belief or confidence, not universal proof, unless a rule explicitly declares a deterministic exclusion.
+
+`related_to` MUST remain non-causal. A causal statement MUST use an explicit causal edge rather than relying on adjacency, naming, prose, or `related_to`.
+
+## Causal edges
+
+Causal edges model directional mechanism and consequence structure separately from diagnostic belief updates.
+
+A causal edge contains:
+
+- stable `causal.*` ID
+- `source` and `target` concept IDs
+- relation: `causes` or `contributes_to`
+- qualitative strength
+- optional conditions under which the causal claim applies
+- optional claim and experiment evidence references
+- human-readable explanation and limitations
+
+Example:
+
+```yaml
+id: causal.network.packet_loss.tcp_retransmissions
+kind: causal_edge
+source: hypothesis.network.packet_loss
+target: observation.network.tcp_retransmissions
+relation: causes
+strength: strong
+conditions:
+  - Missing delivery affects data on an active TCP transfer.
+evidence:
+  claims:
+    - claim.network.packet_loss.partial_loss_causes_tcp_retransmissions
+explanation: Missing TCP segments drive reliable transport recovery and retransmission.
+```
+
+Causal direction MUST NOT be inferred from prediction, support, contradiction, or correlation alone. Evidence references justify an edge but do not change the identity of its endpoint concepts.
 
 ## Rules
 
@@ -124,11 +166,12 @@ Machine-facing fields include:
 
 - stable `id`
 - `kind`
-- explicit relations
+- explicit diagnostic and causal relations
 - predictions
 - probes
 - capabilities
 - deterministic rules
+- causal conditions and evidence provenance
 - risk and approval metadata for actions as the model expands
 
 ## Integration boundary

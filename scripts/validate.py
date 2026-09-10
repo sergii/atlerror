@@ -14,6 +14,7 @@ CONCEPT_SCHEMA = ROOT / "schema" / "concept.schema.json"
 RULE_SCHEMA = ROOT / "schema" / "rule.schema.json"
 CLAIM_SCHEMA = ROOT / "schema" / "claim.schema.json"
 EXPERIMENT_SCHEMA = ROOT / "schema" / "experiment.schema.json"
+CAUSAL_EDGE_SCHEMA = ROOT / "schema" / "causal-edge.schema.json"
 
 REFERENCE_FIELDS = {"may_indicate", "tested_by", "produces", "requires", "preferred_tools", "prerequisites", "related_to"}
 SCALAR_REFERENCE_FIELDS = {"source", "target"}
@@ -33,6 +34,7 @@ def knowledge_files() -> list[Path]: return sorted((ROOT / "knowledge").rglob("*
 def rule_files() -> list[Path]: return sorted((ROOT / "rules").rglob("*.yaml"))
 def claim_files() -> list[Path]: return sorted((ROOT / "claims").rglob("*.yaml"))
 def experiment_files() -> list[Path]: return sorted((ROOT / "experiments").rglob("*.yaml"))
+def causal_files() -> list[Path]: return sorted((ROOT / "causal").rglob("*.yaml")) if (ROOT / "causal").exists() else []
 
 
 def registry_ids() -> set[str]:
@@ -90,7 +92,12 @@ def validate() -> None:
     rule_validator = Draft202012Validator(load_json(RULE_SCHEMA))
     claim_validator = Draft202012Validator(load_json(CLAIM_SCHEMA))
     experiment_validator = Draft202012Validator(load_json(EXPERIMENT_SCHEMA))
-    concepts: dict[str, dict[str, Any]] = {}; claims: dict[str, dict[str, Any]] = {}; experiments: dict[str, dict[str, Any]] = {}; errors: list[str] = []
+    causal_validator = Draft202012Validator(load_json(CAUSAL_EDGE_SCHEMA))
+    concepts: dict[str, dict[str, Any]] = {}
+    claims: dict[str, dict[str, Any]] = {}
+    experiments: dict[str, dict[str, Any]] = {}
+    causal_edges: dict[str, dict[str, Any]] = {}
+    errors: list[str] = []
 
     for path in knowledge_files():
         document = load_yaml(path)
@@ -139,6 +146,39 @@ def validate() -> None:
             if claim_id not in claims: errors.append(f"{path.relative_to(ROOT)}: unresolved claim: {claim_id}")
         validate_runner(path, document.get("runner", {}), errors)
 
+    causal_triples: set[tuple[str, str, str]] = set()
+    for path in causal_files():
+        document = load_yaml(path)
+        for error in sorted(causal_validator.iter_errors(document), key=lambda item: list(item.path)): errors.append(f"{path.relative_to(ROOT)}: schema: {error.message}")
+        edge_id = document.get("id")
+        if edge_id in causal_edges or edge_id in known_concept_ids or edge_id in claims or edge_id in experiments:
+            errors.append(f"{path.relative_to(ROOT)}: duplicate id: {edge_id}")
+        else:
+            causal_edges[edge_id] = document
+
+        source = document.get("source")
+        target = document.get("target")
+        relation = document.get("relation")
+        if source not in concepts: errors.append(f"{path.relative_to(ROOT)}: unresolved causal source concept: {source}")
+        if target not in concepts: errors.append(f"{path.relative_to(ROOT)}: unresolved causal target concept: {target}")
+        if source == target: errors.append(f"{path.relative_to(ROOT)}: causal self-edge is not allowed: {source}")
+        triple = (source, relation, target)
+        if triple in causal_triples: errors.append(f"{path.relative_to(ROOT)}: duplicate causal edge triple: {triple}")
+        else: causal_triples.add(triple)
+
+        evidence = document.get("evidence", {})
+        evidence_claims = set(evidence.get("claims", []))
+        evidence_experiments = set(evidence.get("experiments", []))
+        for claim_id in evidence_claims:
+            if claim_id not in claims: errors.append(f"{path.relative_to(ROOT)}: unresolved causal evidence claim: {claim_id}")
+        for experiment_id in evidence_experiments:
+            experiment = experiments.get(experiment_id)
+            if experiment is None:
+                errors.append(f"{path.relative_to(ROOT)}: unresolved causal evidence experiment: {experiment_id}")
+                continue
+            if evidence_claims and not (set(experiment.get("claims", [])) & evidence_claims):
+                errors.append(f"{path.relative_to(ROOT)}: experiment {experiment_id} supports none of the listed causal evidence claims")
+
     for path in rule_files():
         document = load_yaml(path)
         for error in sorted(rule_validator.iter_errors(document), key=lambda item: list(item.path)): errors.append(f"{path.relative_to(ROOT)}: schema: {error.message}")
@@ -149,7 +189,7 @@ def validate() -> None:
     if errors:
         for error in errors: print(f"ERROR: {error}")
         raise SystemExit(1)
-    print("Validated " f"{len(concepts)} concepts, {len(claims)} claims, " f"{len(experiments)} experiments, and {len(rule_files())} rules " "with no unresolved references.")
+    print("Validated " f"{len(concepts)} concepts, {len(claims)} claims, " f"{len(experiments)} experiments, {len(causal_edges)} causal edges, and {len(rule_files())} rules " "with no unresolved references.")
 
 
 if __name__ == "__main__": validate()

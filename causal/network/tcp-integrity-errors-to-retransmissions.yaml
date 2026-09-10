@@ -1,0 +1,17 @@
+id: causal.network.tcp_integrity_errors.tcp_retransmissions
+kind: causal_edge
+source: observation.network.tcp_integrity_errors
+target: observation.network.tcp_retransmissions
+relation: causes
+strength: strong
+conditions:
+  - The rejected segment belongs to an active reliable TCP transfer.
+  - The sender remains able to retransmit the missing sequence range.
+evidence:
+  claims:
+    - claim.network.packet_corruption.checksum_rejection_causes_tcp_retransmissions
+  experiments:
+    - experiment.network.packet_corruption.tcp_checksum_retransmissions_python_linux
+explanation: A checksum-rejected TCP segment is not accepted into the receive stream, leaving a sequence gap that causes TCP recovery and sender retransmission.
+limitations:
+  - Retransmission timing and count depend on acknowledgment behavior, congestion control, packetization, and kernel implementation.

@@ -29,6 +29,14 @@ relations:
     from: observation
     to: hypothesis
     semantics: The observation lowers confidence in or rejects the hypothesis.
+  - id: relation.causes
+    from: concept
+    to: concept
+    semantics: The source is modeled as a direct causal antecedent of the target under declared conditions.
+  - id: relation.contributes_to
+    from: concept
+    to: concept
+    semantics: The source can causally increase or worsen the target under declared conditions without being sufficient by itself.
   - id: relation.related_to
     from: concept
     to: concept
