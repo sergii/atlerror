@@ -1,0 +1,9 @@
+id: probe.network.inspect_tcp_integrity_errors
+kind: probe
+title: Inspect TCP integrity errors
+summary: Read receiver-side TCP checksum or input-integrity counters around a controlled workload and compare them with an appropriate baseline.
+produces:
+  - observation.network.tcp_integrity_errors
+requires:
+  - capability.network.inspect_tcp_integrity_errors
+risk: read_only
