@@ -1,0 +1,19 @@
+id: symptom.network.jitter_observed
+kind: symptom
+title: Network jitter observed
+summary: Repeated measurements across the same network path show materially variable transport delay rather than a stable latency shift.
+explanation:
+  short: Packet or request timing varies significantly from one sample to the next even when the path and workload are otherwise comparable.
+  detailed: >-
+    Network jitter is variation in transport delay across repeated samples. It is not identical to high average latency, packet loss, timeout, or application processing delay. A path can have a normal median but unstable tail latency, or a high but very stable latency with little jitter. Diagnose jitter by comparing the distribution of repeated transport timings, especially dispersion and tail spread, against a suitable baseline while checking that target-side work and delivery remain comparable.
+may_indicate:
+  - hypothesis.network.jitter
+common_misconceptions:
+  - High average latency proves jitter; a uniformly slow path can have high latency with very little variation.
+  - Jitter means packet loss; packets can all arrive while their delivery times vary substantially.
+search_terms:
+  - network jitter
+  - latency variation
+  - variable latency
+  - rtt variance
+  - tail latency spread
