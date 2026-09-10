@@ -1,0 +1,28 @@
+services:
+  server:
+    build: .
+    command: ["python", "server.py"]
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import socket; s=socket.socket(socket.AF_INET,socket.SOCK_DGRAM); s.settimeout(2); s.sendto(b'health',('127.0.0.1',9000)); data,_=s.recvfrom(64); assert data == b'health'; s.close()"
+      interval: 1s
+      timeout: 2s
+      retries: 15
+
+  probe:
+    build: .
+    command: ["python", "probe.py"]
+    cap_add:
+      - NET_ADMIN
+    environment:
+      TARGET_HOST: server
+      TARGET_PORT: "9000"
+      NETWORK_INTERFACE: eth0
+      CORRUPT_PERCENT: "50"
+      NETEM_SEED: "424242"
+      SAMPLES: "80"
+      PAYLOAD_BYTES: "1100"
+      SOCKET_TIMEOUT_SECONDS: "0.5"

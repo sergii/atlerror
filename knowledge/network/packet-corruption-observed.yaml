@@ -1,0 +1,19 @@
+id: symptom.network.packet_corruption_observed
+kind: symptom
+title: Corrupted network payload observed
+summary: A controlled integrity-aware probe or transport signal indicates that received packet contents differ from the bytes that were transmitted.
+explanation:
+  short: Delivery occurred, but one or more received probe payloads failed an integrity comparison against what was sent.
+  detailed: >-
+    Packet corruption is a content-integrity anomaly. A controlled probe can compare sent and received bytes, checksums, hashes, or equivalent transport telemetry. Corruption is distinct from packet loss, reordering, duplication, and jitter, although integrity enforcement can turn corruption into apparent loss when a lower layer rejects the damaged packet before application delivery.
+may_indicate:
+  - hypothesis.network.packet_corruption
+common_misconceptions:
+  - A missing packet proves corruption; packet loss has many causes and corruption requires integrity evidence or a controlled corruption intervention.
+  - If the application never receives malformed bytes, corruption did not happen; lower-layer checksums can discard corrupted packets before application delivery.
+search_terms:
+  - corrupted network payload
+  - checksum error
+  - bad packet checksum
+  - packet integrity failure
+  - corrupted datagram

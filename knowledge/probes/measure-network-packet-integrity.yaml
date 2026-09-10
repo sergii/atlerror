@@ -1,0 +1,9 @@
+id: probe.network.measure_packet_integrity
+kind: probe
+title: Measure network packet integrity
+summary: Send controlled payloads with known byte content across a network boundary and compare returned bytes or integrity telemetry with the transmitted values while independently tracking missing delivery.
+produces:
+  - observation.network.packet_corruption
+requires:
+  - capability.network.measure_packet_integrity
+risk: low
