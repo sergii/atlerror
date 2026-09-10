@@ -196,6 +196,12 @@ entries:
     canonical_id: symptom.network.packet_duplication_observed
     routes_to: [N1.5]
 
+  - code: S19
+    kind: symptom
+    title: Corrupted network payload observed
+    canonical_id: symptom.network.packet_corruption_observed
+    routes_to: [N1.6]
+
   - code: R1.1
     kind: mechanism
     title: Traffic-driven CPU load
@@ -435,6 +441,18 @@ entries:
     experiments:
       - code: N1.5-L1
         id: experiment.network.packet_duplication.netem_python_linux
+
+  - code: N1.6
+    kind: mechanism
+    title: Network packet corruption
+    canonical_id: hypothesis.network.packet_corruption
+    symptoms: [S19]
+    coverage: empirical
+    claims:
+      - claim.network.packet_corruption.netem_corrupt_changes_udp_payload_integrity
+    experiments:
+      - code: N1.6-L1
+        id: experiment.network.packet_corruption.netem_python_linux
 
   - code: N2.1
     kind: mechanism

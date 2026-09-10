@@ -1,0 +1,24 @@
+id: claim.network.packet_corruption.netem_corrupt_changes_udp_payload_integrity
+kind: claim
+title: Injected Linux packet corruption changes UDP payload integrity
+statement: When controlled Linux netem corruption is applied to a stable UDP path and UDP checksum rejection is intentionally disabled on the probe socket, materially more returned payloads differ from the bytes sent while most probes remain deliverable, and exact payload integrity returns after the intervention is removed.
+hypothesis: hypothesis.network.packet_corruption
+predictions:
+  - observation: observation.network.packet_corruption
+    expected: payload_mismatch_rises_under_netem_corrupt_and_recovers_after_removal
+    strength: strong
+  - observation: observation.network.packet_loss
+    expected: does_not_need_to_dominate_when_udp_checksum_rejection_is_bypassed
+    strength: moderate
+system_entities:
+  - system_entity.application_service
+  - system_entity.external_dependency
+boundaries:
+  - boundary.application.external_dependency
+scope:
+  runtime: python
+  os: linux
+limitations:
+  - Validates synthetic Linux traffic-control corruption inside Docker rather than a physical production network path.
+  - Intentionally disables the sender UDP checksum so corrupted payload bytes can reach the application and be compared directly; normal integrity enforcement may instead discard corrupted packets and make the symptom look like packet loss.
+  - Does not model TCP checksum recovery, retransmission, link-layer FCS behavior, or hardware checksum-offload differences.

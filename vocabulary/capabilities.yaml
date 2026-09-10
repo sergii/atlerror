@@ -52,6 +52,9 @@ capabilities:
   - id: capability.network.measure_packet_duplication
     title: Measure network packet duplication
     description: Send uniquely identified probe units across a network boundary and count repeated copies of each identity while independently tracking unique delivery completeness and order.
+  - id: capability.network.measure_packet_integrity
+    title: Measure network packet integrity
+    description: Send payloads with known byte content across a network boundary and compare returned bytes, hashes, checksums, or equivalent integrity telemetry while independently tracking missing delivery.
   - id: capability.network.inspect_tcp_retransmissions
     title: Inspect TCP retransmissions
     description: Read transport-level TCP retransmission counters or equivalent connection telemetry around a controlled workload and compare them with an appropriate baseline.

@@ -1,0 +1,35 @@
+id: hypothesis.network.packet_corruption
+kind: hypothesis
+title: Network packet corruption
+summary: The network path is altering packet contents in transit so received bytes no longer match the bytes that were transmitted, or integrity checks reject the altered packet before application delivery.
+predictions:
+  - observation: observation.network.packet_corruption
+    expected: above_baseline
+    strength: strong
+  - observation: observation.network.packet_loss
+    expected: may_increase_when_integrity_checks_reject_corrupted_packets
+    strength: moderate
+falsifiers:
+  - observation: observation.network.packet_corruption
+    condition: not_above_baseline
+    effect: decrease
+tested_by:
+  - probe.network.measure_packet_integrity
+related_to:
+  - symptom.network.packet_corruption_observed
+  - hypothesis.network.packet_loss
+  - hypothesis.network.packet_reordering
+  - hypothesis.network.jitter
+  - system_entity.application_service
+  - system_entity.external_dependency
+  - boundary.application.external_dependency
+common_misconceptions:
+  - Packet corruption is the same mechanism as packet loss; corruption can cause apparent loss when checksums reject damaged packets, but the causal mechanism is altered packet contents.
+  - Corrupted bytes must be visible to application code; transport or link integrity checks often discard damaged packets before the application can observe them.
+search_terms:
+  - packet corruption
+  - corrupted packet
+  - checksum error
+  - checksum failure
+  - payload corruption
+  - bit flip network

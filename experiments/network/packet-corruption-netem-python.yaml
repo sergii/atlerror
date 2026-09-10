@@ -1,0 +1,16 @@
+id: experiment.network.packet_corruption.netem_python_linux
+kind: experiment
+title: UDP payload corruption under controlled Linux netem intervention
+claims:
+  - claim.network.packet_corruption.netem_corrupt_changes_udp_payload_integrity
+description: Send known UDP payloads to a stable echo target with sender UDP checksum rejection intentionally bypassed, record a clean baseline, apply Linux tc netem corruption on the probe container egress path, compare returned bytes with sent bytes, then remove the qdisc and measure recovery. Support the corruption claim only when payload mismatches rise materially during intervention while most probes remain deliverable and exact integrity returns after recovery.
+runner:
+  type: docker_compose
+  compose_file: lab/network-packet-corruption/compose.yml
+  setup_service: server
+  evidence_service: probe
+expected_result: supports
+limitations:
+  - Uses synthetic Linux netem corruption inside Docker rather than a physical production path.
+  - Disables the probe socket UDP checksum intentionally to expose content corruption directly instead of allowing checksum rejection to collapse the observation into apparent packet loss.
+  - Does not model TCP retransmission or production NIC checksum-offload behavior.

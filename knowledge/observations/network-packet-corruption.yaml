@@ -1,0 +1,7 @@
+id: observation.network.packet_corruption
+kind: observation
+title: Network packet contents fail integrity comparison
+summary: Integrity-aware probes observe received bytes that differ from the corresponding transmitted bytes, or equivalent transport integrity-error telemetry rises above baseline.
+explanation:
+  short: The contents of one or more delivered probe units no longer match what was sent.
+  detailed: Corruption can be observed directly when a datagram remains deliverable but its payload changes, or indirectly through checksum and integrity-error counters when lower layers reject the damaged unit before application delivery. Direct corruption evidence should be kept distinct from missing delivery alone.
