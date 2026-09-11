@@ -50,7 +50,7 @@ claims/          empirically testable claims
 experiments/     experiment manifests
 lab/             executable empirical labs
 scripts/         validators and transport-independent projections
-examples/        complete diagnostic flows
+examples/        complete diagnostic flows and runtime evidence samples
 ```
 
 ## Causal projection
@@ -114,7 +114,32 @@ python scripts/causal_ranking.py \
 
 Ranking is deterministic and ordinal. The output exposes every factor used for ordering: conflicts, observed causal path nodes, matching hypothesis predictions by declared strength, weakest causal edge strength, evidence provenance, path distance, and `contributes_to` edges. It deliberately emits no probability or opaque numeric score. The contract is defined by `schema/causal-ranking.schema.json`.
 
-The query target is treated as the observation being explained. Additional `--observed` values mean those observation concepts are currently present, while `--absent` means they are known absent or normal. This is lightweight query-time context, not yet a persisted runtime evidence-instance model.
+## Runtime evidence
+
+Runtime evidence connects the reusable semantic graph to facts from one incident. An evidence instance says that a semantic observation was present or explicitly absent at a particular time, with provenance, scope, optional measurements, and ordinal confidence.
+
+Resolve a bundle independently:
+
+```bash
+python scripts/runtime_evidence.py \
+  examples/runtime-evidence/network-corruption-chain.yaml \
+  --as-of 2026-09-11T14:48:00Z \
+  --pretty
+```
+
+Or feed the same bundle directly into causal ranking:
+
+```bash
+python scripts/causal_ranking.py \
+  observation.network.tcp_retransmissions \
+  --evidence examples/runtime-evidence/network-corruption-chain.yaml \
+  --as-of 2026-09-11T14:48:00Z \
+  --pretty
+```
+
+Only active evidence affects ranking. Future instances and expired instances remain visible in the returned `evidence_context` but do not become `observed` or `absent` facts. Contradictory active states fail resolution instead of being silently reconciled.
+
+Runtime confidence and measurement magnitude are preserved for auditability but are not converted into probabilities or hidden weights. The contracts and semantics are defined by `schema/runtime-evidence.schema.json` and [RFC 0005](RFC/0005-runtime-evidence-instances.md).
 
 ## First vertical slice
 
