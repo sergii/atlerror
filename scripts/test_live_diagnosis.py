@@ -10,13 +10,13 @@ from datetime import datetime, timezone
 from pathlib import Path
 from unittest.mock import patch
 
+import yaml
 from jsonschema import Draft202012Validator
 
 from causal_projection import load_concepts, load_edges
 from live_diagnosis import LiveDiagnosisEngine, build_diagnosis_snapshot
 from live_diagnosis_watch import DiagnosisWatcher
 from opentelemetry_trace_adapter import build_runtime_evidence, load_adapter, load_payload
-import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
 NETWORK_EVIDENCE_PATH = ROOT / "examples" / "runtime-evidence" / "network-corruption-chain.yaml"
@@ -101,7 +101,7 @@ class LiveDiagnosisTest(unittest.TestCase):
         )
         self.assert_rankings_validate(snapshot)
 
-    def test_otel_dependency_latency_is_diagnosed_from_live_trace_evidence(self) -> None:
+    def test_otel_trace_produces_latency_and_timeout_diagnoses(self) -> None:
         snapshot = build_diagnosis_snapshot(
             self.otel_evidence(),
             self.concepts,
@@ -119,15 +119,19 @@ class LiveDiagnosisTest(unittest.TestCase):
             partition["scope"],
         )
         by_target = {item["target"]: item for item in partition["diagnoses"]}
+
         latency = by_target["observation.dependency.latency"]["ranking"]
         self.assertEqual(
             "hypothesis.latency.external_dependency",
             latency["candidates"][0]["source"]["id"],
         )
-        self.assertIn(
-            "observation.network.connection_timeout",
-            partition["unranked_observations"],
+
+        timeout = by_target["observation.network.connection_timeout"]["ranking"]
+        self.assertEqual(
+            "hypothesis.network.connection_timeout",
+            timeout["candidates"][0]["source"]["id"],
         )
+        self.assertEqual([], partition["unranked_observations"])
         self.assert_rankings_validate(snapshot)
 
     def test_absent_runtime_state_clears_active_diagnosis(self) -> None:
