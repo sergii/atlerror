@@ -1,0 +1,269 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://atlerror.dev/schema/probe-ranking.schema.json",
+  "title": "Atlerror probe ranking",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "kind",
+    "query",
+    "found",
+    "not_found_reason",
+    "ranking_method",
+    "probes"
+  ],
+  "properties": {
+    "schema_version": {"const": "0.1"},
+    "kind": {"const": "probe_ranking"},
+    "query": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["target", "observed", "absent", "candidate_hypotheses"],
+      "properties": {
+        "target": {"type": "string", "minLength": 1},
+        "observed": {
+          "type": "array",
+          "items": {"type": "string", "minLength": 1},
+          "uniqueItems": true
+        },
+        "absent": {
+          "type": "array",
+          "items": {"type": "string", "minLength": 1},
+          "uniqueItems": true
+        },
+        "candidate_hypotheses": {
+          "type": "array",
+          "items": {"type": "string", "minLength": 1},
+          "uniqueItems": true
+        }
+      }
+    },
+    "found": {"type": "boolean"},
+    "not_found_reason": {
+      "oneOf": [
+        {"type": "null"},
+        {"enum": ["fewer_than_two_candidates", "no_discriminating_probe"]}
+      ]
+    },
+    "ranking_method": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "purpose", "priority"],
+      "properties": {
+        "type": {"const": "deterministic_ordinal"},
+        "purpose": {"const": "discriminate_current_causal_candidates"},
+        "priority": {
+          "const": [
+            "more_top_candidate_two_sided_alternatives",
+            "more_top_candidate_contrast_components",
+            "more_top_candidate_discriminated_alternatives",
+            "more_two_sided_candidate_pairs",
+            "more_contrast_components",
+            "more_discriminated_candidate_pairs",
+            "lower_probe_risk",
+            "more_hypotheses_explicitly_tested",
+            "probe_id"
+          ]
+        }
+      }
+    },
+    "probes": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/probe_candidate"}
+    }
+  },
+  "$defs": {
+    "concept": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "kind": {"type": "string", "minLength": 1},
+        "title": {"type": "string"},
+        "summary": {"type": "string"}
+      }
+    },
+    "pair": {
+      "type": "array",
+      "prefixItems": [
+        {"type": "string", "minLength": 1},
+        {"type": "string", "minLength": 1}
+      ],
+      "items": false,
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "candidate_effect": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "hypothesis",
+        "current_rank",
+        "on_causal_path",
+        "prediction_strength",
+        "prediction_expected",
+        "absent_is_falsifier_conflict",
+        "falsifier_condition",
+        "explicitly_tested_by_probe"
+      ],
+      "properties": {
+        "hypothesis": {"type": "string", "minLength": 1},
+        "current_rank": {"type": "integer", "minimum": 1},
+        "on_causal_path": {"type": "boolean"},
+        "prediction_strength": {
+          "oneOf": [
+            {"type": "null"},
+            {"enum": ["weak", "moderate", "strong"]}
+          ]
+        },
+        "prediction_expected": {
+          "oneOf": [
+            {"type": "null"},
+            {"type": "string", "minLength": 1}
+          ]
+        },
+        "absent_is_falsifier_conflict": {"type": "boolean"},
+        "falsifier_condition": {
+          "oneOf": [
+            {"type": "null"},
+            {"type": "string", "minLength": 1}
+          ]
+        },
+        "explicitly_tested_by_probe": {"type": "boolean"}
+      }
+    },
+    "outcome_analysis": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "observation",
+        "candidate_effects",
+        "observed_distinguishes_pairs",
+        "absent_distinguishes_pairs",
+        "two_sided_distinguishes_pairs",
+        "contrast_components"
+      ],
+      "properties": {
+        "observation": {"type": "string", "minLength": 1},
+        "candidate_effects": {
+          "type": "array",
+          "minItems": 2,
+          "items": {"$ref": "#/$defs/candidate_effect"}
+        },
+        "observed_distinguishes_pairs": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/pair"}
+        },
+        "absent_distinguishes_pairs": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/pair"}
+        },
+        "two_sided_distinguishes_pairs": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/pair"}
+        },
+        "contrast_components": {"type": "integer", "minimum": 1}
+      }
+    },
+    "factors": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "top_candidate",
+        "top_candidate_two_sided_alternatives",
+        "top_candidate_discriminated_alternatives",
+        "top_candidate_contrast_components",
+        "two_sided_candidate_pairs",
+        "discriminated_candidate_pairs",
+        "contrast_components",
+        "discriminating_observations"
+      ],
+      "properties": {
+        "top_candidate": {"type": "string", "minLength": 1},
+        "top_candidate_two_sided_alternatives": {
+          "type": "array",
+          "items": {"type": "string", "minLength": 1},
+          "uniqueItems": true
+        },
+        "top_candidate_discriminated_alternatives": {
+          "type": "array",
+          "items": {"type": "string", "minLength": 1},
+          "uniqueItems": true
+        },
+        "top_candidate_contrast_components": {"type": "integer", "minimum": 1},
+        "two_sided_candidate_pairs": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/pair"}
+        },
+        "discriminated_candidate_pairs": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"$ref": "#/$defs/pair"}
+        },
+        "contrast_components": {"type": "integer", "minimum": 1},
+        "discriminating_observations": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"type": "string", "minLength": 1},
+          "uniqueItems": true
+        }
+      }
+    },
+    "probe_candidate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "rank",
+        "probe",
+        "risk",
+        "requires",
+        "preferred_tools",
+        "unresolved_observations",
+        "hypotheses_tested",
+        "outcome_analysis",
+        "factors",
+        "reasons"
+      ],
+      "properties": {
+        "rank": {"type": "integer", "minimum": 1},
+        "probe": {"$ref": "#/$defs/concept"},
+        "risk": {"enum": ["read_only", "low", "state_changing", "high"]},
+        "requires": {
+          "type": "array",
+          "items": {"type": "string", "minLength": 1},
+          "uniqueItems": true
+        },
+        "preferred_tools": {
+          "type": "array",
+          "items": {"type": "string", "minLength": 1},
+          "uniqueItems": true
+        },
+        "unresolved_observations": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"type": "string", "minLength": 1},
+          "uniqueItems": true
+        },
+        "hypotheses_tested": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"type": "string", "minLength": 1},
+          "uniqueItems": true
+        },
+        "outcome_analysis": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"$ref": "#/$defs/outcome_analysis"}
+        },
+        "factors": {"$ref": "#/$defs/factors"},
+        "reasons": {
+          "type": "array",
+          "minItems": 2,
+          "items": {"type": "string", "minLength": 1}
+        }
+      }
+    }
+  }
+}
