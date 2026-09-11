@@ -16,7 +16,13 @@ from causal_projection import (
     path_view,
     reverse_shortest_paths,
 )
-from runtime_evidence import load_runtime_evidence, parse_timestamp, resolve_runtime_evidence
+from runtime_evidence import (
+    add_scope_arguments,
+    build_scope_query,
+    load_runtime_evidence,
+    parse_timestamp,
+    resolve_runtime_evidence,
+)
 
 STRENGTH_ORDER = {"weak": 0, "moderate": 1, "strong": 2}
 PROVENANCE_ORDER = {"none": 0, "claim": 1, "experiment": 2}
@@ -279,13 +285,14 @@ def build_parser() -> argparse.ArgumentParser:
         "--evidence",
         type=Path,
         metavar="PATH",
-        help="Runtime evidence bundle whose active instances augment --observed and --absent",
+        help="Runtime evidence bundle whose selected active instances augment --observed and --absent",
     )
     parser.add_argument(
         "--as-of",
         metavar="ISO8601",
         help="Time used to resolve runtime evidence freshness; defaults to current UTC time",
     )
+    add_scope_arguments(parser)
     parser.add_argument(
         "--max-depth",
         type=int,
@@ -303,6 +310,10 @@ def main(root: Path = ROOT) -> int:
         parser.error("--max-depth must be at least 1")
     if args.as_of is not None and args.evidence is None:
         parser.error("--as-of requires --evidence")
+    if (
+        args.scope_entity or args.scope_boundary or args.scope_attribute
+    ) and args.evidence is None:
+        parser.error("scope selectors require --evidence")
 
     edges = load_edges(root)
     concepts = load_concepts(root)
@@ -317,12 +328,18 @@ def main(root: Path = ROOT) -> int:
                 if args.as_of is not None
                 else datetime.now(timezone.utc)
             )
+            scope_query = build_scope_query(
+                entities=args.scope_entity,
+                boundaries=args.scope_boundary,
+                attributes=args.scope_attribute,
+            )
             document = load_runtime_evidence(args.evidence)
             runtime_observed, runtime_absent, evidence_context = resolve_runtime_evidence(
                 document,
                 concepts,
                 as_of=as_of,
                 source_path=str(args.evidence),
+                scope_query=scope_query,
             )
             observed.update(runtime_observed)
             absent.update(runtime_absent)
