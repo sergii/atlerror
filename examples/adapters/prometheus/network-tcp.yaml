@@ -1,0 +1,48 @@
+schema_version: "0.1"
+kind: prometheus_adapter
+id: adapter.prometheus.network_tcp
+description: >-
+  Example mapping from Prometheus instant queries into network runtime evidence.
+  Thresholds are deployment policy and must be calibrated for the monitored path.
+default_confidence: moderate
+default_ttl_seconds: 300
+mappings:
+  - id: tcp_retransmissions_rate
+    description: Map a node-exporter TCP retransmission rate above the local baseline.
+    observation: observation.network.tcp_retransmissions
+    query: rate(node_netstat_Tcp_RetransSegs[5m])
+    unit: segments_per_second
+    state_rule:
+      operator: gt
+      threshold: 5
+      state_when_true: observed
+      state_when_false: absent
+    scope:
+      boundary_labels:
+        - atlerror_boundary
+      entity_labels:
+        - atlerror_entity
+      attribute_labels:
+        service: service
+        instance: instance
+
+  - id: tcp_integrity_errors_rate
+    description: >-
+      Map a deployment-specific TCP checksum-error counter. The metric name is an example;
+      use an exporter metric that specifically represents checksum or equivalent integrity errors.
+    observation: observation.network.tcp_integrity_errors
+    query: rate(tcp_checksum_errors_total[5m])
+    unit: errors_per_second
+    state_rule:
+      operator: gt
+      threshold: 0.1
+      state_when_true: observed
+      state_when_false: absent
+    scope:
+      boundary_labels:
+        - atlerror_boundary
+      entity_labels:
+        - atlerror_entity
+      attribute_labels:
+        service: service
+        instance: instance

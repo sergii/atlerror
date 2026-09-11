@@ -179,7 +179,9 @@ This ordering is intentionally explainable rather than statistically calibrated.
 
 For example, TCP retransmissions alone rank packet loss ahead of packet corruption in the current N1 slice because packet loss strongly predicts retransmissions through a shorter evidence-backed path. If receiver TCP integrity errors are also observed, packet corruption moves ahead because the observed integrity error is on its causal path and is also a strong hypothesis prediction. If those integrity errors are known absent, that path receives an explicit conflict.
 
-Query-time `--observed` and `--absent` IDs remain useful lightweight inputs. RFC 0005 adds incident-scoped runtime evidence instances with timestamps, freshness, provenance, scope, measurements, and ordinal confidence. `scripts/causal_ranking.py` can resolve those instances into active observation state and preserve the compact evidence context in its output.
+Query-time `--observed` and `--absent` IDs remain useful lightweight inputs. RFC 0005 adds incident-scoped runtime evidence instances with timestamps, freshness, provenance, scope, measurements, and ordinal confidence. Runtime evidence can now be selected by semantic boundary, entity, and exact scope attributes before ranking, so observations from unrelated paths do not leak into the same candidate ordering.
+
+RFC 0006 adds the first concrete telemetry bridge: Prometheus instant-query results can be mapped into the same runtime evidence contract. This keeps telemetry-vendor syntax and threshold policy outside the causal graph while allowing real measurements to drive the transport-independent ranking engine.
 
 ## Non-goals
 
@@ -193,15 +195,15 @@ This RFC does not introduce:
 
 Feedback loops may eventually require cycles, so the validator must not require the graph to be acyclic.
 
-Runtime evidence instance semantics are defined separately in RFC 0005 rather than being embedded into the causal-edge model.
+Runtime evidence instance semantics are defined separately in RFC 0005 rather than being embedded into the causal-edge model. Telemetry adapter semantics are defined separately in RFC 0006.
 
 ## Future work
 
-Causal path projection, reverse-cause lookup, transparent ordinal ranking, and runtime evidence inputs now have shared transport-independent contracts. Likely next steps are:
+Causal path projection, reverse-cause lookup, transparent ordinal ranking, scoped runtime evidence, and the first real metric adapter now share one end-to-end contract. Likely next steps are:
 
-1. scope-aware evidence selection and candidate ranking
+1. additional telemetry adapters for traces, logs, and probes where they add diagnostic information that metrics cannot express
 2. explicit masking/recovery semantics if repeated use cases justify new relation types
-3. adapters that translate real metrics, traces, logs, and probes into runtime evidence instances
-4. thin MCP and HTTP adapters over the shared contracts once an adapter is useful to a real consumer
+3. richer evidence quality and freshness policies that remain transparent to ranking consumers
+4. thin MCP and HTTP adapters over the shared contracts now that a real telemetry-to-ranking path exists
 
 The graph vocabulary should grow only when a concrete diagnostic case cannot be represented with the existing relations.

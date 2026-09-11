@@ -1,0 +1,19 @@
+{
+  "status": "success",
+  "data": {
+    "resultType": "vector",
+    "result": [
+      {
+        "metric": {
+          "__name__": "node_netstat_Tcp_RetransSegs",
+          "job": "node",
+          "instance": "app-1:9100",
+          "service": "api",
+          "atlerror_boundary": "boundary.application.external_dependency",
+          "atlerror_entity": "system_entity.application_service"
+        },
+        "value": [1789141500, "12.5"]
+      }
+    ]
+  }
+}

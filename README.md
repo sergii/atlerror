@@ -49,8 +49,8 @@ rules/           deterministic inference rules
 claims/          empirically testable claims
 experiments/     experiment manifests
 lab/             executable empirical labs
-scripts/         validators and transport-independent projections
-examples/        complete diagnostic flows and runtime evidence samples
+scripts/         validators, projections, ranking, and telemetry adapters
+examples/        diagnostic flows, runtime evidence, adapter mappings, and telemetry fixtures
 ```
 
 ## Causal projection
@@ -164,6 +164,44 @@ python scripts/causal_ranking.py \
 Selectors can also use `--scope-entity` and exact `--scope-attribute KEY=VALUE` matches. When a scope query is supplied, evidence that cannot be proven applicable to that scope is excluded conservatively and listed in `scope_filtered_instance_ids`. Boundary scopes imply their semantic source and target entities, so an entity selector can match evidence scoped to a boundary containing that entity.
 
 Runtime confidence and measurement magnitude are preserved for auditability but are not converted into probabilities or hidden weights. The contracts and semantics are defined by `schema/runtime-evidence.schema.json` and [RFC 0005](RFC/0005-runtime-evidence-instances.md).
+
+## Prometheus adapter
+
+The first concrete telemetry adapter translates Prometheus instant-query results into the same runtime evidence contract. Prometheus-specific query syntax and deployment thresholds stay in adapter configuration instead of leaking into canonical semantic knowledge.
+
+Query a live Prometheus-compatible server and write a runtime evidence bundle:
+
+```bash
+python scripts/prometheus_adapter.py \
+  examples/adapters/prometheus/network-tcp.yaml \
+  --incident-id incident.network.production \
+  --base-url http://localhost:9090 \
+  > /tmp/atlerror-evidence.yaml
+```
+
+The generated bundle can immediately feed scope-aware causal ranking:
+
+```bash
+python scripts/causal_ranking.py \
+  observation.network.tcp_retransmissions \
+  --evidence /tmp/atlerror-evidence.yaml \
+  --scope-boundary boundary.application.external_dependency \
+  --pretty
+```
+
+Saved Prometheus HTTP API responses can be used instead of live requests for deterministic replay and tests:
+
+```bash
+python scripts/prometheus_adapter.py \
+  examples/adapters/prometheus/network-tcp.yaml \
+  --incident-id incident.network.replay \
+  --response tcp_retransmissions_rate=examples/telemetry/prometheus/tcp_retransmissions_rate.json \
+  --response tcp_integrity_errors_rate=examples/telemetry/prometheus/tcp_integrity_errors_rate.json
+```
+
+Each vector series becomes one evidence instance. Mapping rules explicitly define the threshold comparison and the `observed` or `absent` state on each side of that comparison. Semantic boundaries and entities can come from validated Prometheus label values, while ordinary labels can become exact scope attributes. Missing required scope labels or unknown topology IDs fail conversion instead of silently producing unscoped evidence.
+
+The first adapter supports Prometheus `vector` and `scalar` instant-query results. Range aggregation remains a PromQL concern for now. Optional bearer authentication reads the token from an environment variable through `--bearer-token-env`. The mapping schema and design rationale are documented in `schema/prometheus-adapter.schema.json` and [RFC 0006](RFC/0006-prometheus-runtime-evidence-adapter.md).
 
 ## First vertical slice
 
