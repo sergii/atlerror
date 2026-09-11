@@ -192,7 +192,7 @@
           "items": {"type": "string", "minLength": 1},
           "uniqueItems": true
         },
-        "top_candidate_contrast_components": {"type": "integer", "minimum": 1},
+        "top_candidate_contrast_components": {"type": "integer", "minimum": 0},
         "two_sided_candidate_pairs": {
           "type": "array",
           "items": {"$ref": "#/$defs/pair"}
