@@ -1,0 +1,18 @@
+id: causal.latency.external_dependency.dependency_latency
+kind: causal_edge
+source: hypothesis.latency.external_dependency
+target: observation.dependency.latency
+relation: causes
+strength: strong
+conditions:
+  - The downstream dependency interaction is synchronous and relevant to the selected request path.
+  - The dependency-latency observation is measured for the same semantic dependency scope.
+evidence:
+  claims:
+    - claim.latency.external_dependency.delay_propagates_upstream
+  experiments:
+    - experiment.latency.external_dependency.ruby_http
+explanation: A slower synchronous downstream dependency directly increases the time measured for that dependency interaction.
+limitations:
+  - The edge identifies the slow downstream interaction as a causal antecedent of measured dependency latency, not the provider-internal reason the dependency became slow.
+  - Retries, hedging, caching, batching, and parallel calls can change how dependency delay affects the wider request.
