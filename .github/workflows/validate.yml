@@ -63,6 +63,9 @@ jobs:
       - name: Validate diagnosis MCP resources
         run: python scripts/test_diagnosis_mcp_server.py
 
+      - name: Validate MCP read-only probe tools
+        run: python scripts/test_diagnosis_mcp_probe_tools.py
+
       - name: Validate end-to-end demo harness
         run: python scripts/test_demo_checkout_stripe.py
 

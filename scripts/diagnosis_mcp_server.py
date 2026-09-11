@@ -9,8 +9,9 @@ import sys
 from pathlib import Path
 from typing import Any, TextIO
 
-from causal_projection import ROOT
+from causal_projection import ROOT, load_concepts, load_edges
 from diagnosis_http_api import DiagnosisSnapshotReader, InvalidSnapshot, SnapshotUnavailable
+from mcp_probe_tools import ProbeToolInvocationError, RecommendedProbeToolController
 
 MODERN_PROTOCOL_VERSION = "2026-07-28"
 LEGACY_PROTOCOL_VERSIONS = (
@@ -27,7 +28,7 @@ DIAGNOSIS_STATUS_URI = "atlerror://diagnosis/status"
 SERVER_INFO = {
     "name": "atlerror-diagnosis",
     "title": "Atlerror Diagnosis",
-    "version": "0.1.0",
+    "version": "0.2.0",
 }
 SERVER_INFO_META_KEY = "io.modelcontextprotocol/serverInfo"
 PROTOCOL_VERSION_META_KEY = "io.modelcontextprotocol/protocolVersion"
@@ -58,10 +59,35 @@ class McpProtocolError(ValueError):
 
 
 class DiagnosisMcpServer:
-    def __init__(self, reader: DiagnosisSnapshotReader) -> None:
+    def __init__(
+        self,
+        reader: DiagnosisSnapshotReader,
+        *,
+        probe_tools: RecommendedProbeToolController | None = None,
+    ) -> None:
         self.reader = reader
+        self.probe_tools = probe_tools
         self._legacy_protocol_version: str | None = None
         self._legacy_initialized = False
+
+    def _capabilities(self) -> dict[str, Any]:
+        capabilities: dict[str, Any] = {"resources": {}}
+        if self.probe_tools is not None:
+            capabilities["tools"] = {}
+        return capabilities
+
+    def _instructions(self) -> str:
+        instructions = (
+            f"Read {CURRENT_DIAGNOSIS_URI} for the current diagnosis and "
+            f"{DIAGNOSIS_STATUS_URI} for readiness and revision metadata."
+        )
+        if self.probe_tools is not None:
+            instructions += (
+                " Opt-in read-only probe tools are enabled. Begin only the current top "
+                "recommendation, run the controlled workload externally, then finish the returned "
+                "probe session to append evidence and recompute diagnosis."
+            )
+        return instructions
 
     @staticmethod
     def _resource_descriptors(*, modern: bool) -> list[dict[str, Any]]:
@@ -211,12 +237,9 @@ class DiagnosisMcpServer:
         self._legacy_initialized = False
         return {
             "protocolVersion": negotiated,
-            "capabilities": {"resources": {}},
+            "capabilities": self._capabilities(),
             "serverInfo": copy.deepcopy(SERVER_INFO),
-            "instructions": (
-                f"Read {CURRENT_DIAGNOSIS_URI} for the current diagnosis and "
-                f"{DIAGNOSIS_STATUS_URI} for readiness and revision metadata."
-            ),
+            "instructions": self._instructions(),
         }
 
     def _ensure_legacy_ready(self) -> None:
@@ -236,11 +259,8 @@ class DiagnosisMcpServer:
         return self._modern_result(
             {
                 "supportedVersions": [MODERN_PROTOCOL_VERSION],
-                "capabilities": {"resources": {}},
-                "instructions": (
-                    f"Read {CURRENT_DIAGNOSIS_URI} for the current diagnosis and "
-                    f"{DIAGNOSIS_STATUS_URI} for readiness and revision metadata."
-                ),
+                "capabilities": self._capabilities(),
+                "instructions": self._instructions(),
             },
             cacheable=True,
             ttl_ms=60_000,
@@ -274,6 +294,54 @@ class DiagnosisMcpServer:
             raise McpProtocolError(INVALID_PARAMS, "resources/read requires a non-empty uri")
         return self._read_resource(uri, modern=modern)
 
+    def _tools_list(self, message: dict[str, Any], *, modern: bool) -> dict[str, Any]:
+        if self.probe_tools is None:
+            raise McpProtocolError(METHOD_NOT_FOUND, "MCP probe tools are not enabled")
+        params = self._request_params(message)
+        if params.get("cursor") is not None:
+            raise McpProtocolError(INVALID_PARAMS, "this tool list does not use pagination")
+        payload = {"tools": self.probe_tools.tool_descriptors()}
+        if modern:
+            return self._modern_result(payload, cacheable=True, ttl_ms=60_000, cache_scope="public")
+        return payload
+
+    @classmethod
+    def _tool_result(
+        cls,
+        payload: dict[str, Any] | None,
+        *,
+        modern: bool,
+        error_message: str | None = None,
+    ) -> dict[str, Any]:
+        if error_message is not None:
+            result: dict[str, Any] = {
+                "content": [{"type": "text", "text": error_message}],
+                "isError": True,
+            }
+        else:
+            assert payload is not None
+            result = {
+                "content": [{"type": "text", "text": cls._json_text(payload)}],
+                "structuredContent": copy.deepcopy(payload),
+                "isError": False,
+            }
+        return cls._modern_result(result) if modern else result
+
+    def _tools_call(self, message: dict[str, Any], *, modern: bool) -> dict[str, Any]:
+        if self.probe_tools is None:
+            raise McpProtocolError(METHOD_NOT_FOUND, "MCP probe tools are not enabled")
+        params = self._request_params(message)
+        name = params.get("name")
+        if not isinstance(name, str) or not name:
+            raise McpProtocolError(INVALID_PARAMS, "tools/call requires a non-empty name")
+        if name not in self.probe_tools.tool_names():
+            raise McpProtocolError(INVALID_PARAMS, "Tool not found", data={"name": name})
+        try:
+            result = self.probe_tools.call(name, params.get("arguments"))
+        except ProbeToolInvocationError as exc:
+            return self._tool_result(None, modern=modern, error_message=str(exc))
+        return self._tool_result(result, modern=modern)
+
     def _dispatch_request(self, message: dict[str, Any]) -> dict[str, Any]:
         method = message["method"]
         if method == "server/discover":
@@ -297,6 +365,10 @@ class DiagnosisMcpServer:
             return self._resource_templates_list(message, modern=modern)
         if method == "resources/read":
             return self._resources_read(message, modern=modern)
+        if method == "tools/list":
+            return self._tools_list(message, modern=modern)
+        if method == "tools/call":
+            return self._tools_call(message, modern=modern)
         raise McpProtocolError(METHOD_NOT_FOUND, f"Method not found: {method}")
 
     def _handle_notification(self, message: dict[str, Any]) -> None:
@@ -380,7 +452,8 @@ def serve_stdio(
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description=(
-            "Expose the current Atlerror diagnosis snapshot as read-only MCP resources over stdio."
+            "Expose the current Atlerror diagnosis snapshot as MCP resources over stdio, with "
+            "optional explicitly enabled registered read-only probe tools."
         )
     )
     parser.add_argument(
@@ -389,6 +462,22 @@ def build_parser() -> argparse.ArgumentParser:
         required=True,
         help="Diagnosis snapshot JSON file produced by live_diagnosis_watch.py",
     )
+    parser.add_argument(
+        "--enable-readonly-probe-tools",
+        action="store_true",
+        help="Opt in to MCP tools for registered read-only diagnostic probes",
+    )
+    parser.add_argument(
+        "--runtime-evidence",
+        type=Path,
+        help="Runtime evidence JSON/YAML file to append probe results to when tools are enabled",
+    )
+    parser.add_argument(
+        "--probe-session-dir",
+        type=Path,
+        default=Path("/tmp/atlerror-probe-sessions"),
+        help="Directory for opaque probe sessions, default /tmp/atlerror-probe-sessions",
+    )
     parser.add_argument("--verbose", action="store_true", help="Write request diagnostics to stderr")
     return parser
 
@@ -396,12 +485,24 @@ def build_parser() -> argparse.ArgumentParser:
 def main(root: Path = ROOT) -> int:
     parser = build_parser()
     args = parser.parse_args()
+    if args.enable_readonly_probe_tools and args.runtime_evidence is None:
+        parser.error("--runtime-evidence is required with --enable-readonly-probe-tools")
     try:
         reader = DiagnosisSnapshotReader(
             args.snapshot,
             schema_path=root / "schema" / "diagnosis-snapshot.schema.json",
         )
-        server = DiagnosisMcpServer(reader)
+        probe_tools = None
+        if args.enable_readonly_probe_tools:
+            probe_tools = RecommendedProbeToolController(
+                reader=reader,
+                runtime_evidence_path=args.runtime_evidence,
+                snapshot_path=args.snapshot,
+                concepts=load_concepts(root),
+                edges=load_edges(root),
+                session_dir=args.probe_session_dir,
+            )
+        server = DiagnosisMcpServer(reader, probe_tools=probe_tools)
     except (OSError, ValueError) as exc:
         parser.error(str(exc))
     return serve_stdio(server, verbose=args.verbose)
