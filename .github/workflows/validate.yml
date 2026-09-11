@@ -32,3 +32,6 @@ jobs:
 
       - name: Validate causal ranking
         run: python scripts/test_causal_ranking.py
+
+      - name: Validate runtime evidence
+        run: python scripts/test_runtime_evidence.py
