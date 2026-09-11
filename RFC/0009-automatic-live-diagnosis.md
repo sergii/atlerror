@@ -202,11 +202,17 @@ This RFC does not introduce:
 - causal discovery from trace structure or telemetry correlations
 - automatic creation of missing causal edges
 
+## Consumer transport
+
+RFC 0010 adds a thin read-only HTTP API over the diagnosis snapshot. That API validates and serves the same snapshot contract instead of moving HTTP concerns into the diagnosis engine.
+
+MCP and other consumer transports should follow the same pattern: project the existing diagnosis snapshot without creating a second reasoning model.
+
 ## Future work
 
 The next useful steps are:
 
-1. expose diagnosis snapshots through a thin HTTP or MCP resource for agents and UIs
+1. expose diagnosis snapshots through an MCP resource for agents
 2. replace polling with an event-driven evidence-change notification when a real deployment needs it
 3. add explicit recommended-next-probe projection when top candidates remain ambiguous
 4. correlate traces, logs, and metrics into the same incident evidence partitions

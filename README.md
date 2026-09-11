@@ -276,6 +276,23 @@ The checkout-to-Stripe example is now backed by two explicit empirical causal ed
 
 The snapshot contract is `schema/diagnosis-snapshot.schema.json`; the automatic loop and scope-normalization decisions are documented in [RFC 0009](RFC/0009-automatic-live-diagnosis.md).
 
+## Diagnosis HTTP API
+
+The diagnosis snapshot can be served directly to local agents, IDEs, and UIs through a small read-only HTTP boundary:
+
+```bash
+python scripts/diagnosis_http_api.py \
+  --snapshot /tmp/atlerror-diagnosis.json
+```
+
+The API binds to `127.0.0.1:4320` by default and exposes `GET /health`, `GET /status`, and `GET /diagnosis`. It validates the snapshot against the existing diagnosis schema before serving it, so HTTP does not introduce another diagnosis contract.
+
+`/status` distinguishes `waiting_for_snapshot`, `ready`, and `invalid_snapshot` states and exposes compact counts plus the incident ID, evidence revision, freshness boundary, and current ETag. `/diagnosis` serves the complete diagnosis snapshot including all ranking explanations and evidence context.
+
+`GET /diagnosis` supports `ETag` and `If-None-Match`, allowing cheap polling with HTTP 304 when the snapshot has not changed. Atomic snapshot replacement from the watcher is detected automatically and revalidated before the new diagnosis is served.
+
+The built-in API is read-only and loopback-only by default. It intentionally has no authentication or TLS; remote deployments should put an authenticated transport boundary in front of it. Design details are documented in [RFC 0010](RFC/0010-diagnosis-http-api.md).
+
 ## First vertical slice
 
 The initial slice models `symptom.cpu.high` and a small set of hypotheses:
