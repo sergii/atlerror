@@ -1,0 +1,163 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://atlerror.dev/schema/causal-ranking.schema.json",
+  "title": "Atlerror causal ranking",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "kind", "query", "found", "ranking_method", "candidates"],
+  "properties": {
+    "schema_version": {"const": "0.1"},
+    "kind": {"const": "causal_ranking"},
+    "query": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["target", "observed", "absent", "max_depth"],
+      "properties": {
+        "target": {"type": "string", "minLength": 1},
+        "observed": {
+          "type": "array",
+          "items": {"type": "string", "minLength": 1},
+          "uniqueItems": true
+        },
+        "absent": {
+          "type": "array",
+          "items": {"type": "string", "minLength": 1},
+          "uniqueItems": true
+        },
+        "max_depth": {"type": ["integer", "null"], "minimum": 1}
+      }
+    },
+    "found": {"type": "boolean"},
+    "ranking_method": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "target_is_observed", "priority"],
+      "properties": {
+        "type": {"const": "deterministic_ordinal"},
+        "target_is_observed": {"const": true},
+        "priority": {
+          "const": [
+            "fewer_conflicts",
+            "more_causal_path_matches",
+            "more_strong_prediction_matches",
+            "more_moderate_prediction_matches",
+            "more_weak_prediction_matches",
+            "stronger_weakest_causal_edge",
+            "stronger_weakest_provenance",
+            "shorter_causal_path",
+            "fewer_contributes_to_edges",
+            "source_id"
+          ]
+        }
+      }
+    },
+    "candidates": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/candidate"}
+    }
+  },
+  "$defs": {
+    "concept": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "kind": {"type": "string", "minLength": 1},
+        "title": {"type": "string"},
+        "summary": {"type": "string"}
+      }
+    },
+    "edge": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "source", "target", "relation", "strength", "explanation", "source_path"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "source": {"type": "string", "minLength": 1},
+        "target": {"type": "string", "minLength": 1},
+        "relation": {"enum": ["causes", "contributes_to"]},
+        "strength": {"enum": ["weak", "moderate", "strong"]},
+        "explanation": {"type": "string", "minLength": 1},
+        "conditions": {"type": "array", "items": {"type": "string"}},
+        "evidence": {"type": "object"},
+        "limitations": {"type": "array", "items": {"type": "string"}},
+        "source_path": {"type": "string", "minLength": 1}
+      }
+    },
+    "path": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source", "target", "distance", "nodes", "edges"],
+      "properties": {
+        "source": {"type": "string", "minLength": 1},
+        "target": {"type": "string", "minLength": 1},
+        "distance": {"type": "integer", "minimum": 1},
+        "nodes": {
+          "type": "array",
+          "minItems": 2,
+          "items": {"$ref": "#/$defs/concept"}
+        },
+        "edges": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"$ref": "#/$defs/edge"}
+        }
+      }
+    },
+    "prediction_matches": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["strong", "moderate", "weak"],
+      "properties": {
+        "strong": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "moderate": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "weak": {"type": "array", "items": {"type": "string"}, "uniqueItems": true}
+      }
+    },
+    "factors": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "matched_path_observations",
+        "path_conflicts",
+        "falsifier_conflicts",
+        "conflicting_observations",
+        "prediction_matches",
+        "weakest_edge_strength",
+        "weakest_provenance",
+        "experiment_backed_edges",
+        "claim_backed_edges",
+        "contributes_to_edges"
+      ],
+      "properties": {
+        "matched_path_observations": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "path_conflicts": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "falsifier_conflicts": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "conflicting_observations": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "prediction_matches": {"$ref": "#/$defs/prediction_matches"},
+        "weakest_edge_strength": {"enum": ["weak", "moderate", "strong"]},
+        "weakest_provenance": {"enum": ["none", "claim", "experiment"]},
+        "experiment_backed_edges": {"type": "integer", "minimum": 0},
+        "claim_backed_edges": {"type": "integer", "minimum": 0},
+        "contributes_to_edges": {"type": "integer", "minimum": 0}
+      }
+    },
+    "candidate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["rank", "source", "path", "factors", "reasons"],
+      "properties": {
+        "rank": {"type": "integer", "minimum": 1},
+        "source": {"$ref": "#/$defs/concept"},
+        "path": {"$ref": "#/$defs/path"},
+        "factors": {"$ref": "#/$defs/factors"},
+        "reasons": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"type": "string", "minLength": 1}
+        }
+      }
+    }
+  }
+}
