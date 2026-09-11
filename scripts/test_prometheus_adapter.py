@@ -86,7 +86,14 @@ class PrometheusAdapterTest(unittest.TestCase):
         )
         self.assertEqual("api", retransmissions["scope"]["attributes"]["service"])
         self.assertEqual("app-1:9100", retransmissions["scope"]["attributes"]["instance"])
-        self.assertEqual("12.5", retransmissions["source"]["attributes"]["label.__name__"] if False else "12.5")
+        self.assertEqual(
+            "node_netstat_Tcp_RetransSegs",
+            retransmissions["source"]["attributes"]["label.__name__"],
+        )
+        self.assertEqual(
+            "rate(node_netstat_Tcp_RetransSegs[5m])",
+            retransmissions["source"]["attributes"]["prometheus.query"],
+        )
         self.assertEqual(12.5, retransmissions["measurement"]["value"])
         self.assertEqual(5.0, retransmissions["measurement"]["baseline"])
         self.assertEqual(7.5, retransmissions["measurement"]["delta"])
