@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -15,6 +16,7 @@ from causal_projection import (
     path_view,
     reverse_shortest_paths,
 )
+from runtime_evidence import load_runtime_evidence, parse_timestamp, resolve_runtime_evidence
 
 STRENGTH_ORDER = {"weak": 0, "moderate": 1, "strong": 2}
 PROVENANCE_ORDER = {"none": 0, "claim": 1, "experiment": 2}
@@ -178,6 +180,7 @@ def rank_causes(
     observed: set[str] | None = None,
     absent: set[str] | None = None,
     max_depth: int | None = None,
+    evidence_context: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     observed = set() if observed is None else set(observed)
     absent = set() if absent is None else set(absent)
@@ -203,7 +206,7 @@ def rank_causes(
     for rank, candidate in enumerate(candidates, start=1):
         candidate["rank"] = rank
 
-    return {
+    result: dict[str, Any] = {
         "schema_version": "0.1",
         "kind": "causal_ranking",
         "query": {
@@ -220,6 +223,9 @@ def rank_causes(
         },
         "candidates": candidates,
     }
+    if evidence_context is not None:
+        result["evidence_context"] = evidence_context
+    return result
 
 
 def validate_query(
@@ -235,7 +241,7 @@ def validate_query(
     if target_concept.get("kind") != "observation":
         parser.error("target must be an observation concept")
 
-    for label, values in (("--observed", observed), ("--absent", absent)):
+    for label, values in (("--observed/evidence", observed), ("--absent/evidence", absent)):
         for concept_id in sorted(values):
             concept = concepts.get(concept_id)
             if concept is None:
@@ -270,6 +276,17 @@ def build_parser() -> argparse.ArgumentParser:
         help="Observation known to be absent or normal; may be repeated",
     )
     parser.add_argument(
+        "--evidence",
+        type=Path,
+        metavar="PATH",
+        help="Runtime evidence bundle whose active instances augment --observed and --absent",
+    )
+    parser.add_argument(
+        "--as-of",
+        metavar="ISO8601",
+        help="Time used to resolve runtime evidence freshness; defaults to current UTC time",
+    )
+    parser.add_argument(
         "--max-depth",
         type=int,
         default=None,
@@ -284,11 +301,34 @@ def main(root: Path = ROOT) -> int:
     args = parser.parse_args()
     if args.max_depth is not None and args.max_depth < 1:
         parser.error("--max-depth must be at least 1")
+    if args.as_of is not None and args.evidence is None:
+        parser.error("--as-of requires --evidence")
 
     edges = load_edges(root)
     concepts = load_concepts(root)
     observed = set(args.observed)
     absent = set(args.absent)
+    evidence_context: dict[str, Any] | None = None
+
+    if args.evidence is not None:
+        try:
+            as_of = (
+                parse_timestamp(args.as_of, "--as-of")
+                if args.as_of is not None
+                else datetime.now(timezone.utc)
+            )
+            document = load_runtime_evidence(args.evidence)
+            runtime_observed, runtime_absent, evidence_context = resolve_runtime_evidence(
+                document,
+                concepts,
+                as_of=as_of,
+                source_path=str(args.evidence),
+            )
+            observed.update(runtime_observed)
+            absent.update(runtime_absent)
+        except (OSError, ValueError) as exc:
+            parser.error(str(exc))
+
     validate_query(parser, args.target, observed, absent, concepts)
 
     projection = rank_causes(
@@ -298,6 +338,7 @@ def main(root: Path = ROOT) -> int:
         observed=observed,
         absent=absent,
         max_depth=args.max_depth,
+        evidence_context=evidence_context,
     )
     indent = 2 if args.pretty else None
     print(json.dumps(projection, indent=indent, sort_keys=True))
