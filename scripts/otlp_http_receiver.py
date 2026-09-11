@@ -10,7 +10,7 @@ import sys
 from datetime import datetime, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from threading import Lock
+from threading import RLock
 from typing import Any
 from urllib.parse import urlsplit
 
@@ -86,7 +86,7 @@ class EvidenceStore:
         self.concepts = concepts
         self.snapshot_path = snapshot_path
         self._instances_by_scope: dict[str, dict[str, Any]] = {}
-        self._lock = Lock()
+        self._lock = RLock()
         self._accepted_requests_total = 0
         self._matched_instances_total = 0
         self._inserted_instances_total = 0
