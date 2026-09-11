@@ -49,7 +49,7 @@ rules/           deterministic inference rules
 claims/          empirically testable claims
 experiments/     experiment manifests
 lab/             executable empirical labs
-scripts/         validators, projections, ranking, telemetry adapters, and live diagnosis
+scripts/         validators, projections, ranking, telemetry adapters, live diagnosis, and transports
 examples/        diagnostic flows, runtime evidence, adapter mappings, and telemetry fixtures
 ```
 
@@ -292,6 +292,41 @@ The API binds to `127.0.0.1:4320` by default and exposes `GET /health`, `GET /st
 `GET /diagnosis` supports `ETag` and `If-None-Match`, allowing cheap polling with HTTP 304 when the snapshot has not changed. Atomic snapshot replacement from the watcher is detected automatically and revalidated before the new diagnosis is served.
 
 The built-in API is read-only and loopback-only by default. It intentionally has no authentication or TLS; remote deployments should put an authenticated transport boundary in front of it. Design details are documented in [RFC 0010](RFC/0010-diagnosis-http-api.md).
+
+## Diagnosis MCP resources
+
+MCP-aware agents and IDEs can consume the same diagnosis snapshot through a local read-only stdio server:
+
+```bash
+python scripts/diagnosis_mcp_server.py \
+  --snapshot /tmp/atlerror-diagnosis.json
+```
+
+The server exposes two resources:
+
+```text
+atlerror://diagnosis/current
+atlerror://diagnosis/status
+```
+
+`atlerror://diagnosis/current` returns the complete validated diagnosis snapshot. `atlerror://diagnosis/status` returns readiness, incident revision, freshness, and compact diagnosis counts. Both reuse the same `DiagnosisSnapshotReader` as the HTTP API, so MCP is another transport projection rather than another reasoning path.
+
+The primary wire target is MCP `2026-07-28`: the server supports stateless per-request metadata, `server/discover`, required `resultType` discrimination, server identity metadata, and cache hints. The fixed resource catalog is cacheable for 60 seconds, while incident-specific resource reads use zero TTL and private cache scope. The adapter also supports the basic resource subset of legacy handshake revisions through `2025-11-25`, `2025-06-18`, `2025-03-26`, and `2024-11-05`.
+
+For MCP hosts that use command/argument configuration, the process can be registered conceptually as:
+
+```json
+{
+  "command": "python",
+  "args": [
+    "/path/to/atlerror/scripts/diagnosis_mcp_server.py",
+    "--snapshot",
+    "/tmp/atlerror-diagnosis.json"
+  ]
+}
+```
+
+The stdio server has no network listener, no MCP tools, and no mutation surface. Design and compatibility details are documented in [RFC 0011](RFC/0011-diagnosis-mcp-resources.md).
 
 ## First vertical slice
 

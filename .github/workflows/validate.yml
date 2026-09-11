@@ -50,3 +50,6 @@ jobs:
 
       - name: Validate diagnosis HTTP API
         run: python scripts/test_diagnosis_http_api.py
+
+      - name: Validate diagnosis MCP resources
+        run: python scripts/test_diagnosis_mcp_server.py
