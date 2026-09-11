@@ -1,0 +1,46 @@
+{
+  "resourceSpans": [
+    {
+      "resource": {
+        "attributes": [
+          {"key": "service.name", "value": {"stringValue": "checkout-api"}}
+        ]
+      },
+      "scopeSpans": [
+        {
+          "scope": {"name": "example.http"},
+          "spans": [
+            {
+              "traceId": "0123456789abcdef0123456789abcdef",
+              "spanId": "0123456789abcdef",
+              "name": "POST stripe.payment_intents",
+              "kind": "SPAN_KIND_CLIENT",
+              "startTimeUnixNano": "1789144200000000000",
+              "endTimeUnixNano": "1789144200250000000",
+              "status": {
+                "code": "STATUS_CODE_ERROR",
+                "message": "deadline exceeded"
+              },
+              "attributes": [
+                {"key": "rpc.system", "value": {"stringValue": "http"}},
+                {"key": "peer.service", "value": {"stringValue": "stripe"}},
+                {"key": "error.type", "value": {"stringValue": "TimeoutError"}},
+                {"key": "atlerror.boundary", "value": {"stringValue": "boundary.application.external_dependency"}}
+              ]
+            },
+            {
+              "traceId": "0123456789abcdef0123456789abcdef",
+              "spanId": "fedcba9876543210",
+              "name": "serialize.response",
+              "kind": "SPAN_KIND_INTERNAL",
+              "startTimeUnixNano": "1789144200260000000",
+              "endTimeUnixNano": "1789144200270000000",
+              "status": {"code": "STATUS_CODE_OK"},
+              "attributes": []
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

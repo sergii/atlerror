@@ -1,0 +1,115 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://atlerror.dev/schema/opentelemetry-trace-adapter.schema.json",
+  "title": "Atlerror OpenTelemetry trace adapter",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "kind", "id", "mappings"],
+  "properties": {
+    "schema_version": {"const": "0.1"},
+    "kind": {"const": "opentelemetry_trace_adapter"},
+    "id": {"type": "string", "minLength": 1},
+    "default_ttl_seconds": {"type": "integer", "minimum": 1},
+    "default_confidence": {"enum": ["low", "moderate", "high"]},
+    "mappings": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/mapping"}
+    }
+  },
+  "$defs": {
+    "concept_id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*(\\.[a-z0-9_]+)+$"
+    },
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "entities": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/concept_id"},
+          "uniqueItems": true
+        },
+        "boundaries": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/concept_id"},
+          "uniqueItems": true
+        },
+        "attributes": {
+          "type": "object",
+          "additionalProperties": {"type": "string"}
+        },
+        "entity_attributes": {
+          "type": "array",
+          "items": {"type": "string", "minLength": 1},
+          "uniqueItems": true
+        },
+        "boundary_attributes": {
+          "type": "array",
+          "items": {"type": "string", "minLength": 1},
+          "uniqueItems": true
+        },
+        "attribute_map": {
+          "type": "object",
+          "additionalProperties": {"type": "string", "minLength": 1}
+        }
+      },
+      "minProperties": 1
+    },
+    "match": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "span_kind": {
+          "enum": ["SPAN_KIND_UNSPECIFIED", "SPAN_KIND_INTERNAL", "SPAN_KIND_SERVER", "SPAN_KIND_CLIENT", "SPAN_KIND_PRODUCER", "SPAN_KIND_CONSUMER"]
+        },
+        "name": {"type": "string", "minLength": 1},
+        "attributes": {
+          "type": "object",
+          "additionalProperties": {"type": ["string", "number", "boolean"]}
+        }
+      },
+      "minProperties": 1
+    },
+    "signal": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "operator", "threshold"],
+          "properties": {
+            "type": {"const": "duration_ms"},
+            "operator": {"enum": ["gt", "gte", "lt", "lte", "eq", "neq"]},
+            "threshold": {"type": "number"}
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type"],
+          "properties": {
+            "type": {"const": "status_error"}
+          }
+        }
+      ]
+    },
+    "mapping": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "observation", "match", "signal"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "observation": {"$ref": "#/$defs/concept_id"},
+        "match": {"$ref": "#/$defs/match"},
+        "signal": {"$ref": "#/$defs/signal"},
+        "state_when_true": {"enum": ["observed", "absent"]},
+        "state_when_false": {"enum": ["observed", "absent"]},
+        "unit": {"type": "string", "minLength": 1},
+        "ttl_seconds": {"type": "integer", "minimum": 1},
+        "confidence": {"enum": ["low", "moderate", "high"]},
+        "scope": {"$ref": "#/$defs/scope"}
+      }
+    }
+  }
+}
