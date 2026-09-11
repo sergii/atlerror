@@ -43,10 +43,44 @@ The long-term goal is to make this loop useful both as documentation and as a de
 RFC/             design decisions and semantic roadmap
 schema/          structural validation for machine-readable knowledge
 vocabulary/      canonical kinds and relations
-knowledge/       concrete troubleshooting knowledge
+knowledge/       concrete troubleshooting concepts
+causal/          explicit directional causal edges
 rules/           deterministic inference rules
+claims/          empirically testable claims
+experiments/     experiment manifests
+lab/             executable empirical labs
+scripts/         validators and transport-independent projections
 examples/        complete diagnostic flows
 ```
+
+## Causal projection
+
+The semantic causal graph can be projected as stable JSON before adding any transport-specific adapter.
+
+Find the shortest directed causal path:
+
+```bash
+python scripts/causal_projection.py --pretty path \
+  hypothesis.network.packet_corruption \
+  observation.network.transport_latency
+```
+
+Look backward from an observation to plausible causal antecedents:
+
+```bash
+python scripts/causal_projection.py --pretty causes \
+  observation.network.tcp_retransmissions
+```
+
+Bound reverse traversal when a consumer wants a local causal neighborhood:
+
+```bash
+python scripts/causal_projection.py --pretty causes \
+  observation.network.tcp_retransmissions \
+  --max-depth 1
+```
+
+The JSON contract is defined by `schema/causal-projection.schema.json`. CLI, MCP, HTTP, and other adapters should consume the same projection instead of reimplementing graph semantics.
 
 ## First vertical slice
 
