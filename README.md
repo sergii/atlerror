@@ -139,6 +139,30 @@ python scripts/causal_ranking.py \
 
 Only active evidence affects ranking. Future instances and expired instances remain visible in the returned `evidence_context` but do not become `observed` or `absent` facts. Contradictory active states fail resolution instead of being silently reconciled.
 
+Runtime evidence can also be selected by semantic topology scope. This prevents observations from one path on a shared host from leaking into reasoning about another path:
+
+```bash
+python scripts/causal_ranking.py \
+  observation.network.tcp_retransmissions \
+  --evidence examples/runtime-evidence/network-mixed-scopes.yaml \
+  --as-of 2026-09-11T14:48:00Z \
+  --scope-boundary boundary.application.external_dependency \
+  --pretty
+```
+
+The same mixed bundle can be ranked for the database boundary instead:
+
+```bash
+python scripts/causal_ranking.py \
+  observation.network.tcp_retransmissions \
+  --evidence examples/runtime-evidence/network-mixed-scopes.yaml \
+  --as-of 2026-09-11T14:48:00Z \
+  --scope-boundary boundary.application.database \
+  --pretty
+```
+
+Selectors can also use `--scope-entity` and exact `--scope-attribute KEY=VALUE` matches. When a scope query is supplied, evidence that cannot be proven applicable to that scope is excluded conservatively and listed in `scope_filtered_instance_ids`. Boundary scopes imply their semantic source and target entities, so an entity selector can match evidence scoped to a boundary containing that entity.
+
 Runtime confidence and measurement magnitude are preserved for auditability but are not converted into probabilities or hidden weights. The contracts and semantics are defined by `schema/runtime-evidence.schema.json` and [RFC 0005](RFC/0005-runtime-evidence-instances.md).
 
 ## First vertical slice

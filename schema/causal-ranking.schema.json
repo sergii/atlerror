@@ -144,6 +144,27 @@
         "contributes_to_edges": {"type": "integer", "minimum": 0}
       }
     },
+    "runtime_scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "entities": {
+          "type": "array",
+          "items": {"type": "string", "minLength": 1},
+          "uniqueItems": true
+        },
+        "boundaries": {
+          "type": "array",
+          "items": {"type": "string", "minLength": 1},
+          "uniqueItems": true
+        },
+        "attributes": {
+          "type": "object",
+          "additionalProperties": {"type": "string"}
+        }
+      },
+      "minProperties": 1
+    },
     "runtime_evidence_ref": {
       "type": "object",
       "additionalProperties": false,
@@ -152,7 +173,8 @@
         "id": {"type": "string", "minLength": 1},
         "observation": {"type": "string", "minLength": 1},
         "state": {"enum": ["observed", "absent"]},
-        "confidence": {"enum": ["low", "moderate", "high"]}
+        "confidence": {"enum": ["low", "moderate", "high"]},
+        "scope": {"$ref": "#/$defs/runtime_scope"}
       }
     },
     "runtime_evidence_context": {
@@ -161,7 +183,9 @@
       "required": [
         "incident_id",
         "as_of",
+        "scope_query",
         "active_instances",
+        "scope_filtered_instance_ids",
         "stale_instance_ids",
         "future_instance_ids"
       ],
@@ -169,9 +193,20 @@
         "incident_id": {"type": "string", "minLength": 1},
         "as_of": {"type": "string", "format": "date-time"},
         "source_path": {"type": "string", "minLength": 1},
+        "scope_query": {
+          "oneOf": [
+            {"type": "null"},
+            {"$ref": "#/$defs/runtime_scope"}
+          ]
+        },
         "active_instances": {
           "type": "array",
           "items": {"$ref": "#/$defs/runtime_evidence_ref"}
+        },
+        "scope_filtered_instance_ids": {
+          "type": "array",
+          "items": {"type": "string", "minLength": 1},
+          "uniqueItems": true
         },
         "stale_instance_ids": {
           "type": "array",

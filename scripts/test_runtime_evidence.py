@@ -16,6 +16,7 @@ from runtime_evidence import load_runtime_evidence, resolve_runtime_evidence, va
 
 ROOT = Path(__file__).resolve().parents[1]
 EXAMPLE_PATH = ROOT / "examples" / "runtime-evidence" / "network-corruption-chain.yaml"
+MIXED_SCOPE_PATH = ROOT / "examples" / "runtime-evidence" / "network-mixed-scopes.yaml"
 RANKING_SCHEMA_PATH = ROOT / "schema" / "causal-ranking.schema.json"
 AS_OF = datetime(2026, 9, 11, 14, 48, tzinfo=timezone.utc)
 
@@ -32,6 +33,9 @@ class RuntimeEvidenceTest(unittest.TestCase):
 
     def load_example(self) -> dict:
         return load_runtime_evidence(EXAMPLE_PATH)
+
+    def load_mixed_scope_example(self) -> dict:
+        return load_runtime_evidence(MIXED_SCOPE_PATH)
 
     def assert_valid_ranking(self, ranking: dict) -> None:
         errors = sorted(
@@ -62,6 +66,8 @@ class RuntimeEvidenceTest(unittest.TestCase):
             context["stale_instance_ids"],
         )
         self.assertEqual([], context["future_instance_ids"])
+        self.assertEqual([], context["scope_filtered_instance_ids"])
+        self.assertIsNone(context["scope_query"])
         self.assertEqual(2, len(context["active_instances"]))
         self.assertEqual("incident.network.retransmission_spike", context["incident_id"])
 
@@ -136,6 +142,118 @@ class RuntimeEvidenceTest(unittest.TestCase):
         self.assertEqual(
             ["evidence.network.packet_corruption.future"],
             context["future_instance_ids"],
+        )
+
+    def test_scope_query_partitions_contradictory_states(self) -> None:
+        document = self.load_mixed_scope_example()
+
+        with self.assertRaisesRegex(ValueError, "contradictory states"):
+            resolve_runtime_evidence(document, self.concepts, as_of=AS_OF)
+
+        external_scope = {
+            "boundaries": ["boundary.application.external_dependency"],
+        }
+        observed, absent, context = resolve_runtime_evidence(
+            document,
+            self.concepts,
+            as_of=AS_OF,
+            scope_query=external_scope,
+        )
+
+        self.assertIn("observation.network.tcp_integrity_errors", observed)
+        self.assertNotIn("observation.network.tcp_integrity_errors", absent)
+        self.assertEqual(external_scope, context["scope_query"])
+        self.assertEqual(
+            [
+                "evidence.network.tcp_integrity_errors.database",
+                "evidence.network.tcp_retransmissions.database",
+            ],
+            context["scope_filtered_instance_ids"],
+        )
+        self.assertEqual(
+            {
+                "evidence.network.tcp_integrity_errors.external",
+                "evidence.network.tcp_retransmissions.external",
+            },
+            {instance["id"] for instance in context["active_instances"]},
+        )
+
+    def test_boundary_scope_implies_endpoint_entities(self) -> None:
+        document = self.load_mixed_scope_example()
+        observed, absent, context = resolve_runtime_evidence(
+            document,
+            self.concepts,
+            as_of=AS_OF,
+            scope_query={"entities": ["system_entity.external_dependency"]},
+        )
+
+        self.assertIn("observation.network.tcp_integrity_errors", observed)
+        self.assertEqual(set(), absent)
+        self.assertEqual(2, len(context["active_instances"]))
+        self.assertEqual(2, len(context["scope_filtered_instance_ids"]))
+
+    def test_scope_attribute_requires_exact_value(self) -> None:
+        document = self.load_mixed_scope_example()
+        observed, absent, context = resolve_runtime_evidence(
+            document,
+            self.concepts,
+            as_of=AS_OF,
+            scope_query={
+                "boundaries": ["boundary.application.external_dependency"],
+                "attributes": {"environment": "staging"},
+            },
+        )
+
+        self.assertEqual(set(), observed)
+        self.assertEqual(set(), absent)
+        self.assertEqual([], context["active_instances"])
+        self.assertEqual(4, len(context["scope_filtered_instance_ids"]))
+
+    def test_scope_changes_candidate_order_without_cross_path_leakage(self) -> None:
+        document = self.load_mixed_scope_example()
+
+        external_observed, external_absent, external_context = resolve_runtime_evidence(
+            document,
+            self.concepts,
+            as_of=AS_OF,
+            scope_query={"boundaries": ["boundary.application.external_dependency"]},
+        )
+        external_ranking = rank_causes(
+            "observation.network.tcp_retransmissions",
+            self.edges,
+            self.concepts,
+            observed=external_observed,
+            absent=external_absent,
+            evidence_context=external_context,
+        )
+        self.assert_valid_ranking(external_ranking)
+        self.assertEqual(
+            "hypothesis.network.packet_corruption",
+            external_ranking["candidates"][0]["source"]["id"],
+        )
+
+        database_observed, database_absent, database_context = resolve_runtime_evidence(
+            document,
+            self.concepts,
+            as_of=AS_OF,
+            scope_query={"boundaries": ["boundary.application.database"]},
+        )
+        database_ranking = rank_causes(
+            "observation.network.tcp_retransmissions",
+            self.edges,
+            self.concepts,
+            observed=database_observed,
+            absent=database_absent,
+            evidence_context=database_context,
+        )
+        self.assert_valid_ranking(database_ranking)
+        self.assertEqual(
+            "hypothesis.network.packet_loss",
+            database_ranking["candidates"][0]["source"]["id"],
+        )
+        self.assertIn(
+            "observation.network.tcp_integrity_errors",
+            database_ranking["candidates"][1]["factors"]["path_conflicts"],
         )
 
 

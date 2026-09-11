@@ -1,0 +1,92 @@
+schema_version: "0.1"
+kind: runtime_evidence
+incident_id: incident.network.shared_host_mixed_paths
+description: The same host has different network evidence on the external dependency and database boundaries.
+instances:
+  - id: evidence.network.tcp_retransmissions.external
+    observation: observation.network.tcp_retransmissions
+    state: observed
+    observed_at: "2026-09-11T14:46:00Z"
+    expires_at: "2026-09-11T15:01:00Z"
+    confidence: high
+    source:
+      type: metric
+      name: linux.tcp.retranssegs
+      attributes:
+        host: app-1
+    scope:
+      boundaries:
+        - boundary.application.external_dependency
+      attributes:
+        environment: production
+    measurement:
+      value: 184
+      baseline: 3
+      delta: 181
+      unit: segments
+      comparison: above_baseline
+
+  - id: evidence.network.tcp_integrity_errors.external
+    observation: observation.network.tcp_integrity_errors
+    state: observed
+    observed_at: "2026-09-11T14:46:05Z"
+    expires_at: "2026-09-11T15:01:00Z"
+    confidence: high
+    source:
+      type: metric
+      name: linux.tcp.incsumerrors
+      attributes:
+        host: app-1
+    scope:
+      boundaries:
+        - boundary.application.external_dependency
+      attributes:
+        environment: production
+    measurement:
+      value: 27
+      baseline: 0
+      delta: 27
+      unit: segments
+      comparison: above_baseline
+
+  - id: evidence.network.tcp_retransmissions.database
+    observation: observation.network.tcp_retransmissions
+    state: observed
+    observed_at: "2026-09-11T14:46:10Z"
+    expires_at: "2026-09-11T15:01:00Z"
+    confidence: moderate
+    source:
+      type: metric
+      name: linux.tcp.retranssegs
+      attributes:
+        host: app-1
+    scope:
+      boundaries:
+        - boundary.application.database
+      attributes:
+        environment: production
+    measurement:
+      value: 9
+      baseline: 3
+      delta: 6
+      unit: segments
+      comparison: above_baseline
+
+  - id: evidence.network.tcp_integrity_errors.database
+    observation: observation.network.tcp_integrity_errors
+    state: absent
+    observed_at: "2026-09-11T14:46:15Z"
+    expires_at: "2026-09-11T15:01:00Z"
+    confidence: high
+    source:
+      type: probe
+      name: tcp-integrity-check
+      attributes:
+        host: app-1
+    scope:
+      boundaries:
+        - boundary.application.database
+      attributes:
+        environment: production
+    measurement:
+      comparison: absent
