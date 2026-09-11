@@ -80,7 +80,7 @@ python scripts/causal_projection.py --pretty causes \
   --max-depth 1
 ```
 
-The JSON contract is defined by `schema/causal-projection.schema.json`. CLI, MCP, HTTP, and other adapters should consume the same projection instead of reimplementing graph semantics.
+The JSON contract is defined by `schema/causal-projection.schema.json`. CLI, MCP, HTTP, and other adapters should consume this projection contract instead of reimplementing graph semantics.
 
 ## Causal ranking
 
@@ -272,7 +272,7 @@ Freshness remains live even when the evidence document itself does not change. E
 
 Observations with no causal explanation in the current graph are listed explicitly under `unranked_observations` rather than being assigned a guessed cause. Diagnosable observations keep the complete `causal_ranking` projection, including candidate order, paths, factors, provenance, conflicts, and human-readable reasons.
 
-The checkout-to-Stripe example is now backed by an explicit empirical causal edge from `hypothesis.latency.external_dependency` to `observation.dependency.latency`, so a slow dependency trace produces a real ranked diagnosis while the still-unmodeled connection-timeout observation remains visible as unranked coverage.
+The checkout-to-Stripe example is now backed by two explicit empirical causal edges. `hypothesis.latency.external_dependency` explains the observed downstream latency, while `hypothesis.network.connection_timeout` explains the mapped TCP connection-timeout observation. Both rankings keep their claim and experiment provenance, and any future observation without graph coverage will still remain visible under `unranked_observations` rather than receiving a guessed cause.
 
 The snapshot contract is `schema/diagnosis-snapshot.schema.json`; the automatic loop and scope-normalization decisions are documented in [RFC 0009](RFC/0009-automatic-live-diagnosis.md).
 
