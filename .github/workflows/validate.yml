@@ -51,6 +51,9 @@ jobs:
       - name: Validate live diagnosis loop
         run: python scripts/test_live_diagnosis.py
 
+      - name: Validate live probe recommendations
+        run: python scripts/test_live_probe_recommendations.py
+
       - name: Validate diagnosis HTTP API
         run: python scripts/test_diagnosis_http_api.py
 
