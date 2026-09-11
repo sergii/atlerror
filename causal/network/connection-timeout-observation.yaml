@@ -1,0 +1,17 @@
+id: causal.network.connection_timeout.observation
+kind: causal_edge
+source: hypothesis.network.connection_timeout
+target: observation.network.connection_timeout
+relation: causes
+strength: strong
+conditions:
+  - TCP connection establishment begins but neither completes nor receives a prompt active rejection before the configured connect deadline.
+evidence:
+  claims:
+    - claim.network.connection_timeout.dropped_syn_expires_connect_deadline
+  experiments:
+    - experiment.network.connection_timeout.python_linux
+explanation: A connection-establishment path that remains unresolved until the client deadline expires directly produces the observed TCP connection timeout.
+limitations:
+  - The evidence grounds one Linux silent-drop mechanism and does not identify which network device, route, host, or policy caused the missing establishment response.
+  - This edge does not apply to application read timeouts after a TCP connection has already been established.
