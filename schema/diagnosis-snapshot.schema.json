@@ -83,13 +83,40 @@
         }
       }
     },
+    "probe_ranking": {
+      "type": "object",
+      "required": [
+        "schema_version",
+        "kind",
+        "query",
+        "found",
+        "not_found_reason",
+        "ranking_method",
+        "probes"
+      ],
+      "properties": {
+        "schema_version": {"const": "0.1"},
+        "kind": {"const": "probe_ranking"},
+        "query": {"type": "object"},
+        "found": {"type": "boolean"},
+        "not_found_reason": {
+          "oneOf": [
+            {"type": "null"},
+            {"enum": ["fewer_than_two_candidates", "no_discriminating_probe"]}
+          ]
+        },
+        "ranking_method": {"type": "object"},
+        "probes": {"type": "array"}
+      }
+    },
     "diagnosis": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["target", "ranking"],
+      "required": ["target", "ranking", "probe_ranking"],
       "properties": {
         "target": {"type": "string", "minLength": 1},
-        "ranking": {"$ref": "#/$defs/ranking"}
+        "ranking": {"$ref": "#/$defs/ranking"},
+        "probe_ranking": {"$ref": "#/$defs/probe_ranking"}
       }
     },
     "partition": {
