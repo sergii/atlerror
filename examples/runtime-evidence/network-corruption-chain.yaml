@@ -1,0 +1,64 @@
+schema_version: "0.1"
+kind: runtime_evidence
+incident_id: incident.network.retransmission_spike
+description: Runtime observations from a network incident where retransmissions and TCP integrity errors rise together.
+instances:
+  - id: evidence.network.tcp_retransmissions.current
+    observation: observation.network.tcp_retransmissions
+    state: observed
+    observed_at: "2026-09-11T14:46:00Z"
+    expires_at: "2026-09-11T15:01:00Z"
+    confidence: high
+    source:
+      type: metric
+      name: linux.tcp.retranssegs
+      attributes:
+        host: app-1
+    scope:
+      entities:
+        - system_entity.application_service
+        - system_entity.external_dependency
+      boundaries:
+        - boundary.application.external_dependency
+    measurement:
+      value: 184
+      baseline: 3
+      delta: 181
+      unit: segments
+      comparison: above_baseline
+
+  - id: evidence.network.tcp_integrity_errors.current
+    observation: observation.network.tcp_integrity_errors
+    state: observed
+    observed_at: "2026-09-11T14:46:05Z"
+    expires_at: "2026-09-11T15:01:00Z"
+    confidence: high
+    source:
+      type: metric
+      name: linux.tcp.incsumerrors
+      attributes:
+        host: app-1
+    scope:
+      boundaries:
+        - boundary.application.external_dependency
+    measurement:
+      value: 27
+      baseline: 0
+      delta: 27
+      unit: segments
+      comparison: above_baseline
+
+  - id: evidence.network.packet_loss.stale
+    observation: observation.network.packet_loss
+    state: absent
+    observed_at: "2026-09-11T14:00:00Z"
+    expires_at: "2026-09-11T14:30:00Z"
+    confidence: moderate
+    source:
+      type: probe
+      name: packet-delivery-sample
+    scope:
+      boundaries:
+        - boundary.application.external_dependency
+    measurement:
+      comparison: absent
