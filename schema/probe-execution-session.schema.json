@@ -1,0 +1,84 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://atlerror.dev/schema/probe-execution-session.schema.json",
+  "title": "Atlerror read-only probe execution session",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "kind",
+    "session_id",
+    "incident_id",
+    "probe",
+    "executor",
+    "started_at",
+    "baseline",
+    "state"
+  ],
+  "properties": {
+    "schema_version": {"const": "0.1"},
+    "kind": {"const": "probe_execution_session"},
+    "session_id": {"type": "string", "minLength": 1},
+    "incident_id": {"type": "string", "minLength": 1},
+    "probe": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "risk", "capability", "observation"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "risk": {"const": "read_only"},
+        "capability": {"type": "string", "minLength": 1},
+        "observation": {"type": "string", "minLength": 1}
+      }
+    },
+    "executor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "platform", "source"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "platform": {"type": "string", "minLength": 1},
+        "source": {"type": "string", "minLength": 1}
+      }
+    },
+    "scope": {"$ref": "#/$defs/scope"},
+    "started_at": {"type": "string", "format": "date-time"},
+    "baseline": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["counter", "value"],
+      "properties": {
+        "counter": {"const": "Tcp.InErrs"},
+        "value": {"type": "integer", "minimum": 0}
+      }
+    },
+    "state": {"const": "baseline_captured"}
+  },
+  "$defs": {
+    "concept_id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*(\\.[a-z0-9_]+)+$"
+    },
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "entities": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/concept_id"},
+          "uniqueItems": true
+        },
+        "boundaries": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/concept_id"},
+          "uniqueItems": true
+        },
+        "attributes": {
+          "type": "object",
+          "additionalProperties": {"type": "string"}
+        }
+      },
+      "minProperties": 1
+    }
+  }
+}
