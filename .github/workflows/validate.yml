@@ -38,3 +38,6 @@ jobs:
 
       - name: Validate Prometheus adapter
         run: python scripts/test_prometheus_adapter.py
+
+      - name: Validate OpenTelemetry trace adapter
+        run: python scripts/test_opentelemetry_trace_adapter.py
