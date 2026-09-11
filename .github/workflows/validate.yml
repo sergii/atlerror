@@ -26,3 +26,6 @@ jobs:
 
       - name: Validate diagnostic catalog codes
         run: python scripts/validate_catalog.py
+
+      - name: Validate causal projections
+        run: python scripts/test_causal_projection.py

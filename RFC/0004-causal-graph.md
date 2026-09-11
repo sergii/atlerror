@@ -145,6 +145,19 @@ This immediately enables useful diagnostic reasoning:
 - retransmissions have multiple causal antecedents
 - retransmissions can explain additional latency without making latency itself the root mechanism
 
+## Projection boundary
+
+The first consumer-facing projection is transport independent. `scripts/causal_projection.py` reads canonical concepts and causal edges and emits JSON that validates against `schema/causal-projection.schema.json`.
+
+The projection supports two query modes:
+
+- `path` returns one deterministic shortest directed path between two concepts
+- `causes` traverses backward from a target and returns one shortest path from each distinct upstream antecedent, optionally bounded by depth
+
+Projected paths include concept identity and human-facing metadata plus causal edge semantics, conditions, evidence provenance, limitations, and source file paths. CLI, MCP, HTTP, and other adapters should consume this projection contract instead of implementing their own traversal rules.
+
+The older `scripts/causal_path.py` command remains a compatibility view but delegates graph traversal to the shared projection implementation.
+
 ## Non-goals
 
 This RFC does not introduce:
@@ -160,12 +173,11 @@ Feedback loops may eventually require cycles, so the validator must not require 
 
 ## Future work
 
-Likely next steps:
+Causal path projection and reverse-cause lookup now have a shared transport-independent contract. Likely next steps are:
 
-1. causal path projection for CLI/MCP/HTTP consumers
-2. reverse-cause lookup from an observation
-3. path ranking using evidence strength and current observations
-4. explicit masking/recovery semantics if repeated use cases justify new relation types
-5. runtime evidence instances mapped onto the static causal graph
+1. path ranking using evidence strength and current observations
+2. explicit masking/recovery semantics if repeated use cases justify new relation types
+3. runtime evidence instances mapped onto the static causal graph
+4. thin MCP and HTTP adapters over the projection contract once an adapter is useful to a real consumer
 
 The graph vocabulary should grow only when a concrete diagnostic case cannot be represented with the existing relations.
