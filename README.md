@@ -203,6 +203,54 @@ Each vector series becomes one evidence instance. Mapping rules explicitly defin
 
 The first adapter supports Prometheus `vector` and `scalar` instant-query results. Range aggregation remains a PromQL concern for now. Optional bearer authentication reads the token from an environment variable through `--bearer-token-env`. The mapping schema and design rationale are documented in `schema/prometheus-adapter.schema.json` and [RFC 0006](RFC/0006-prometheus-runtime-evidence-adapter.md).
 
+## OpenTelemetry trace adapter
+
+The trace adapter converts OTLP/HTTP JSON trace payloads into the same runtime evidence contract. Mapping configuration selects spans explicitly by kind, name, and attributes, then evaluates duration or error status without treating trace structure itself as causal proof.
+
+Convert the included checkout-to-Stripe trace fixture:
+
+```bash
+python scripts/opentelemetry_trace_adapter.py \
+  examples/adapters/opentelemetry/external-dependency.yaml \
+  examples/telemetry/opentelemetry/external-dependency-trace.json \
+  --incident-id incident.checkout.stripe_timeout
+```
+
+The example emits `observation.dependency.latency` and `observation.network.connection_timeout` for `boundary.application.external_dependency`, preserving `service=checkout-api`, `dependency=stripe`, trace ID, span ID, timing, and source provenance.
+
+Dynamic semantic boundary and entity IDs read from telemetry are validated before evidence is emitted. OpenTelemetry span names, status codes, deployment attributes, and latency thresholds remain adapter policy rather than canonical Atlerror knowledge. The mapping contract and rationale are documented in `schema/opentelemetry-trace-adapter.schema.json` and [RFC 0007](RFC/0007-opentelemetry-trace-adapter.md).
+
+## Live OTLP/HTTP receiver
+
+Run an incident-scoped live receiver on the standard OTLP/HTTP port:
+
+```bash
+python scripts/otlp_http_receiver.py \
+  examples/adapters/opentelemetry/external-dependency.yaml \
+  --incident-id incident.checkout.live \
+  --snapshot /tmp/atlerror-runtime-evidence.json
+```
+
+The receiver binds to `127.0.0.1:4318` by default and accepts JSON trace exports at `POST /v1/traces`. It also exposes `GET /health`, `GET /status`, and `GET /evidence`. Identity and gzip request bodies are supported; binary protobuf is intentionally rejected in this first slice.
+
+A Collector can send JSON OTLP to the receiver:
+
+```yaml
+exporters:
+  otlp_http/atlerror:
+    endpoint: http://127.0.0.1:4318
+    encoding: json
+
+service:
+  pipelines:
+    traces:
+      exporters: [otlp_http/atlerror]
+```
+
+Live traces repeat continuously, so the receiver does not retain every span-derived state. It keeps the latest evidence instance for each `(observation, exact scope)` pair. Exact replays are deduplicated, older out-of-order spans cannot roll state backward, and different dependency scopes stay independent. `/status` exposes the insert, replacement, duplicate, and out-of-order counters.
+
+The optional snapshot is atomically replaced with the current runtime evidence bundle and can feed existing ranking commands directly. The receiver semantics and explicit aggregation policy are documented in [RFC 0008](RFC/0008-live-otlp-http-receiver.md).
+
 ## First vertical slice
 
 The initial slice models `symptom.cpu.high` and a small set of hypotheses:
