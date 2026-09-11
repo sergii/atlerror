@@ -29,3 +29,6 @@ jobs:
 
       - name: Validate causal projections
         run: python scripts/test_causal_projection.py
+
+      - name: Validate causal ranking
+        run: python scripts/test_causal_ranking.py
