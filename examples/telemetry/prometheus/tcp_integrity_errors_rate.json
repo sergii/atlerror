@@ -1,0 +1,19 @@
+{
+  "status": "success",
+  "data": {
+    "resultType": "vector",
+    "result": [
+      {
+        "metric": {
+          "__name__": "tcp_checksum_errors_total",
+          "job": "node",
+          "instance": "app-1:9100",
+          "service": "api",
+          "atlerror_boundary": "boundary.application.external_dependency",
+          "atlerror_entity": "system_entity.application_service"
+        },
+        "value": [1789141505, "2.0"]
+      }
+    ]
+  }
+}
