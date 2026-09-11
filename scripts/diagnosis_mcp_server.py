@@ -20,7 +20,6 @@ LEGACY_PROTOCOL_VERSIONS = (
     "2024-11-05",
 )
 LATEST_LEGACY_PROTOCOL_VERSION = LEGACY_PROTOCOL_VERSIONS[0]
-SUPPORTED_PROTOCOL_VERSIONS = (MODERN_PROTOCOL_VERSION, *LEGACY_PROTOCOL_VERSIONS)
 
 CURRENT_DIAGNOSIS_URI = "atlerror://diagnosis/current"
 DIAGNOSIS_STATUS_URI = "atlerror://diagnosis/status"
@@ -357,6 +356,7 @@ def serve_stdio(
         line = raw_line.rstrip("\r\n")
         if not line:
             continue
+        message: Any = None
         try:
             message = json.loads(line)
         except json.JSONDecodeError as exc:
