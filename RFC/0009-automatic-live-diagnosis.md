@@ -47,8 +47,9 @@ partitions:
     diagnoses:
       - target: observation.dependency.latency
         ranking: {...}
-    unranked_observations:
-      - observation.network.connection_timeout
+      - target: observation.network.connection_timeout
+        ranking: {...}
+    unranked_observations: []
 ```
 
 Each `ranking` is the existing `causal_ranking` projection, including candidate order, causal paths, factors, reasons, and runtime evidence context.
@@ -136,19 +137,25 @@ An unranked observation is not an error. It means the current causal knowledge g
 
 This makes missing ontology coverage visible rather than silently inventing a cause.
 
-## External dependency latency edge
+## Trace-backed causal coverage
 
-The live OpenTelemetry example observes `observation.dependency.latency`. To make that signal diagnosable using existing empirical knowledge, this RFC adds:
+The live OpenTelemetry example observes both `observation.dependency.latency` and `observation.network.connection_timeout`. Existing claims and executable experiments already ground both mechanisms, so this RFC adds explicit causal edges:
 
 ```text
 hypothesis.latency.external_dependency
   --causes-->
 observation.dependency.latency
+
+hypothesis.network.connection_timeout
+  --causes-->
+observation.network.connection_timeout
 ```
 
-The edge is strong and references the existing claim and executable Ruby HTTP experiment that establish the downstream-delay mechanism.
+Both edges are strong and carry claim plus experiment provenance.
 
-The edge does not claim to explain why the external provider itself became slow. It only models a slow synchronous dependency interaction as the causal antecedent of the measured dependency latency.
+The external-dependency edge does not claim to explain why the provider itself became slow. It models a slow synchronous dependency interaction as the causal antecedent of the measured dependency latency.
+
+The connection-timeout edge does not claim that every timeout comes from the same packet-drop mechanism used in the experiment. It models unresolved TCP establishment until the configured deadline as the causal antecedent of the connection-timeout observation, while preserving limitations on the grounded mechanism.
 
 ## Explainability
 
