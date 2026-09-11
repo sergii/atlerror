@@ -13,6 +13,7 @@ from jsonschema import Draft202012Validator
 
 from causal_projection import ROOT
 from causal_ranking import rank_causes
+from probe_ranking import rank_probes, validate_probe_ranking
 from runtime_evidence import format_timestamp, parse_timestamp, resolve_runtime_evidence
 
 SCHEMA_PATH = ROOT / "schema" / "diagnosis-snapshot.schema.json"
@@ -157,7 +158,14 @@ def build_diagnosis_snapshot(
                 evidence_context=evidence_context,
             )
             if ranking["found"]:
-                diagnoses.append({"target": target, "ranking": ranking})
+                probe_ranking = rank_probes(ranking, concepts)
+                diagnoses.append(
+                    {
+                        "target": target,
+                        "ranking": ranking,
+                        "probe_ranking": probe_ranking,
+                    }
+                )
             else:
                 unranked_observations.append(target)
 
@@ -206,6 +214,10 @@ def validate_diagnosis_snapshot(snapshot: dict[str, Any]) -> None:
             "diagnosis snapshot schema validation failed: "
             + "; ".join(error.message for error in errors)
         )
+
+    for partition in snapshot.get("partitions", []):
+        for diagnosis in partition.get("diagnoses", []):
+            validate_probe_ranking(diagnosis["probe_ranking"])
 
 
 def _default_clock() -> datetime:
