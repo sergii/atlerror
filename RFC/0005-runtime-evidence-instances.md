@@ -147,17 +147,19 @@ The CLI also supports repeated `--scope-entity` selectors and exact `--scope-att
 
 The ranking output preserves a compact evidence context containing the incident ID, resolution time, scope query, selected instance references, scope-filtered IDs, and stale or future instance IDs. This gives consumers an auditable link between runtime evidence and the resulting candidate order.
 
+Telemetry ingestion remains outside this core resolver. Concrete adapters translate external systems into this shared contract. The first implementation is the Prometheus adapter defined by [RFC 0006](0006-prometheus-runtime-evidence-adapter.md).
+
 ## Non-goals
 
 This RFC does not introduce:
 
 - a telemetry database or event store
-- automatic ingestion from OpenTelemetry, Prometheus, logs, or cloud vendors
+- vendor-specific telemetry ingestion semantics inside the runtime evidence core
 - probabilistic calibration
 - numeric Bayesian inference
 - automatic inference of the desired scope from a causal target or path
 - hierarchical topology containment beyond explicit boundary endpoint expansion
-- time-series aggregation semantics
+- time-series aggregation semantics in the runtime evidence resolver
 - automatic reconciliation of contradictory evidence inside the same selected scope
 
 Those capabilities belong in adapters or later semantic layers once concrete consumers require them.
@@ -166,7 +168,7 @@ Those capabilities belong in adapters or later semantic layers once concrete con
 
 Likely next steps are:
 
-1. adapters that produce runtime evidence bundles from metrics, traces, logs, and probes
+1. additional adapters for traces, logs, probes, and other telemetry sources
 2. richer topology identity and scope hierarchies when concrete multi-service cases require them
 3. persistent incident evidence stores when a real consumer needs retention
 4. evidence quality and freshness policies that remain transparent to ranking consumers
