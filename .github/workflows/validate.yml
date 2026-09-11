@@ -41,3 +41,6 @@ jobs:
 
       - name: Validate OpenTelemetry trace adapter
         run: python scripts/test_opentelemetry_trace_adapter.py
+
+      - name: Validate OTLP HTTP receiver
+        run: python scripts/test_otlp_http_receiver.py

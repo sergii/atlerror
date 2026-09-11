@@ -134,12 +134,13 @@ The adapter fails instead of guessing when:
 - span end precedes span start
 - no spans match any configured mapping
 
+The file-oriented adapter keeps the final rule because an explicitly supplied saved payload that produces no evidence is usually a configuration mistake. RFC 0008 defines different no-match behavior for a live stream, where unrelated spans are expected.
+
 ## Non-goals
 
 This RFC does not introduce:
 
-- an OTLP receiver or collector service
-- trace storage
+- a trace store
 - topology discovery from arbitrary service names
 - probabilistic inference from trace frequency
 - automatic latency baselines
@@ -147,7 +148,7 @@ This RFC does not introduce:
 - log correlation
 - parent/child causal inference from trace structure
 
-Those capabilities should be added only when a concrete diagnostic consumer requires them.
+Live OTLP/HTTP ingestion is defined separately in RFC 0008 so transport and repeated-evidence policy do not become part of the trace-to-observation mapping contract.
 
 ## Example flow
 
@@ -165,7 +166,7 @@ Both evidence instances retain the same boundary and dependency scope, so runtim
 The next useful trace work should be driven by real incidents. Likely extensions are:
 
 1. parent/child path context without treating span trees as a causal graph automatically
-2. OTLP receiver or collector integration for live evidence ingestion
-3. trace-log correlation using trace and span IDs
-4. standardized semantic-convention mappings for common HTTP, database, RPC, and messaging spans
-5. evidence aggregation policies for repeated spans that remain explicit and auditable
+2. trace-log correlation using trace and span IDs
+3. standardized semantic-convention mappings for common HTTP, database, RPC, and messaging spans
+4. richer explicit evidence-window aggregation if the live latest-state policy in RFC 0008 proves insufficient
+5. persistent incident evidence storage when a concrete consumer needs retention
