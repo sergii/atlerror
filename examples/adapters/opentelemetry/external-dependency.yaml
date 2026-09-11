@@ -1,0 +1,42 @@
+schema_version: "0.1"
+kind: opentelemetry_trace_adapter
+id: adapter.opentelemetry.external_dependency
+default_ttl_seconds: 300
+default_confidence: high
+mappings:
+  - id: dependency_latency
+    observation: observation.dependency.latency
+    match:
+      span_kind: SPAN_KIND_CLIENT
+      attributes:
+        rpc.system: http
+    signal:
+      type: duration_ms
+      operator: gt
+      threshold: 100
+    state_when_true: observed
+    state_when_false: absent
+    unit: ms
+    scope:
+      boundary_attributes:
+        - atlerror.boundary
+      attribute_map:
+        service: service.name
+        dependency: peer.service
+
+  - id: dependency_error
+    observation: observation.network.connection_timeout
+    match:
+      span_kind: SPAN_KIND_CLIENT
+      attributes:
+        error.type: TimeoutError
+    signal:
+      type: status_error
+    state_when_true: observed
+    state_when_false: absent
+    scope:
+      boundary_attributes:
+        - atlerror.boundary
+      attribute_map:
+        service: service.name
+        dependency: peer.service
