@@ -1,6 +1,6 @@
 # Atlerror end-to-end demo
 
-The checkout-to-Stripe demo exercises the current read-only Atlerror stack in one deterministic command.
+The checkout-to-Stripe demo exercises the current Atlerror stack in one deterministic command.
 
 ## Run
 
@@ -156,8 +156,37 @@ python scripts/demo_checkout_stripe.py \
   --as-of 2026-09-11T16:31:00Z
 ```
 
+## Optional active read-only extension
+
+The diagnosis recommends `probe.network.inspect_tcp_integrity_errors`. On a Linux host, Atlerror can now execute that specific probe through a fixed read-only executor without invoking a shell or arbitrary subprocess.
+
+Capture a baseline:
+
+```bash
+python scripts/probe_execution.py begin \
+  --incident-id incident.demo.checkout.stripe \
+  --probe probe.network.inspect_tcp_integrity_errors \
+  --session /tmp/atlerror-demo/tcp-integrity-probe-session.json \
+  --scope-boundary boundary.application.external_dependency \
+  --scope-attribute service=checkout-api \
+  --scope-attribute dependency=stripe
+```
+
+Exercise the intended controlled workload outside Atlerror, then finish the session:
+
+```bash
+python scripts/probe_execution.py finish \
+  --session /tmp/atlerror-demo/tcp-integrity-probe-session.json \
+  --output /tmp/atlerror-demo/tcp-integrity-probe-evidence.json \
+  --pretty
+```
+
+The result is standard `runtime_evidence`. An increase in Linux `Tcp.InErrs` produces `observation.network.tcp_integrity_errors=observed`; an unchanged counter produces explicit absence. A counter reset fails closed.
+
+The integration tests compose that evidence back into the checkout-to-Stripe incident and verify the feedback loop: observed integrity errors move `hypothesis.network.packet_corruption` ahead of packet loss, and the completed integrity probe is no longer recommended.
+
 ## Safety boundary
 
-This demo is read-only. It recommends the next diagnostic probe but does not execute probes, expose mutation tools, or perform remediation.
+The one-shot fixture demo remains read-only and does not execute probes automatically. The optional execution layer only supports explicitly registered `read_only` probes. The first executor reads Linux `/proc/net/snmp`; it cannot run user-supplied commands, mutate network state, execute the workload, or perform remediation. Non-read-only probes are rejected.
 
-Design details are documented in [RFC 0015](RFC/0015-end-to-end-demo-harness.md).
+Design details are documented in [RFC 0015](RFC/0015-end-to-end-demo-harness.md) and [RFC 0016](RFC/0016-safe-read-only-probe-execution.md).
