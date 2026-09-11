@@ -158,6 +158,29 @@ Projected paths include concept identity and human-facing metadata plus causal e
 
 The older `scripts/causal_path.py` command remains a compatibility view but delegates graph traversal to the shared projection implementation.
 
+## Causal candidate ranking
+
+A causal projection can contain several upstream antecedents, but an agent also needs a deterministic way to decide which **hypotheses** deserve attention first under the evidence currently available.
+
+`scripts/causal_ranking.py` adds a transport-independent ordinal ranking projection defined by `schema/causal-ranking.schema.json`. The target is treated as the observed effect being explained. Callers may also provide observation IDs that are currently present and observation IDs that are known absent or normal.
+
+The initial ranking deliberately does not assign probabilities. Candidates are ordered lexicographically using visible semantic factors, in this priority order:
+
+1. fewer conflicts with supplied absent observations and explicit hypothesis falsifiers
+2. more supplied observations that occur as intermediate nodes on the candidate causal path
+3. more strong, then moderate, then weak hypothesis predictions matching the target or supplied observations
+4. stronger weakest causal edge on the path
+5. stronger weakest evidence provenance on the path, ordered as experiment, claim, none
+6. shorter causal path
+7. fewer `contributes_to` edges
+8. stable source ID as the final deterministic tie-breaker
+
+This ordering is intentionally explainable rather than statistically calibrated. Each ranked candidate includes the projected path and all factors used to order it. A consumer can therefore explain why one candidate moved above another without reconstructing hidden weights.
+
+For example, TCP retransmissions alone rank packet loss ahead of packet corruption in the current N1 slice because packet loss strongly predicts retransmissions through a shorter evidence-backed path. If receiver TCP integrity errors are also observed, packet corruption moves ahead because the observed integrity error is on its causal path and is also a strong hypothesis prediction. If those integrity errors are known absent, that path receives an explicit conflict.
+
+The query-time observation IDs are not persisted event instances. They are a lightweight bridge between the static graph and future runtime evidence modeling.
+
 ## Non-goals
 
 This RFC does not introduce:
@@ -167,17 +190,17 @@ This RFC does not introduce:
 - a universal DAG requirement
 - temporal event instances
 - interventions or counterfactual syntax beyond evidence-backed edge conditions
-- automatic root-cause ranking
+- calibrated probabilistic root-cause scoring
 
 Feedback loops may eventually require cycles, so the validator must not require the graph to be acyclic.
 
 ## Future work
 
-Causal path projection and reverse-cause lookup now have a shared transport-independent contract. Likely next steps are:
+Causal path projection, reverse-cause lookup, and transparent ordinal ranking now have shared transport-independent contracts. Likely next steps are:
 
-1. path ranking using evidence strength and current observations
+1. runtime evidence instances mapped onto the static causal graph and ranking context
 2. explicit masking/recovery semantics if repeated use cases justify new relation types
-3. runtime evidence instances mapped onto the static causal graph
-4. thin MCP and HTTP adapters over the projection contract once an adapter is useful to a real consumer
+3. ranking policies that can consume richer evidence quality, freshness, and scope without hiding the decision basis
+4. thin MCP and HTTP adapters over the projection contracts once an adapter is useful to a real consumer
 
 The graph vocabulary should grow only when a concrete diagnostic case cannot be represented with the existing relations.
