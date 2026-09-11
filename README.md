@@ -49,7 +49,7 @@ rules/           deterministic inference rules
 claims/          empirically testable claims
 experiments/     experiment manifests
 lab/             executable empirical labs
-scripts/         validators, projections, ranking, and telemetry adapters
+scripts/         validators, projections, ranking, telemetry adapters, and live diagnosis
 examples/        diagnostic flows, runtime evidence, adapter mappings, and telemetry fixtures
 ```
 
@@ -250,6 +250,31 @@ service:
 Live traces repeat continuously, so the receiver does not retain every span-derived state. It keeps the latest evidence instance for each `(observation, exact scope)` pair. Exact replays are deduplicated, older out-of-order spans cannot roll state backward, and different dependency scopes stay independent. `/status` exposes the insert, replacement, duplicate, and out-of-order counters.
 
 The optional snapshot is atomically replaced with the current runtime evidence bundle and can feed existing ranking commands directly. The receiver semantics and explicit aggregation policy are documented in [RFC 0008](RFC/0008-live-otlp-http-receiver.md).
+
+## Automatic live diagnosis
+
+A separate watcher can now turn the receiver's current evidence into a continuously refreshed diagnosis snapshot without embedding causal reasoning into the transport process.
+
+Start the receiver as above, then run:
+
+```bash
+python scripts/live_diagnosis_watch.py \
+  --receiver-url http://127.0.0.1:4318 \
+  --snapshot /tmp/atlerror-diagnosis.json \
+  --verbose
+```
+
+The watcher fingerprints canonical runtime evidence. When the document changes, it increments its local evidence revision and immediately reruns the existing deterministic causal ranking for every currently observed target that has upstream hypothesis candidates. Repeated polls of unchanged evidence do not rerun ranking.
+
+Evidence is partitioned by normalized semantic scope before diagnosis. Entities already implied by a boundary are treated as redundant, while non-redundant entities and exact attributes such as `dependency=stripe` remain part of the partition. This lets evidence emitted with slightly different but semantically equivalent topology detail contribute to one diagnosis without mixing unrelated dependency paths.
+
+Freshness remains live even when the evidence document itself does not change. Each diagnosis snapshot records the next activation or expiry boundary in `next_recompute_at`; the watcher reruns diagnosis once that transition becomes due.
+
+Observations with no causal explanation in the current graph are listed explicitly under `unranked_observations` rather than being assigned a guessed cause. Diagnosable observations keep the complete `causal_ranking` projection, including candidate order, paths, factors, provenance, conflicts, and human-readable reasons.
+
+The checkout-to-Stripe example is now backed by an explicit empirical causal edge from `hypothesis.latency.external_dependency` to `observation.dependency.latency`, so a slow dependency trace produces a real ranked diagnosis while the still-unmodeled connection-timeout observation remains visible as unranked coverage.
+
+The snapshot contract is `schema/diagnosis-snapshot.schema.json`; the automatic loop and scope-normalization decisions are documented in [RFC 0009](RFC/0009-automatic-live-diagnosis.md).
 
 ## First vertical slice
 
