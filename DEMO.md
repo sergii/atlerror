@@ -125,7 +125,7 @@ GET http://127.0.0.1:4320/diagnosis
 
 The one-shot harness also verifies the existing MCP resource implementation against the exact same persisted snapshot.
 
-To attach an MCP host after the demo, run:
+To attach an MCP host after the demo in resource-only mode, run:
 
 ```bash
 python scripts/diagnosis_mcp_server.py \
@@ -139,28 +139,13 @@ atlerror://diagnosis/current
 atlerror://diagnosis/status
 ```
 
-## Determinism
-
-The default `as_of` is fixed at:
-
-```text
-2026-09-11T16:31:00Z
-```
-
-This keeps the included telemetry inside its freshness window and makes repeated runs reproducible.
-
-You can override it explicitly:
-
-```bash
-python scripts/demo_checkout_stripe.py \
-  --as-of 2026-09-11T16:31:00Z
-```
+Resource-only mode remains the default and exposes no MCP mutation tools.
 
 ## Optional active read-only extension
 
-The diagnosis recommends `probe.network.inspect_tcp_integrity_errors`. On a Linux host, Atlerror can now execute that specific probe through a fixed read-only executor without invoking a shell or arbitrary subprocess.
+The diagnosis recommends `probe.network.inspect_tcp_integrity_errors`. On a Linux host, Atlerror can execute that specific probe through a fixed read-only executor without invoking a shell or arbitrary subprocess.
 
-Capture a baseline:
+Capture a baseline directly through the CLI:
 
 ```bash
 python scripts/probe_execution.py begin \
@@ -185,8 +170,76 @@ The result is standard `runtime_evidence`. An increase in Linux `Tcp.InErrs` pro
 
 The integration tests compose that evidence back into the checkout-to-Stripe incident and verify the feedback loop: observed integrity errors move `hypothesis.network.packet_corruption` ahead of packet loss, and the completed integrity probe is no longer recommended.
 
+## Opt-in MCP probe tools
+
+The same safe execution path can be exposed to an MCP host, but only through explicit process-level opt-in:
+
+```bash
+python scripts/diagnosis_mcp_server.py \
+  --snapshot /tmp/atlerror-demo/diagnosis.json \
+  --enable-readonly-probe-tools \
+  --runtime-evidence /tmp/atlerror-demo/runtime-evidence.json \
+  --probe-session-dir /tmp/atlerror-demo/probe-sessions
+```
+
+When enabled, the server advertises exactly two tools:
+
+```text
+atlerror.probe.begin_recommended
+atlerror.probe.finish
+```
+
+`atlerror.probe.begin_recommended` accepts a diagnosis target, not an arbitrary probe ID. Atlerror reads the current validated diagnosis, selects the current top next-probe recommendation, verifies that it is canonical `risk: read_only`, verifies that a fixed executor exists, and captures the baseline in the exact diagnosis scope.
+
+For the demo target:
+
+```text
+observation.network.tcp_retransmissions
+```
+
+the selected probe is:
+
+```text
+probe.network.inspect_tcp_integrity_errors
+```
+
+The begin result returns an opaque `probe-session.<digest>` handle. Run the controlled workload outside Atlerror, then pass that handle to `atlerror.probe.finish`.
+
+Finish emits standard probe runtime evidence, composes it into `runtime-evidence.json`, increments `evidence_revision`, recomputes `diagnosis.json`, and returns the revised top hypothesis and next probe. A positive integrity-error result therefore closes the loop:
+
+```text
+packet_loss #1
+  -> begin recommended integrity probe
+  -> external workload
+  -> finish probe
+  -> tcp_integrity_errors observed
+  -> packet_corruption #1
+  -> completed integrity probe suppressed
+```
+
+Finish is retry-safe. If the MCP response is lost after evidence was persisted, another finish call with the same session ID returns the existing result instead of executing the counter read again or appending duplicate evidence.
+
+## Determinism
+
+The default fixture `as_of` is fixed at:
+
+```text
+2026-09-11T16:31:00Z
+```
+
+This keeps the included telemetry inside its freshness window and makes repeated one-shot demo runs reproducible.
+
+You can override it explicitly:
+
+```bash
+python scripts/demo_checkout_stripe.py \
+  --as-of 2026-09-11T16:31:00Z
+```
+
 ## Safety boundary
 
-The one-shot fixture demo remains read-only and does not execute probes automatically. The optional execution layer only supports explicitly registered `read_only` probes. The first executor reads Linux `/proc/net/snmp`; it cannot run user-supplied commands, mutate network state, execute the workload, or perform remediation. Non-read-only probes are rejected.
+The one-shot fixture demo and default MCP mode remain read-only. Active MCP tools are absent unless `--enable-readonly-probe-tools` is supplied explicitly.
 
-Design details are documented in [RFC 0015](RFC/0015-end-to-end-demo-harness.md) and [RFC 0016](RFC/0016-safe-read-only-probe-execution.md).
+Even when enabled, the active layer supports only explicitly registered canonical `read_only` probes. The first executor reads Linux `/proc/net/snmp`; MCP cannot supply a command string, choose an arbitrary executor, choose an arbitrary counter source path, generate traffic, execute the workload, mutate network state, or perform remediation. `low`, `state_changing`, and `high` risk probes are rejected before executor lookup.
+
+Design details are documented in [RFC 0015](RFC/0015-end-to-end-demo-harness.md), [RFC 0016](RFC/0016-safe-read-only-probe-execution.md), and [RFC 0017](RFC/0017-opt-in-mcp-read-only-probe-tools.md).
