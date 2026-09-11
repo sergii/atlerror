@@ -44,3 +44,6 @@ jobs:
 
       - name: Validate OTLP HTTP receiver
         run: python scripts/test_otlp_http_receiver.py
+
+      - name: Validate live diagnosis loop
+        run: python scripts/test_live_diagnosis.py
