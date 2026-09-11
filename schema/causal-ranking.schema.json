@@ -51,6 +51,7 @@
         }
       }
     },
+    "evidence_context": {"$ref": "#/$defs/runtime_evidence_context"},
     "candidates": {
       "type": "array",
       "items": {"$ref": "#/$defs/candidate"}
@@ -141,6 +142,47 @@
         "experiment_backed_edges": {"type": "integer", "minimum": 0},
         "claim_backed_edges": {"type": "integer", "minimum": 0},
         "contributes_to_edges": {"type": "integer", "minimum": 0}
+      }
+    },
+    "runtime_evidence_ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "observation", "state", "confidence"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "observation": {"type": "string", "minLength": 1},
+        "state": {"enum": ["observed", "absent"]},
+        "confidence": {"enum": ["low", "moderate", "high"]}
+      }
+    },
+    "runtime_evidence_context": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "incident_id",
+        "as_of",
+        "active_instances",
+        "stale_instance_ids",
+        "future_instance_ids"
+      ],
+      "properties": {
+        "incident_id": {"type": "string", "minLength": 1},
+        "as_of": {"type": "string", "format": "date-time"},
+        "source_path": {"type": "string", "minLength": 1},
+        "active_instances": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/runtime_evidence_ref"}
+        },
+        "stale_instance_ids": {
+          "type": "array",
+          "items": {"type": "string", "minLength": 1},
+          "uniqueItems": true
+        },
+        "future_instance_ids": {
+          "type": "array",
+          "items": {"type": "string", "minLength": 1},
+          "uniqueItems": true
+        }
       }
     },
     "candidate": {
