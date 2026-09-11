@@ -56,11 +56,13 @@ class ApiHarness:
             with urlopen(request, timeout=2) as response:
                 raw = response.read()
                 payload = json.loads(raw.decode("utf-8")) if raw else None
-                return response.status, payload, dict(response.headers.items())
+                response_headers = {key.lower(): value for key, value in response.headers.items()}
+                return response.status, payload, response_headers
         except HTTPError as exc:
             raw = exc.read()
             payload = json.loads(raw.decode("utf-8")) if raw else None
-            return exc.code, payload, dict(exc.headers.items())
+            response_headers = {key.lower(): value for key, value in exc.headers.items()}
+            return exc.code, payload, response_headers
 
 
 class DiagnosisHttpApiTest(unittest.TestCase):
@@ -119,8 +121,8 @@ class DiagnosisHttpApiTest(unittest.TestCase):
                 status, diagnosis, headers = api.request("GET", "/diagnosis")
                 self.assertEqual(200, status)
                 self.assertEqual(expected, diagnosis)
-                self.assertIn("Etag", headers)
-                self.assertEqual("no-cache", headers["Cache-Control"])
+                self.assertIn("etag", headers)
+                self.assertEqual("no-cache", headers["cache-control"])
 
                 status, summary, _ = api.request("GET", "/status")
                 self.assertEqual(200, status)
@@ -140,7 +142,7 @@ class DiagnosisHttpApiTest(unittest.TestCase):
             api = ApiHarness(snapshot_path)
             try:
                 _, first, headers = api.request("GET", "/diagnosis")
-                first_etag = headers["Etag"]
+                first_etag = headers["etag"]
                 self.assertEqual(1, first["evidence_revision"])
 
                 status, payload, conditional_headers = api.request(
@@ -150,7 +152,7 @@ class DiagnosisHttpApiTest(unittest.TestCase):
                 )
                 self.assertEqual(304, status)
                 self.assertIsNone(payload)
-                self.assertEqual(first_etag, conditional_headers["Etag"])
+                self.assertEqual(first_etag, conditional_headers["etag"])
 
                 self.write_snapshot(snapshot_path, self.build_snapshot(2))
                 status, second, second_headers = api.request(
@@ -160,7 +162,7 @@ class DiagnosisHttpApiTest(unittest.TestCase):
                 )
                 self.assertEqual(200, status)
                 self.assertEqual(2, second["evidence_revision"])
-                self.assertNotEqual(first_etag, second_headers["Etag"])
+                self.assertNotEqual(first_etag, second_headers["etag"])
             finally:
                 api.close()
 
@@ -191,12 +193,12 @@ class DiagnosisHttpApiTest(unittest.TestCase):
                 status, payload, headers = api.request("HEAD", "/diagnosis")
                 self.assertEqual(200, status)
                 self.assertIsNone(payload)
-                self.assertIn("Etag", headers)
+                self.assertIn("etag", headers)
 
                 status, payload, headers = api.request("POST", "/diagnosis", body=b"{}")
                 self.assertEqual(405, status)
                 self.assertIsNone(payload)
-                self.assertEqual("GET, HEAD", headers["Allow"])
+                self.assertEqual("GET, HEAD", headers["allow"])
             finally:
                 api.close()
 
