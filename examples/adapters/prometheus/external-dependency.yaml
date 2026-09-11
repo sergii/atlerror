@@ -1,0 +1,24 @@
+schema_version: "0.1"
+kind: prometheus_adapter
+id: adapter.prometheus.external_dependency
+description: >-
+  Example metric evidence for the same semantic dependency scope used by the
+  OpenTelemetry external-dependency trace example.
+default_confidence: moderate
+default_ttl_seconds: 300
+mappings:
+  - id: tcp_retransmissions_rate
+    observation: observation.network.tcp_retransmissions
+    query: rate(node_netstat_Tcp_RetransSegs[5m])
+    unit: segments_per_second
+    state_rule:
+      operator: gt
+      threshold: 5
+      state_when_true: observed
+      state_when_false: absent
+    scope:
+      boundary_labels:
+        - atlerror_boundary
+      attribute_labels:
+        service: service
+        dependency: dependency

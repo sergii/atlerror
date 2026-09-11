@@ -39,6 +39,9 @@ jobs:
       - name: Validate runtime evidence
         run: python scripts/test_runtime_evidence.py
 
+      - name: Validate runtime evidence composition
+        run: python scripts/test_runtime_evidence_composition.py
+
       - name: Validate Prometheus adapter
         run: python scripts/test_prometheus_adapter.py
 
