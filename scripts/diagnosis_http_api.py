@@ -18,6 +18,7 @@ from urllib.parse import urlsplit
 from jsonschema import Draft202012Validator, FormatChecker
 
 from causal_projection import ROOT
+from probe_ranking import validate_probe_ranking
 from runtime_evidence import format_timestamp
 
 DEFAULT_HOST = "127.0.0.1"
@@ -45,6 +46,17 @@ class DiagnosisSnapshotReader:
         self._etag: str | None = None
         self._loaded_at: str | None = None
         self._lock = RLock()
+
+    @staticmethod
+    def _validate_probe_rankings(document: dict[str, Any]) -> None:
+        for partition in document.get("partitions", []):
+            for diagnosis in partition.get("diagnoses", []):
+                try:
+                    validate_probe_ranking(diagnosis["probe_ranking"])
+                except (OSError, ValueError) as exc:
+                    raise InvalidSnapshot(
+                        "embedded probe ranking validation failed: " + str(exc)
+                    ) from exc
 
     def _load(self) -> tuple[dict[str, Any], str]:
         try:
@@ -74,6 +86,7 @@ class DiagnosisSnapshotReader:
             if len(errors) > 5:
                 details += f"; and {len(errors) - 5} more validation errors"
             raise InvalidSnapshot("diagnosis snapshot schema validation failed: " + details)
+        self._validate_probe_rankings(document)
 
         digest = hashlib.sha256(raw).hexdigest()
         etag = f'"{digest}"'
@@ -93,17 +106,26 @@ class DiagnosisSnapshotReader:
         diagnoses = 0
         unranked = 0
         active_observations = 0
+        next_probe_recommendations = 0
         for partition in partitions:
             if not isinstance(partition, dict):
                 continue
-            diagnoses += len(partition.get("diagnoses", []))
+            partition_diagnoses = partition.get("diagnoses", [])
+            diagnoses += len(partition_diagnoses)
             unranked += len(partition.get("unranked_observations", []))
             active_observations += len(partition.get("observed", []))
+            for diagnosis in partition_diagnoses:
+                if not isinstance(diagnosis, dict):
+                    continue
+                probe_ranking = diagnosis.get("probe_ranking")
+                if isinstance(probe_ranking, dict) and probe_ranking.get("found") is True:
+                    next_probe_recommendations += 1
         return {
             "partitions": len(partitions),
             "diagnoses": diagnoses,
             "unranked_observations": unranked,
             "active_observations": active_observations,
+            "next_probe_recommendations": next_probe_recommendations,
         }
 
     def status(self) -> dict[str, Any]:
