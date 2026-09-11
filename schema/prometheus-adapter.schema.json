@@ -1,0 +1,89 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://atlerror.dev/schema/prometheus-adapter.schema.json",
+  "title": "Atlerror Prometheus runtime evidence adapter",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "kind", "id", "mappings"],
+  "properties": {
+    "schema_version": {"const": "0.1"},
+    "kind": {"const": "prometheus_adapter"},
+    "id": {"type": "string", "minLength": 1},
+    "description": {"type": "string"},
+    "default_confidence": {"enum": ["low", "moderate", "high"]},
+    "default_ttl_seconds": {"type": "integer", "minimum": 1},
+    "mappings": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/mapping"}
+    }
+  },
+  "$defs": {
+    "concept_id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*(\\.[a-z0-9_]+)+$"
+    },
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "entities": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/concept_id"},
+          "uniqueItems": true
+        },
+        "boundaries": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/concept_id"},
+          "uniqueItems": true
+        },
+        "attributes": {
+          "type": "object",
+          "additionalProperties": {"type": "string"}
+        },
+        "entity_labels": {
+          "type": "array",
+          "items": {"type": "string", "minLength": 1},
+          "uniqueItems": true
+        },
+        "boundary_labels": {
+          "type": "array",
+          "items": {"type": "string", "minLength": 1},
+          "uniqueItems": true
+        },
+        "attribute_labels": {
+          "type": "object",
+          "additionalProperties": {"type": "string", "minLength": 1}
+        }
+      },
+      "minProperties": 1
+    },
+    "state_rule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["operator", "threshold", "state_when_true", "state_when_false"],
+      "properties": {
+        "operator": {"enum": ["gt", "gte", "lt", "lte", "eq", "neq"]},
+        "threshold": {"type": "number"},
+        "state_when_true": {"enum": ["observed", "absent"]},
+        "state_when_false": {"enum": ["observed", "absent"]}
+      }
+    },
+    "mapping": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "observation", "query", "state_rule"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "description": {"type": "string"},
+        "observation": {"$ref": "#/$defs/concept_id"},
+        "query": {"type": "string", "minLength": 1},
+        "state_rule": {"$ref": "#/$defs/state_rule"},
+        "confidence": {"enum": ["low", "moderate", "high"]},
+        "ttl_seconds": {"type": "integer", "minimum": 1},
+        "unit": {"type": "string", "minLength": 1},
+        "scope": {"$ref": "#/$defs/scope"}
+      }
+    }
+  }
+}
