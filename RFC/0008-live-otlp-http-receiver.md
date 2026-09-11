@@ -133,6 +133,8 @@ python scripts/causal_ranking.py \
 
 The snapshot is current state, not a durable trace archive.
 
+RFC 0009 adds a separate watcher that consumes this same `GET /evidence` contract and keeps a transparent diagnosis snapshot current. The receiver itself remains focused on ingestion and evidence state rather than embedding causal reasoning into the transport process.
+
 ## Incident model
 
 One receiver process has one explicit `--incident-id`.
@@ -180,10 +182,10 @@ This RFC does not introduce:
 
 ## Future work
 
-The next useful steps should be driven by real use of the live path. Likely candidates are:
+The automatic diagnosis consumer is now defined separately by RFC 0009. Remaining receiver-side work should be driven by real use of the live path. Likely candidates are:
 
-1. a consumer that runs causal ranking automatically when the current evidence snapshot changes
-2. explicit evidence-window aggregation policies when latest-value semantics prove insufficient
+1. explicit evidence-window aggregation policies when latest-value semantics prove insufficient
+2. event-driven evidence-change notification when polling becomes a measurable limitation
 3. trace-log correlation through trace and span IDs
 4. standardized OpenTelemetry semantic-convention mappings for common HTTP, database, RPC, and messaging spans
 5. a durable incident evidence store if in-memory current state becomes insufficient
