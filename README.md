@@ -82,6 +82,40 @@ python scripts/causal_projection.py --pretty causes \
 
 The JSON contract is defined by `schema/causal-projection.schema.json`. CLI, MCP, HTTP, and other adapters should consume the same projection instead of reimplementing graph semantics.
 
+## Causal ranking
+
+A projection can also rank upstream **hypotheses** for an observed target without pretending to calculate a universal probability.
+
+With only TCP retransmissions as the target, packet loss ranks ahead of packet corruption because packet loss directly and strongly predicts retransmissions through a shorter evidence-backed causal path:
+
+```bash
+python scripts/causal_ranking.py \
+  observation.network.tcp_retransmissions \
+  --pretty
+```
+
+Add current observations to change the ranking transparently. Receiver-side TCP integrity errors move packet corruption ahead because that observation lies directly on its causal path and is a strong hypothesis prediction:
+
+```bash
+python scripts/causal_ranking.py \
+  observation.network.tcp_retransmissions \
+  --observed observation.network.tcp_integrity_errors \
+  --pretty
+```
+
+Known-absent observations can penalize a causal path or an explicit hypothesis falsifier:
+
+```bash
+python scripts/causal_ranking.py \
+  observation.network.tcp_retransmissions \
+  --absent observation.network.tcp_integrity_errors \
+  --pretty
+```
+
+Ranking is deterministic and ordinal. The output exposes every factor used for ordering: conflicts, observed causal path nodes, matching hypothesis predictions by declared strength, weakest causal edge strength, evidence provenance, path distance, and `contributes_to` edges. It deliberately emits no probability or opaque numeric score. The contract is defined by `schema/causal-ranking.schema.json`.
+
+The query target is treated as the observation being explained. Additional `--observed` values mean those observation concepts are currently present, while `--absent` means they are known absent or normal. This is lightweight query-time context, not yet a persisted runtime evidence-instance model.
+
 ## First vertical slice
 
 The initial slice models `symptom.cpu.high` and a small set of hypotheses:
