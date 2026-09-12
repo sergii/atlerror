@@ -20,7 +20,14 @@ from probe_execution import (
     finish_probe_session,
     load_probe_session,
 )
+from probe_session_state import (
+    DEFAULT_SESSION_MAX_AGE_SECONDS,
+    classify_probe_session_lifecycle,
+    discover_pending_probe_sessions,
+    probe_abandonment_path,
+)
 from runtime_evidence import (
+    format_timestamp,
     load_runtime_evidence,
     validate_runtime_references,
     validate_scope_query,
@@ -29,6 +36,7 @@ from runtime_evidence_composition import compose_runtime_evidence
 
 BEGIN_TOOL_NAME = "atlerror.probe.begin_recommended"
 FINISH_TOOL_NAME = "atlerror.probe.finish"
+ABANDON_TOOL_NAME = "atlerror.probe.abandon"
 SESSION_ID_PATTERN = re.compile(r"^probe-session\.[0-9a-f]{16}$")
 
 _SCOPE_SCHEMA: dict[str, Any] = {
@@ -73,7 +81,7 @@ _BEGIN_INPUT_SCHEMA: dict[str, Any] = {
     },
 }
 
-_FINISH_INPUT_SCHEMA: dict[str, Any] = {
+_SESSION_INPUT_SCHEMA: dict[str, Any] = {
     "type": "object",
     "additionalProperties": False,
     "required": ["sessionId"],
@@ -117,7 +125,10 @@ class RecommendedProbeToolController:
         session_dir: Path,
         source_path: Path = DEFAULT_SOURCE_PATH,
         clock: Callable[[], datetime] = _default_clock,
+        max_session_age_seconds: int = DEFAULT_SESSION_MAX_AGE_SECONDS,
     ) -> None:
+        if max_session_age_seconds <= 0:
+            raise ValueError("probe session max age must be positive")
         self.reader = reader
         self.runtime_evidence_path = runtime_evidence_path
         self.snapshot_path = snapshot_path
@@ -126,11 +137,12 @@ class RecommendedProbeToolController:
         self.session_dir = session_dir
         self.source_path = source_path
         self.clock = clock
+        self.max_session_age_seconds = max_session_age_seconds
         self._lock = RLock()
 
     @staticmethod
-    def tool_names() -> tuple[str, str]:
-        return (BEGIN_TOOL_NAME, FINISH_TOOL_NAME)
+    def tool_names() -> tuple[str, str, str]:
+        return (ABANDON_TOOL_NAME, BEGIN_TOOL_NAME, FINISH_TOOL_NAME)
 
     @staticmethod
     def tool_descriptors() -> list[dict[str, Any]]:
@@ -141,9 +153,10 @@ class RecommendedProbeToolController:
                 "description": (
                     "Capture a baseline for the current top recommended Atlerror probe. "
                     "The server chooses the probe from the validated diagnosis snapshot, refuses "
-                    "non-read-only or unregistered executors, and binds the session to the exact "
-                    "diagnosis scope. The caller must run the controlled workload separately, then "
-                    f"call {FINISH_TOOL_NAME}."
+                    "non-read-only or unregistered executors, binds the session to the exact "
+                    "diagnosis scope, and refuses a second unfinished session for the same target "
+                    "and scope. The caller must run the controlled workload separately, then call "
+                    f"{FINISH_TOOL_NAME}."
                 ),
                 "inputSchema": copy.deepcopy(_BEGIN_INPUT_SCHEMA),
                 "annotations": {
@@ -157,11 +170,27 @@ class RecommendedProbeToolController:
                 "name": FINISH_TOOL_NAME,
                 "title": "Finish read-only probe",
                 "description": (
-                    "Complete a previously started registered read-only probe, append its result as "
+                    "Complete a non-expired registered read-only probe, append its result as "
                     "standard runtime evidence, and recompute the diagnosis snapshot. The tool never "
                     "runs a shell command, arbitrary subprocess, traffic generator, or remediation."
                 ),
-                "inputSchema": copy.deepcopy(_FINISH_INPUT_SCHEMA),
+                "inputSchema": copy.deepcopy(_SESSION_INPUT_SCHEMA),
+                "annotations": {
+                    "readOnlyHint": False,
+                    "destructiveHint": False,
+                    "idempotentHint": True,
+                    "openWorldHint": False,
+                },
+            },
+            {
+                "name": ABANDON_TOOL_NAME,
+                "title": "Abandon probe session",
+                "description": (
+                    "Mark an unfinished local probe session as abandoned without reading the probe "
+                    "source again, creating runtime evidence, changing diagnosis ranking, or deleting "
+                    "its persisted audit files. This is the safe recovery path for expired sessions."
+                ),
+                "inputSchema": copy.deepcopy(_SESSION_INPUT_SCHEMA),
                 "annotations": {
                     "readOnlyHint": False,
                     "destructiveHint": False,
@@ -268,6 +297,12 @@ class RecommendedProbeToolController:
             raise ProbeToolInvocationError("invalid probe session id")
         return self.session_dir / f"{session_id}.binding.json"
 
+    def _abandonment_path(self, session_id: str) -> Path:
+        try:
+            return probe_abandonment_path(self.session_dir, session_id)
+        except ValueError as exc:
+            raise ProbeToolInvocationError(str(exc)) from exc
+
     def _write_binding(
         self,
         *,
@@ -330,6 +365,35 @@ class RecommendedProbeToolController:
                 validate_scope_query(document["scope"], self.concepts)
             except ValueError as exc:
                 raise ProbeToolInvocationError(str(exc)) from exc
+            document["scope"] = normalize_scope(document["scope"], self.concepts)
+        return document
+
+    def _load_abandonment(self, session_id: str, incident_id: str) -> dict[str, Any] | None:
+        path = self._abandonment_path(session_id)
+        if not path.exists():
+            return None
+        try:
+            document = json.loads(path.read_text(encoding="utf-8"))
+        except OSError as exc:
+            raise ProbeToolInvocationError(f"cannot read probe abandonment for {session_id}") from exc
+        except json.JSONDecodeError as exc:
+            raise ProbeToolInvocationError(f"probe abandonment is invalid JSON for {session_id}") from exc
+        required = {
+            "schema_version",
+            "kind",
+            "session_id",
+            "incident_id",
+            "abandoned_at",
+            "reason",
+        }
+        if not isinstance(document, dict) or set(document) != required:
+            raise ProbeToolInvocationError("probe abandonment has an unexpected structure")
+        if document["schema_version"] != "0.1" or document["kind"] != "mcp_probe_abandonment":
+            raise ProbeToolInvocationError("unsupported probe abandonment version or kind")
+        if document["session_id"] != session_id or document["incident_id"] != incident_id:
+            raise ProbeToolInvocationError("probe abandonment does not match probe session")
+        if document["reason"] != "operator_abandoned":
+            raise ProbeToolInvocationError("unsupported probe abandonment reason")
         return document
 
     @staticmethod
@@ -412,6 +476,18 @@ class RecommendedProbeToolController:
             **diagnosis,
         }
 
+    def _pending_sessions(self) -> list[dict[str, Any]]:
+        try:
+            return discover_pending_probe_sessions(
+                session_dir=self.session_dir,
+                runtime_evidence_path=self.runtime_evidence_path,
+                concepts=self.concepts,
+                as_of=self.clock(),
+                max_age_seconds=self.max_session_age_seconds,
+            )
+        except (OSError, ValueError) as exc:
+            raise ProbeToolInvocationError(f"cannot discover pending probe sessions: {exc}") from exc
+
     def begin(self, arguments: Any) -> dict[str, Any]:
         arguments = self._validate_arguments(_BEGIN_INPUT_SCHEMA, arguments)
         target = arguments["target"]
@@ -426,6 +502,20 @@ class RecommendedProbeToolController:
                 target=target,
                 requested_scope=requested_scope,
             )
+            pending = [
+                session
+                for session in self._pending_sessions()
+                if session["target"] == target
+                and scope_key(session.get("scope")) == scope_key(partition_scope)
+            ]
+            if pending:
+                existing = pending[0]
+                raise ProbeToolInvocationError(
+                    "an unfinished probe session already exists for this target and scope: "
+                    f"{existing['session_id']} ({existing['lifecycle_state']}); "
+                    "finish or abandon it before beginning another"
+                )
+
             probe_id = top_probe["probe"]["id"]
             if top_probe.get("risk") != "read_only":
                 raise ProbeToolInvocationError(
@@ -446,7 +536,8 @@ class RecommendedProbeToolController:
 
             session_path = self._session_path(session["session_id"])
             binding_path = self._binding_path(session["session_id"])
-            if session_path.exists() or binding_path.exists():
+            abandonment_path = self._abandonment_path(session["session_id"])
+            if session_path.exists() or binding_path.exists() or abandonment_path.exists():
                 raise ProbeToolInvocationError(
                     f"probe session already exists: {session['session_id']}"
                 )
@@ -458,7 +549,11 @@ class RecommendedProbeToolController:
                 diagnosis_revision=snapshot["evidence_revision"],
                 diagnosis_etag=etag,
             )
-
+            lifecycle_state, expires_at = classify_probe_session_lifecycle(
+                session,
+                as_of=self.clock(),
+                max_age_seconds=self.max_session_age_seconds,
+            )
             return {
                 "status": "baseline_captured",
                 "session_id": session["session_id"],
@@ -467,16 +562,18 @@ class RecommendedProbeToolController:
                 "probe_id": probe_id,
                 "scope": copy.deepcopy(partition_scope),
                 "started_at": session["started_at"],
+                "expires_at": expires_at,
+                "lifecycle_state": lifecycle_state,
                 "baseline": copy.deepcopy(session["baseline"]),
                 "diagnosis_revision": snapshot["evidence_revision"],
                 "next_action": (
                     "Run the controlled workload outside Atlerror, then call "
-                    f"{FINISH_TOOL_NAME} with this sessionId."
+                    f"{FINISH_TOOL_NAME} with this sessionId before the session expires."
                 ),
             }
 
     def finish(self, arguments: Any) -> dict[str, Any]:
-        arguments = self._validate_arguments(_FINISH_INPUT_SCHEMA, arguments)
+        arguments = self._validate_arguments(_SESSION_INPUT_SCHEMA, arguments)
         session_id = arguments["sessionId"]
 
         with self._lock:
@@ -500,6 +597,10 @@ class RecommendedProbeToolController:
                     "probe session belongs to a different incident than the current diagnosis"
                 )
 
+            abandonment = self._load_abandonment(session_id, session["incident_id"])
+            if abandonment is not None:
+                raise ProbeToolInvocationError(f"probe session was abandoned: {session_id}")
+
             existing = self._session_evidence_instance(evidence, session_id)
             if existing is not None:
                 if not self._snapshot_mentions_instance(snapshot, existing["id"]):
@@ -516,6 +617,16 @@ class RecommendedProbeToolController:
                     instance=existing,
                     snapshot=snapshot,
                     already_completed=True,
+                )
+
+            lifecycle_state, expires_at = classify_probe_session_lifecycle(
+                session,
+                as_of=self.clock(),
+                max_age_seconds=self.max_session_age_seconds,
+            )
+            if lifecycle_state == "expired":
+                raise ProbeToolInvocationError(
+                    f"probe session expired at {expires_at}; abandon it and begin a new probe"
                 )
 
             try:
@@ -548,9 +659,69 @@ class RecommendedProbeToolController:
                 already_completed=False,
             )
 
+    def abandon(self, arguments: Any) -> dict[str, Any]:
+        arguments = self._validate_arguments(_SESSION_INPUT_SCHEMA, arguments)
+        session_id = arguments["sessionId"]
+
+        with self._lock:
+            binding = self._load_binding(session_id)
+            try:
+                session = load_probe_session(self._session_path(session_id), self.concepts)
+            except (OSError, ValueError) as exc:
+                raise ProbeToolInvocationError(str(exc)) from exc
+            if session["incident_id"] != binding["incident_id"]:
+                raise ProbeToolInvocationError("probe session and binding incident ids differ")
+
+            evidence = self._load_runtime_evidence()
+            snapshot, _etag = self._load_snapshot()
+            self._ensure_same_incident(snapshot, evidence)
+            if session["incident_id"] != snapshot["incident_id"]:
+                raise ProbeToolInvocationError(
+                    "probe session belongs to a different incident than the current diagnosis"
+                )
+            if self._session_evidence_instance(evidence, session_id) is not None:
+                raise ProbeToolInvocationError(
+                    f"completed probe session cannot be abandoned: {session_id}"
+                )
+
+            existing = self._load_abandonment(session_id, session["incident_id"])
+            if existing is not None:
+                return {
+                    "status": "abandoned",
+                    "already_abandoned": True,
+                    "session_id": session_id,
+                    "incident_id": binding["incident_id"],
+                    "target": binding["target"],
+                    "probe_id": binding["probe_id"],
+                    "scope": copy.deepcopy(binding["scope"]),
+                    "abandoned_at": existing["abandoned_at"],
+                }
+
+            marker = {
+                "schema_version": "0.1",
+                "kind": "mcp_probe_abandonment",
+                "session_id": session_id,
+                "incident_id": binding["incident_id"],
+                "abandoned_at": format_timestamp(self.clock()),
+                "reason": "operator_abandoned",
+            }
+            _write_json_atomic(self._abandonment_path(session_id), marker)
+            return {
+                "status": "abandoned",
+                "already_abandoned": False,
+                "session_id": session_id,
+                "incident_id": binding["incident_id"],
+                "target": binding["target"],
+                "probe_id": binding["probe_id"],
+                "scope": copy.deepcopy(binding["scope"]),
+                "abandoned_at": marker["abandoned_at"],
+            }
+
     def call(self, name: str, arguments: Any) -> dict[str, Any]:
         if name == BEGIN_TOOL_NAME:
             return self.begin(arguments)
         if name == FINISH_TOOL_NAME:
             return self.finish(arguments)
+        if name == ABANDON_TOOL_NAME:
+            return self.abandon(arguments)
         raise KeyError(name)
