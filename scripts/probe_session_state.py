@@ -248,15 +248,11 @@ def discover_active_probe_sessions(
     as_of: datetime | None = None,
     max_age_seconds: int = DEFAULT_SESSION_MAX_AGE_SECONDS,
 ) -> list[dict[str, Any]]:
-    """Compatibility projection containing only non-expired unfinished sessions."""
-    return [
-        session
-        for session in discover_pending_probe_sessions(
-            session_dir=session_dir,
-            runtime_evidence_path=runtime_evidence_path,
-            concepts=concepts,
-            as_of=as_of,
-            max_age_seconds=max_age_seconds,
-        )
-        if session["lifecycle_state"] == "active"
-    ]
+    """Backward-compatible provider name returning all unfinished sessions, including expired ones."""
+    return discover_pending_probe_sessions(
+        session_dir=session_dir,
+        runtime_evidence_path=runtime_evidence_path,
+        concepts=concepts,
+        as_of=as_of,
+        max_age_seconds=max_age_seconds,
+    )
