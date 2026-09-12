@@ -13,6 +13,9 @@ from jsonschema import Draft202012Validator
 
 from causal_projection import ROOT
 from causal_ranking import rank_causes
+from probe_execution_annotation import annotate_recommended_probe_execution
+from probe_executor_registry import ProbeExecutorRegistry
+from probe_executor_runtime import build_probe_execution_capabilities
 from probe_ranking import rank_probes, validate_probe_ranking
 from runtime_evidence import format_timestamp, parse_timestamp, resolve_runtime_evidence
 
@@ -128,6 +131,7 @@ def build_diagnosis_snapshot(
     as_of: datetime,
     evidence_revision: int,
     max_depth: int | None = None,
+    executor_registry: ProbeExecutorRegistry | None = None,
 ) -> dict[str, Any]:
     if as_of.utcoffset() is None:
         raise ValueError("diagnosis as_of must include a timezone")
@@ -135,6 +139,11 @@ def build_diagnosis_snapshot(
         raise ValueError("evidence_revision must not be negative")
     if max_depth is not None and max_depth < 1:
         raise ValueError("diagnosis max_depth must be at least 1")
+
+    execution_capabilities = build_probe_execution_capabilities(
+        concepts,
+        registry=executor_registry,
+    )
 
     partitions: list[dict[str, Any]] = []
     for scope, partition_document in partition_runtime_evidence(document, concepts):
@@ -159,11 +168,16 @@ def build_diagnosis_snapshot(
             )
             if ranking["found"]:
                 probe_ranking = rank_probes(ranking, concepts)
+                probe_execution = annotate_recommended_probe_execution(
+                    probe_ranking,
+                    execution_capabilities,
+                )
                 diagnoses.append(
                     {
                         "target": target,
                         "ranking": ranking,
                         "probe_ranking": probe_ranking,
+                        "probe_execution": probe_execution,
                     }
                 )
             else:
@@ -232,6 +246,7 @@ class LiveDiagnosisEngine:
         edges: list[dict[str, Any]],
         snapshot_path: Path | None = None,
         max_depth: int | None = None,
+        executor_registry: ProbeExecutorRegistry | None = None,
         clock: Callable[[], datetime] = _default_clock,
     ) -> None:
         if max_depth is not None and max_depth < 1:
@@ -240,6 +255,7 @@ class LiveDiagnosisEngine:
         self.edges = edges
         self.snapshot_path = snapshot_path
         self.max_depth = max_depth
+        self.executor_registry = executor_registry
         self.clock = clock
         self._lock = RLock()
         self._cached: dict[str, Any] | None = None
@@ -273,6 +289,7 @@ class LiveDiagnosisEngine:
             as_of=now,
             evidence_revision=evidence_revision,
             max_depth=self.max_depth,
+            executor_registry=self.executor_registry,
         )
         with self._lock:
             self._write_snapshot(snapshot)

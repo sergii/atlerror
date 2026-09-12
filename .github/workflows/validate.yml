@@ -57,6 +57,9 @@ jobs:
       - name: Validate live probe recommendations
         run: python scripts/test_live_probe_recommendations.py
 
+      - name: Validate next-probe execution annotations
+        run: python scripts/test_probe_execution_annotation.py
+
       - name: Validate diagnosis HTTP API
         run: python scripts/test_diagnosis_http_api.py
 
