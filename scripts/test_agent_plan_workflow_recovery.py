@@ -11,7 +11,7 @@ from pathlib import Path
 
 import yaml
 
-from agent_plan_recovery import build_agent_plan_projection
+from agent_plan_recovery import RECOVERY_OPERATION, build_agent_plan_projection
 from causal_projection import load_concepts, load_edges
 from diagnosis_http_api import DiagnosisSnapshotReader
 from diagnosis_mcp_server import (
@@ -115,7 +115,7 @@ class AgentPlanWorkflowRecoveryTest(unittest.TestCase):
         self.assertEqual("active_execution_disabled", step["reason"])
         self.assertEqual(0, plan["summary"]["workflow_recovery_required"])
 
-    def test_recovery_issue_gates_normal_diagnostic_actions(self) -> None:
+    def test_recovery_issue_gates_normal_actions_and_is_tool_actionable_when_enabled(self) -> None:
         snapshot = self.build_snapshot()
         issue = {
             "session_id": SESSION_ID,
@@ -135,12 +135,43 @@ class AgentPlanWorkflowRecoveryTest(unittest.TestCase):
         self.assertIsNone(step["target"])
         self.assertEqual("workflow_recovery_required", step["state"])
         self.assertEqual("partial_probe_workflow_state", step["reason"])
-        self.assertFalse(step["allowed"])
-        self.assertEqual("reconcile_partial_workflow", step["fallback"])
+        self.assertTrue(step["allowed"])
+        self.assertFalse(step["requires_opt_in"])
+        self.assertEqual(RECOVERY_OPERATION, step["operation"])
+        self.assertEqual(
+            {"sessionId": SESSION_ID, "fingerprint": "a" * 64},
+            step["arguments"],
+        )
+        self.assertEqual("none", step["fallback"])
         self.assertEqual(SESSION_ID, step["recovery"]["session_id"])
         self.assertEqual("orphan_session", step["recovery"]["issue_kind"])
         self.assertEqual(1, plan["summary"]["workflow_recovery_required"])
         self.assertEqual(0, plan["summary"]["actionable"])
+
+    def test_recovery_operation_is_explicit_but_blocked_without_tool_opt_in(self) -> None:
+        snapshot = self.build_snapshot()
+        issue = {
+            "session_id": SESSION_ID,
+            "incident_id": snapshot["incident_id"],
+            "issue_kind": "orphan_binding",
+            "fingerprint": "c" * 64,
+            "files": [f"{SESSION_ID}.binding.json"],
+            "recovery": "discard_partial_state",
+        }
+        plan = build_agent_plan_projection(
+            snapshot,
+            active_execution_enabled=False,
+            recovery_issues=[issue],
+        )
+        step = plan["steps"][0]
+        self.assertEqual(RECOVERY_OPERATION, step["operation"])
+        self.assertEqual(
+            {"sessionId": SESSION_ID, "fingerprint": "c" * 64},
+            step["arguments"],
+        )
+        self.assertFalse(step["allowed"])
+        self.assertTrue(step["requires_opt_in"])
+        self.assertEqual("reconcile_partial_workflow", step["fallback"])
 
     def test_mcp_agent_plan_surfaces_real_partial_state_and_resumes_after_reconciliation(self) -> None:
         with tempfile.TemporaryDirectory() as directory_name:
@@ -178,6 +209,9 @@ class AgentPlanWorkflowRecoveryTest(unittest.TestCase):
             self.assertEqual("workflow_recovery_required", step["state"])
             self.assertEqual("orphan_binding", step["recovery"]["issue_kind"])
             self.assertEqual(SESSION_ID, step["recovery"]["session_id"])
+            self.assertEqual(RECOVERY_OPERATION, step["operation"])
+            self.assertFalse(step["allowed"])
+            self.assertEqual(step["recovery"]["fingerprint"], step["arguments"]["fingerprint"])
 
             reconciled = reconcile_partial_probe_workflow(
                 session_dir,
@@ -208,6 +242,7 @@ class AgentPlanWorkflowRecoveryTest(unittest.TestCase):
         )
         self.assertEqual("workflow_recovery_required", plan["steps"][0]["state"])
         self.assertIsNone(plan["steps"][0]["recovery"]["incident_id"])
+        self.assertEqual(RECOVERY_OPERATION, plan["steps"][0]["operation"])
 
 
 if __name__ == "__main__":
