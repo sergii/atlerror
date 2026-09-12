@@ -54,6 +54,9 @@
       },
       "minProperties": 1
     },
+    "scalar": {
+      "type": ["number", "string", "boolean", "null"]
+    },
     "ranking": {
       "type": "object",
       "required": ["schema_version", "kind", "query", "found", "ranking_method", "candidates"],
@@ -109,14 +112,65 @@
         "probes": {"type": "array"}
       }
     },
+    "probe_execution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "kind",
+        "affects_ranking",
+        "platform",
+        "probe_id",
+        "registered",
+        "executable_here",
+        "unavailable_reason",
+        "executor",
+        "capability",
+        "observation",
+        "source",
+        "policy"
+      ],
+      "properties": {
+        "schema_version": {"const": "0.1"},
+        "kind": {"const": "probe_execution_annotation"},
+        "affects_ranking": {"const": false},
+        "platform": {"type": "string", "minLength": 1},
+        "probe_id": {"type": ["string", "null"]},
+        "registered": {"type": ["boolean", "null"]},
+        "executable_here": {"type": ["boolean", "null"]},
+        "unavailable_reason": {"type": ["string", "null"]},
+        "executor": {
+          "oneOf": [
+            {"type": "null"},
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["id", "platform"],
+              "properties": {
+                "id": {"type": "string", "minLength": 1},
+                "platform": {"type": "string", "minLength": 1}
+              }
+            }
+          ]
+        },
+        "capability": {"type": ["string", "null"]},
+        "observation": {"type": ["string", "null"]},
+        "source": {"type": ["string", "null"]},
+        "policy": {
+          "type": "object",
+          "additionalProperties": {"$ref": "#/$defs/scalar"}
+        }
+      }
+    },
     "diagnosis": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["target", "ranking", "probe_ranking"],
+      "required": ["target", "ranking", "probe_ranking", "probe_execution"],
       "properties": {
         "target": {"type": "string", "minLength": 1},
         "ranking": {"$ref": "#/$defs/ranking"},
-        "probe_ranking": {"$ref": "#/$defs/probe_ranking"}
+        "probe_ranking": {"$ref": "#/$defs/probe_ranking"},
+        "probe_execution": {"$ref": "#/$defs/probe_execution"}
       }
     },
     "partition": {
