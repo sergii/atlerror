@@ -29,6 +29,7 @@
       "required": [
         "actionable",
         "probe_in_progress",
+        "probe_session_expired",
         "blocked",
         "no_executor",
         "no_probe_needed",
@@ -37,6 +38,7 @@
       "properties": {
         "actionable": {"type": "integer", "minimum": 0},
         "probe_in_progress": {"type": "integer", "minimum": 0},
+        "probe_session_expired": {"type": "integer", "minimum": 0},
         "blocked": {"type": "integer", "minimum": 0},
         "no_executor": {"type": "integer", "minimum": 0},
         "no_probe_needed": {"type": "integer", "minimum": 0},
@@ -75,7 +77,7 @@
         "scope": {"$ref": "#/$defs/runtime_scope"}
       }
     },
-    "finish_arguments": {
+    "session_arguments": {
       "type": "object",
       "additionalProperties": false,
       "required": ["sessionId"],
@@ -94,6 +96,8 @@
         "probe_id",
         "executor_id",
         "started_at",
+        "expires_at",
+        "lifecycle_state",
         "diagnosis_revision",
         "matches_current_recommendation"
       ],
@@ -105,6 +109,8 @@
         "probe_id": {"type": "string", "minLength": 1},
         "executor_id": {"type": "string", "minLength": 1},
         "started_at": {"type": "string", "format": "date-time"},
+        "expires_at": {"type": ["string", "null"], "format": "date-time"},
+        "lifecycle_state": {"enum": ["active", "expired"]},
         "diagnosis_revision": {"type": "integer", "minimum": 0},
         "matches_current_recommendation": {"type": "boolean"}
       }
@@ -141,6 +147,7 @@
           "enum": [
             "actionable",
             "probe_in_progress",
+            "probe_session_expired",
             "blocked",
             "no_executor",
             "no_probe_needed",
@@ -152,6 +159,8 @@
             "ready_to_begin_recommended",
             "ready_to_finish_probe",
             "probe_in_progress_execution_disabled",
+            "ready_to_abandon_expired_probe",
+            "expired_probe_execution_disabled",
             "active_execution_disabled",
             "executor_unavailable",
             "no_registered_executor",
@@ -167,14 +176,15 @@
           "oneOf": [
             {"type": "null"},
             {"const": "atlerror.probe.begin_recommended"},
-            {"const": "atlerror.probe.finish"}
+            {"const": "atlerror.probe.finish"},
+            {"const": "atlerror.probe.abandon"}
           ]
         },
         "arguments": {
           "oneOf": [
             {"type": "null"},
             {"$ref": "#/$defs/begin_arguments"},
-            {"$ref": "#/$defs/finish_arguments"}
+            {"$ref": "#/$defs/session_arguments"}
           ]
         },
         "allowed": {"type": "boolean"},

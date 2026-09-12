@@ -23,6 +23,7 @@ from diagnosis_mcp_server import (
 from live_diagnosis import build_diagnosis_snapshot
 from mcp_probe_tools import BEGIN_TOOL_NAME, FINISH_TOOL_NAME, RecommendedProbeToolController
 from probe_executor_registry import default_executor_registry
+from probe_session_state import discover_pending_probe_sessions
 
 ROOT = Path(__file__).resolve().parents[1]
 CLOCK = datetime(2026, 9, 11, 16, 31, 20, tzinfo=timezone.utc)
@@ -104,7 +105,22 @@ class AgentPlanProbeSessionTest(unittest.TestCase):
             source_path=source_path,
             clock=lambda: CLOCK,
         )
-        return DiagnosisMcpServer(reader, probe_tools=controller), source_path, snapshot_path
+        provider = lambda: discover_pending_probe_sessions(
+            session_dir=session_dir,
+            runtime_evidence_path=evidence_path,
+            concepts=self.concepts,
+            as_of=CLOCK,
+            max_age_seconds=controller.max_session_age_seconds,
+        )
+        return (
+            DiagnosisMcpServer(
+                reader,
+                probe_tools=controller,
+                probe_session_provider=provider,
+            ),
+            source_path,
+            snapshot_path,
+        )
 
     def read_plan(self, server: DiagnosisMcpServer, request_id: int) -> dict:
         response = self.modern_request(
@@ -153,6 +169,8 @@ class AgentPlanProbeSessionTest(unittest.TestCase):
             self.assertEqual(session_id, step["session"]["id"])
             self.assertEqual(EXPECTED_PROBE, step["session"]["probe_id"])
             self.assertEqual(EXPECTED_EXECUTOR, step["session"]["executor_id"])
+            self.assertEqual("active", step["session"]["lifecycle_state"])
+            self.assertTrue(step["session"]["expires_at"])
             self.assertEqual(1, step["session"]["diagnosis_revision"])
             self.assertTrue(step["session"]["matches_current_recommendation"])
             self.assertEqual(1, in_progress["summary"]["probe_in_progress"])
@@ -206,6 +224,8 @@ class AgentPlanProbeSessionTest(unittest.TestCase):
                         "probe_id": EXPECTED_PROBE,
                         "scope": scope,
                         "started_at": begun["started_at"],
+                        "expires_at": begun["expires_at"],
+                        "lifecycle_state": "active",
                         "diagnosis_revision": begun["diagnosis_revision"],
                         "executor_id": EXPECTED_EXECUTOR,
                     }
