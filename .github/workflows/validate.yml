@@ -69,5 +69,8 @@ jobs:
       - name: Validate end-to-end demo harness
         run: python scripts/test_demo_checkout_stripe.py
 
+      - name: Validate probe executor registry
+        run: python scripts/test_probe_executor_registry.py
+
       - name: Validate safe read-only probe execution
         run: python scripts/test_probe_execution.py
