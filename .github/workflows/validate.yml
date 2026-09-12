@@ -60,6 +60,9 @@ jobs:
       - name: Validate next-probe execution annotations
         run: python scripts/test_probe_execution_annotation.py
 
+      - name: Validate agent plan projection
+        run: python scripts/test_agent_plan.py
+
       - name: Validate diagnosis HTTP API
         run: python scripts/test_diagnosis_http_api.py
 

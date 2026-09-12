@@ -14,6 +14,7 @@ import yaml
 from causal_projection import load_concepts, load_edges
 from diagnosis_http_api import DiagnosisSnapshotReader
 from diagnosis_mcp_server import (
+    AGENT_PLAN_URI,
     CLIENT_CAPABILITIES_META_KEY,
     CLIENT_INFO_META_KEY,
     CURRENT_DIAGNOSIS_URI,
@@ -113,7 +114,7 @@ class DiagnosisMcpServerTest(unittest.TestCase):
             self.assertEqual(60_000, listed["ttlMs"])
             self.assertEqual("public", listed["cacheScope"])
             self.assertEqual(
-                [CURRENT_DIAGNOSIS_URI, DIAGNOSIS_STATUS_URI],
+                [AGENT_PLAN_URI, CURRENT_DIAGNOSIS_URI, DIAGNOSIS_STATUS_URI],
                 [resource["uri"] for resource in listed["resources"]],
             )
             self.assertTrue(all("title" in resource for resource in listed["resources"]))
@@ -283,7 +284,12 @@ class DiagnosisMcpServerTest(unittest.TestCase):
             self.assertEqual(1, first["id"])
             self.assertEqual(-32700, second["error"]["code"])
             self.assertTrue(all("\n" not in line for line in lines))
-            self.assertEqual("", output_stream.getvalue().replace(lines[0] + "\n", "", 1).replace(lines[1] + "\n", "", 1))
+            self.assertEqual(
+                "",
+                output_stream.getvalue()
+                .replace(lines[0] + "\n", "", 1)
+                .replace(lines[1] + "\n", "", 1),
+            )
 
 
 if __name__ == "__main__":

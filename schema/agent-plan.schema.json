@@ -1,0 +1,152 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://atlerror.dev/schema/agent-plan.schema.json",
+  "title": "Atlerror agent plan",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "kind",
+    "incident_id",
+    "evidence_revision",
+    "active_execution_enabled",
+    "steps",
+    "summary"
+  ],
+  "properties": {
+    "schema_version": {"const": "0.1"},
+    "kind": {"const": "agent_plan"},
+    "incident_id": {"type": "string", "minLength": 1},
+    "evidence_revision": {"type": "integer", "minimum": 0},
+    "active_execution_enabled": {"type": "boolean"},
+    "steps": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/step"}
+    },
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "actionable",
+        "blocked",
+        "no_executor",
+        "no_probe_needed",
+        "no_discriminating_probe"
+      ],
+      "properties": {
+        "actionable": {"type": "integer", "minimum": 0},
+        "blocked": {"type": "integer", "minimum": 0},
+        "no_executor": {"type": "integer", "minimum": 0},
+        "no_probe_needed": {"type": "integer", "minimum": 0},
+        "no_discriminating_probe": {"type": "integer", "minimum": 0}
+      }
+    }
+  },
+  "$defs": {
+    "runtime_scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "entities": {
+          "type": "array",
+          "items": {"type": "string", "minLength": 1},
+          "uniqueItems": true
+        },
+        "boundaries": {
+          "type": "array",
+          "items": {"type": "string", "minLength": 1},
+          "uniqueItems": true
+        },
+        "attributes": {
+          "type": "object",
+          "additionalProperties": {"type": "string"}
+        }
+      },
+      "minProperties": 1
+    },
+    "arguments": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["target"],
+      "properties": {
+        "target": {"type": "string", "minLength": 1},
+        "scope": {"$ref": "#/$defs/runtime_scope"}
+      }
+    },
+    "step": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "scope",
+        "target",
+        "state",
+        "reason",
+        "recommended_probe",
+        "registered",
+        "executable_here",
+        "executor_id",
+        "operation",
+        "arguments",
+        "allowed",
+        "requires_opt_in",
+        "unavailable_reason",
+        "fallback"
+      ],
+      "properties": {
+        "scope": {
+          "oneOf": [
+            {"type": "null"},
+            {"$ref": "#/$defs/runtime_scope"}
+          ]
+        },
+        "target": {"type": "string", "minLength": 1},
+        "state": {
+          "enum": [
+            "actionable",
+            "blocked",
+            "no_executor",
+            "no_probe_needed",
+            "no_discriminating_probe"
+          ]
+        },
+        "reason": {
+          "enum": [
+            "ready_to_begin_recommended",
+            "active_execution_disabled",
+            "executor_unavailable",
+            "no_registered_executor",
+            "fewer_than_two_candidates",
+            "no_discriminating_probe"
+          ]
+        },
+        "recommended_probe": {"type": ["string", "null"]},
+        "registered": {"type": ["boolean", "null"]},
+        "executable_here": {"type": ["boolean", "null"]},
+        "executor_id": {"type": ["string", "null"]},
+        "operation": {
+          "oneOf": [
+            {"type": "null"},
+            {"const": "atlerror.probe.begin_recommended"}
+          ]
+        },
+        "arguments": {
+          "oneOf": [
+            {"type": "null"},
+            {"$ref": "#/$defs/arguments"}
+          ]
+        },
+        "allowed": {"type": "boolean"},
+        "requires_opt_in": {"type": "boolean"},
+        "unavailable_reason": {"type": ["string", "null"]},
+        "fallback": {
+          "enum": [
+            "none",
+            "enable_readonly_probe_tools",
+            "restore_executor_availability",
+            "gather_external_evidence"
+          ]
+        }
+      }
+    }
+  }
+}
