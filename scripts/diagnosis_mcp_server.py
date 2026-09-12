@@ -14,6 +14,7 @@ from causal_projection import ROOT, load_concepts, load_edges
 from diagnosis_http_api import DiagnosisSnapshotReader, InvalidSnapshot, SnapshotUnavailable
 from mcp_probe_tools import ProbeToolInvocationError, RecommendedProbeToolController
 from probe_executor_runtime import build_probe_execution_capabilities
+from probe_session_state import discover_active_probe_sessions
 
 MODERN_PROTOCOL_VERSION = "2026-07-28"
 LEGACY_PROTOCOL_VERSIONS = (
@@ -32,7 +33,7 @@ PROBE_EXECUTION_CAPABILITIES_URI = "atlerror://probe-execution/capabilities"
 SERVER_INFO = {
     "name": "atlerror-diagnosis",
     "title": "Atlerror Diagnosis",
-    "version": "0.4.0",
+    "version": "0.5.0",
 }
 SERVER_INFO_META_KEY = "io.modelcontextprotocol/serverInfo"
 PROTOCOL_VERSION_META_KEY = "io.modelcontextprotocol/protocolVersion"
@@ -69,10 +70,21 @@ class DiagnosisMcpServer:
         *,
         probe_tools: RecommendedProbeToolController | None = None,
         probe_capability_provider: Callable[[], dict[str, Any]] | None = None,
+        probe_session_provider: Callable[[], list[dict[str, Any]]] | None = None,
     ) -> None:
         self.reader = reader
         self.probe_tools = probe_tools
         self.probe_capability_provider = probe_capability_provider
+        if probe_session_provider is not None:
+            self.probe_session_provider = probe_session_provider
+        elif probe_tools is not None:
+            self.probe_session_provider = lambda: discover_active_probe_sessions(
+                session_dir=probe_tools.session_dir,
+                runtime_evidence_path=probe_tools.runtime_evidence_path,
+                concepts=probe_tools.concepts,
+            )
+        else:
+            self.probe_session_provider = None
         self._legacy_protocol_version: str | None = None
         self._legacy_initialized = False
 
@@ -85,8 +97,8 @@ class DiagnosisMcpServer:
     def _instructions(self) -> str:
         instructions = (
             f"Read {CURRENT_DIAGNOSIS_URI} for the current diagnosis, "
-            f"{AGENT_PLAN_URI} for compact machine-readable next actions, and "
-            f"{DIAGNOSIS_STATUS_URI} for readiness and revision metadata."
+            f"{AGENT_PLAN_URI} for compact machine-readable next actions and active probe-session "
+            f"state, and {DIAGNOSIS_STATUS_URI} for readiness and revision metadata."
         )
         if self.probe_capability_provider is not None:
             instructions += (
@@ -109,8 +121,8 @@ class DiagnosisMcpServer:
                 "name": "agent_plan",
                 "description": (
                     "Compact next-action projection derived from the validated diagnosis snapshot, "
-                    "host execution annotation, and current MCP probe-tool opt-in state. It does "
-                    "not rerank hypotheses or probes."
+                    "host execution annotation, current MCP probe-tool opt-in state, and unfinished "
+                    "persisted probe sessions. It does not rerank hypotheses or probes."
                 ),
                 "mimeType": "application/json",
             },
@@ -202,9 +214,15 @@ class DiagnosisMcpServer:
         elif uri == AGENT_PLAN_URI:
             snapshot = self._read_snapshot(uri, modern=modern)
             try:
+                active_sessions = (
+                    self.probe_session_provider()
+                    if self.probe_session_provider is not None
+                    else []
+                )
                 document = build_agent_plan(
                     snapshot,
                     active_execution_enabled=self.probe_tools is not None,
+                    active_sessions=active_sessions,
                 )
             except (OSError, ValueError) as exc:
                 raise McpProtocolError(
