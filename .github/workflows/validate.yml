@@ -78,6 +78,9 @@ jobs:
       - name: Validate probe workflow reconciliation
         run: python scripts/test_probe_workflow_reconciliation.py
 
+      - name: Validate probe workflow history
+        run: python scripts/test_probe_workflow_history.py
+
       - name: Validate cross-process probe claims
         run: python scripts/test_probe_filesystem_claim.py
 
