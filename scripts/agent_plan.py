@@ -11,15 +11,18 @@ from typing import Any
 from jsonschema import Draft202012Validator
 
 from causal_projection import ROOT
+from runtime_evidence import parse_timestamp
 
 SCHEMA_PATH = ROOT / "schema" / "agent-plan.schema.json"
 BEGIN_RECOMMENDED_OPERATION = "atlerror.probe.begin_recommended"
 FINISH_OPERATION = "atlerror.probe.finish"
+ABANDON_OPERATION = "atlerror.probe.abandon"
 SESSION_ID_PATTERN = re.compile(r"^probe-session\.[0-9a-f]{16}$")
 
 STATES = (
     "actionable",
     "probe_in_progress",
+    "probe_session_expired",
     "blocked",
     "no_executor",
     "no_probe_needed",
@@ -203,31 +206,44 @@ def _validated_active_sessions(
     if active_sessions is None:
         return []
     if not isinstance(active_sessions, list):
-        raise ValueError("active probe sessions must be an array")
+        raise ValueError("pending probe sessions must be an array")
 
     validated: list[dict[str, Any]] = []
     for item in active_sessions:
         if not isinstance(item, dict):
-            raise ValueError("active probe session projection must be an object")
+            raise ValueError("pending probe session projection must be an object")
+        item = copy.deepcopy(item)
         session_id = item.get("session_id")
         if not isinstance(session_id, str) or SESSION_ID_PATTERN.fullmatch(session_id) is None:
-            raise ValueError("active probe session has an invalid session_id")
+            raise ValueError("pending probe session has an invalid session_id")
         if item.get("incident_id") != incident_id:
-            raise ValueError(f"active probe session belongs to another incident: {session_id}")
+            raise ValueError(f"pending probe session belongs to another incident: {session_id}")
         for field in ("target", "probe_id", "executor_id", "started_at"):
             if not isinstance(item.get(field), str) or not item[field]:
-                raise ValueError(f"active probe session {session_id} has invalid {field}")
+                raise ValueError(f"pending probe session {session_id} has invalid {field}")
+        parse_timestamp(item["started_at"], f"pending probe session {session_id}.started_at")
         diagnosis_revision = item.get("diagnosis_revision")
         if not isinstance(diagnosis_revision, int) or diagnosis_revision < 0:
-            raise ValueError(f"active probe session {session_id} has invalid diagnosis_revision")
+            raise ValueError(f"pending probe session {session_id} has invalid diagnosis_revision")
         if diagnosis_revision > evidence_revision:
             raise ValueError(
-                f"active probe session {session_id} was created from a newer diagnosis revision"
+                f"pending probe session {session_id} was created from a newer diagnosis revision"
             )
         scope = item.get("scope")
         if scope is not None and not isinstance(scope, dict):
-            raise ValueError(f"active probe session {session_id} has invalid scope")
-        validated.append(copy.deepcopy(item))
+            raise ValueError(f"pending probe session {session_id} has invalid scope")
+
+        lifecycle_state = item.get("lifecycle_state", "active")
+        if lifecycle_state not in {"active", "expired"}:
+            raise ValueError(f"pending probe session {session_id} has invalid lifecycle_state")
+        item["lifecycle_state"] = lifecycle_state
+        expires_at = item.get("expires_at")
+        if expires_at is not None:
+            if not isinstance(expires_at, str) or not expires_at:
+                raise ValueError(f"pending probe session {session_id} has invalid expires_at")
+            parse_timestamp(expires_at, f"pending probe session {session_id}.expires_at")
+        item["expires_at"] = expires_at
+        validated.append(item)
 
     return sorted(
         validated,
@@ -271,15 +287,29 @@ def _session_step(
             "unavailable_reason": current_step["unavailable_reason"],
         }
 
-    return {
-        **base,
-        "state": "probe_in_progress",
-        "reason": (
+    lifecycle_state = session["lifecycle_state"]
+    if lifecycle_state == "expired":
+        state = "probe_session_expired"
+        reason = (
+            "ready_to_abandon_expired_probe"
+            if active_execution_enabled
+            else "expired_probe_execution_disabled"
+        )
+        operation = ABANDON_OPERATION
+    else:
+        state = "probe_in_progress"
+        reason = (
             "ready_to_finish_probe"
             if active_execution_enabled
             else "probe_in_progress_execution_disabled"
-        ),
-        "operation": FINISH_OPERATION,
+        )
+        operation = FINISH_OPERATION
+
+    return {
+        **base,
+        "state": state,
+        "reason": reason,
+        "operation": operation,
         "arguments": {"sessionId": session["session_id"]},
         "allowed": active_execution_enabled,
         "requires_opt_in": not active_execution_enabled,
@@ -289,6 +319,8 @@ def _session_step(
             "probe_id": session["probe_id"],
             "executor_id": session["executor_id"],
             "started_at": session["started_at"],
+            "expires_at": session.get("expires_at"),
+            "lifecycle_state": lifecycle_state,
             "diagnosis_revision": session["diagnosis_revision"],
             "matches_current_recommendation": matches_current,
         },
