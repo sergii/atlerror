@@ -16,6 +16,7 @@ from mcp_probe_recovery_tool import RecoveryAwareProbeToolController
 from mcp_probe_tools import ProbeToolInvocationError, RecommendedProbeToolController
 from probe_executor_runtime import build_probe_execution_capabilities
 from probe_session_state import discover_active_probe_sessions
+from probe_workflow_history import build_probe_workflow_history
 from probe_workflow_reconciliation import scan_partial_probe_workflows
 
 MODERN_PROTOCOL_VERSION = "2026-07-28"
@@ -31,11 +32,12 @@ AGENT_PLAN_URI = "atlerror://diagnosis/agent-plan"
 CURRENT_DIAGNOSIS_URI = "atlerror://diagnosis/current"
 DIAGNOSIS_STATUS_URI = "atlerror://diagnosis/status"
 PROBE_EXECUTION_CAPABILITIES_URI = "atlerror://probe-execution/capabilities"
+PROBE_WORKFLOW_HISTORY_URI = "atlerror://probe-workflow/history"
 
 SERVER_INFO = {
     "name": "atlerror-diagnosis",
     "title": "Atlerror Diagnosis",
-    "version": "0.7.0",
+    "version": "0.8.0",
 }
 SERVER_INFO_META_KEY = "io.modelcontextprotocol/serverInfo"
 PROTOCOL_VERSION_META_KEY = "io.modelcontextprotocol/protocolVersion"
@@ -74,11 +76,13 @@ class DiagnosisMcpServer:
         probe_capability_provider: Callable[[], dict[str, Any]] | None = None,
         probe_session_provider: Callable[[], list[dict[str, Any]]] | None = None,
         probe_recovery_provider: Callable[[str], list[dict[str, Any]]] | None = None,
+        probe_history_provider: Callable[[str], dict[str, Any]] | None = None,
     ) -> None:
         self.reader = reader
         self.probe_tools = probe_tools
         self.probe_capability_provider = probe_capability_provider
         self.probe_recovery_provider = probe_recovery_provider
+        self.probe_history_provider = probe_history_provider
         if probe_session_provider is not None:
             self.probe_session_provider = probe_session_provider
         elif isinstance(probe_tools, RecommendedProbeToolController):
@@ -110,6 +114,11 @@ class DiagnosisMcpServer:
                 f" Read {PROBE_EXECUTION_CAPABILITIES_URI} to discover which registered "
                 "read-only probe executors exist on this host and whether they are currently "
                 "available."
+            )
+        if self.probe_history_provider is not None:
+            instructions += (
+                f" Read {PROBE_WORKFLOW_HISTORY_URI} for read-only incident history of completed, "
+                "abandoned, pending, expired, and reconciled probe workflows."
             )
         if self.probe_tools is not None:
             instructions += (
@@ -165,12 +174,26 @@ class DiagnosisMcpServer:
                     "mimeType": "application/json",
                 }
             )
+        if self.probe_history_provider is not None:
+            resources.append(
+                {
+                    "uri": PROBE_WORKFLOW_HISTORY_URI,
+                    "name": "probe_workflow_history",
+                    "description": (
+                        "Read-only incident audit projection reconstructed from persisted probe "
+                        "sessions, bindings, terminal markers, reconciliation markers, and normal "
+                        "runtime evidence. Reading this resource never executes or mutates a probe."
+                    ),
+                    "mimeType": "application/json",
+                }
+            )
         if modern:
             titles = {
                 AGENT_PLAN_URI: "Atlerror agent plan",
                 CURRENT_DIAGNOSIS_URI: "Current Atlerror diagnosis",
                 DIAGNOSIS_STATUS_URI: "Atlerror diagnosis status",
                 PROBE_EXECUTION_CAPABILITIES_URI: "Atlerror probe execution capabilities",
+                PROBE_WORKFLOW_HISTORY_URI: "Atlerror probe workflow history",
             }
             for resource in resources:
                 resource["title"] = titles[resource["uri"]]
@@ -248,6 +271,16 @@ class DiagnosisMcpServer:
                 raise McpProtocolError(
                     INTERNAL_ERROR,
                     f"probe execution capability discovery failed: {exc}",
+                    data={"uri": uri},
+                ) from exc
+        elif uri == PROBE_WORKFLOW_HISTORY_URI and self.probe_history_provider is not None:
+            snapshot = self._read_snapshot(uri, modern=modern)
+            try:
+                document = self.probe_history_provider(snapshot["incident_id"])
+            except (OSError, ValueError) as exc:
+                raise McpProtocolError(
+                    INTERNAL_ERROR,
+                    f"probe workflow history projection failed: {exc}",
                     data={"uri": uri},
                 ) from exc
         else:
@@ -561,7 +594,10 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--runtime-evidence",
         type=Path,
-        help="Runtime evidence JSON/YAML file to append probe results to when tools are enabled",
+        help=(
+            "Runtime evidence JSON/YAML file. Required for active tools and used to expose "
+            "probe workflow history when supplied."
+        ),
     )
     parser.add_argument(
         "--probe-session-dir",
@@ -594,6 +630,14 @@ def main(root: Path = ROOT) -> int:
                 edges=load_edges(root),
                 session_dir=args.probe_session_dir,
             )
+        history_provider = None
+        if args.runtime_evidence is not None:
+            history_provider = lambda incident_id: build_probe_workflow_history(
+                session_dir=args.probe_session_dir,
+                runtime_evidence_path=args.runtime_evidence,
+                concepts=concepts,
+                incident_id=incident_id,
+            )
         server = DiagnosisMcpServer(
             reader,
             probe_tools=probe_tools,
@@ -602,6 +646,7 @@ def main(root: Path = ROOT) -> int:
                 args.probe_session_dir,
                 incident_id=incident_id,
             ),
+            probe_history_provider=history_provider,
         )
     except (OSError, ValueError) as exc:
         parser.error(str(exc))
