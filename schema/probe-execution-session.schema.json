@@ -25,20 +25,25 @@
       "additionalProperties": false,
       "required": ["id", "risk", "capability", "observation"],
       "properties": {
-        "id": {"type": "string", "minLength": 1},
+        "id": {"$ref": "#/$defs/concept_id"},
         "risk": {"const": "read_only"},
-        "capability": {"type": "string", "minLength": 1},
-        "observation": {"type": "string", "minLength": 1}
+        "capability": {"$ref": "#/$defs/concept_id"},
+        "observation": {"$ref": "#/$defs/concept_id"}
       }
     },
     "executor": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "platform", "source"],
+      "required": ["id", "platform", "source", "source_mode", "policy"],
       "properties": {
-        "id": {"type": "string", "minLength": 1},
+        "id": {"$ref": "#/$defs/concept_id"},
         "platform": {"type": "string", "minLength": 1},
-        "source": {"type": "string", "minLength": 1}
+        "source": {"type": "string", "minLength": 1},
+        "source_mode": {"enum": ["registered", "explicit_override"]},
+        "policy": {
+          "type": "object",
+          "additionalProperties": {"$ref": "#/$defs/scalar"}
+        }
       }
     },
     "scope": {"$ref": "#/$defs/scope"},
@@ -46,10 +51,14 @@
     "baseline": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["counter", "value"],
+      "required": ["metric", "values"],
       "properties": {
-        "counter": {"const": "Tcp.InErrs"},
-        "value": {"type": "integer", "minimum": 0}
+        "metric": {"type": "string", "minLength": 1},
+        "values": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": {"type": "integer", "minimum": 0}
+        }
       }
     },
     "state": {"const": "baseline_captured"}
@@ -58,6 +67,9 @@
     "concept_id": {
       "type": "string",
       "pattern": "^[a-z][a-z0-9_]*(\\.[a-z0-9_]+)+$"
+    },
+    "scalar": {
+      "type": ["number", "string", "boolean", "null"]
     },
     "scope": {
       "type": "object",
