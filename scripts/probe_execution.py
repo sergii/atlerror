@@ -6,6 +6,9 @@ from probe_executor_runtime import main
 
 
 def begin_probe_session(*args, **kwargs):
+    probe_id = kwargs.get("probe_id")
+    if probe_id != SUPPORTED_PROBE_ID and kwargs.get("source_path") == DEFAULT_SOURCE_PATH:
+        kwargs["source_path"] = None
     session = _begin_probe_session(*args, **kwargs)
     if session["probe"]["id"] == SUPPORTED_PROBE_ID:
         session["baseline"]["counter"] = "Tcp.InErrs"
