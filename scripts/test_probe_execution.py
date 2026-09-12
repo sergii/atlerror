@@ -77,7 +77,9 @@ class ProbeExecutionTests(unittest.TestCase):
                 scope=scope,
                 started_at=datetime(2026, 9, 11, 16, 31, 0, tzinfo=timezone.utc),
             )
-            self.assertEqual(10, session["baseline"]["value"])
+            self.assertEqual("Tcp.InErrs", session["baseline"]["metric"])
+            self.assertEqual(10, session["baseline"]["values"]["counter"])
+            self.assertEqual("explicit_override", session["executor"]["source_mode"])
             self.assertEqual("read_only", session["probe"]["risk"])
 
             source.write_text(snmp_text(13), encoding="utf-8")
