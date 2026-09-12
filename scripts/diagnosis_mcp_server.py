@@ -9,12 +9,13 @@ import sys
 from pathlib import Path
 from typing import Any, Callable, TextIO
 
-from agent_plan import build_agent_plan
+from agent_plan_recovery import build_agent_plan_projection
 from causal_projection import ROOT, load_concepts, load_edges
 from diagnosis_http_api import DiagnosisSnapshotReader, InvalidSnapshot, SnapshotUnavailable
 from mcp_probe_tools import ProbeToolInvocationError, RecommendedProbeToolController
 from probe_executor_runtime import build_probe_execution_capabilities
 from probe_session_state import discover_active_probe_sessions
+from probe_workflow_reconciliation import scan_partial_probe_workflows
 
 MODERN_PROTOCOL_VERSION = "2026-07-28"
 LEGACY_PROTOCOL_VERSIONS = (
@@ -33,7 +34,7 @@ PROBE_EXECUTION_CAPABILITIES_URI = "atlerror://probe-execution/capabilities"
 SERVER_INFO = {
     "name": "atlerror-diagnosis",
     "title": "Atlerror Diagnosis",
-    "version": "0.5.0",
+    "version": "0.6.0",
 }
 SERVER_INFO_META_KEY = "io.modelcontextprotocol/serverInfo"
 PROTOCOL_VERSION_META_KEY = "io.modelcontextprotocol/protocolVersion"
@@ -71,10 +72,12 @@ class DiagnosisMcpServer:
         probe_tools: RecommendedProbeToolController | None = None,
         probe_capability_provider: Callable[[], dict[str, Any]] | None = None,
         probe_session_provider: Callable[[], list[dict[str, Any]]] | None = None,
+        probe_recovery_provider: Callable[[str], list[dict[str, Any]]] | None = None,
     ) -> None:
         self.reader = reader
         self.probe_tools = probe_tools
         self.probe_capability_provider = probe_capability_provider
+        self.probe_recovery_provider = probe_recovery_provider
         if probe_session_provider is not None:
             self.probe_session_provider = probe_session_provider
         elif isinstance(probe_tools, RecommendedProbeToolController):
@@ -97,8 +100,9 @@ class DiagnosisMcpServer:
     def _instructions(self) -> str:
         instructions = (
             f"Read {CURRENT_DIAGNOSIS_URI} for the current diagnosis, "
-            f"{AGENT_PLAN_URI} for compact machine-readable next actions and active probe-session "
-            f"state, and {DIAGNOSIS_STATUS_URI} for readiness and revision metadata."
+            f"{AGENT_PLAN_URI} for compact machine-readable next actions, active probe-session "
+            f"state, and persisted workflow recovery requirements, and {DIAGNOSIS_STATUS_URI} "
+            "for readiness and revision metadata."
         )
         if self.probe_capability_provider is not None:
             instructions += (
@@ -121,8 +125,9 @@ class DiagnosisMcpServer:
                 "name": "agent_plan",
                 "description": (
                     "Compact next-action projection derived from the validated diagnosis snapshot, "
-                    "host execution annotation, current MCP probe-tool opt-in state, and unfinished "
-                    "persisted probe sessions. It does not rerank hypotheses or probes."
+                    "host execution annotation, current MCP probe-tool opt-in state, unfinished "
+                    "persisted probe sessions, and unresolved partial workflow state. It does not "
+                    "rerank hypotheses or probes."
                 ),
                 "mimeType": "application/json",
             },
@@ -214,15 +219,19 @@ class DiagnosisMcpServer:
         elif uri == AGENT_PLAN_URI:
             snapshot = self._read_snapshot(uri, modern=modern)
             try:
-                active_sessions = (
-                    self.probe_session_provider()
-                    if self.probe_session_provider is not None
+                recovery_issues = (
+                    self.probe_recovery_provider(snapshot["incident_id"])
+                    if self.probe_recovery_provider is not None
                     else []
                 )
-                document = build_agent_plan(
+                active_sessions = []
+                if not recovery_issues and self.probe_session_provider is not None:
+                    active_sessions = self.probe_session_provider()
+                document = build_agent_plan_projection(
                     snapshot,
                     active_execution_enabled=self.probe_tools is not None,
                     active_sessions=active_sessions,
+                    recovery_issues=recovery_issues,
                 )
             except (OSError, ValueError) as exc:
                 raise McpProtocolError(
@@ -587,6 +596,10 @@ def main(root: Path = ROOT) -> int:
             reader,
             probe_tools=probe_tools,
             probe_capability_provider=lambda: build_probe_execution_capabilities(concepts),
+            probe_recovery_provider=lambda incident_id: scan_partial_probe_workflows(
+                args.probe_session_dir,
+                incident_id=incident_id,
+            ),
         )
     except (OSError, ValueError) as exc:
         parser.error(str(exc))
