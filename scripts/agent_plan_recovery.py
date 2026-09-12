@@ -10,6 +10,7 @@ from agent_plan import STATES, build_agent_plan, validate_agent_plan
 
 RECOVERY_STATE = "workflow_recovery_required"
 RECOVERY_REASON = "partial_probe_workflow_state"
+RECOVERY_OPERATION = "atlerror.probe.reconcile_partial"
 RECOVERY_FALLBACK = "reconcile_partial_workflow"
 FINGERPRINT_PATTERN = re.compile(r"^[0-9a-f]{64}$")
 SESSION_ID_PATTERN = re.compile(r"^probe-session\.[0-9a-f]{16}$")
@@ -57,7 +58,11 @@ def _validated_recovery_issues(
     return sorted(validated, key=lambda item: item["session_id"])
 
 
-def _recovery_step(issue: dict[str, Any]) -> dict[str, Any]:
+def _recovery_step(
+    issue: dict[str, Any],
+    *,
+    active_execution_enabled: bool,
+) -> dict[str, Any]:
     return {
         "scope": None,
         "target": None,
@@ -67,12 +72,15 @@ def _recovery_step(issue: dict[str, Any]) -> dict[str, Any]:
         "registered": None,
         "executable_here": None,
         "executor_id": None,
-        "operation": None,
-        "arguments": None,
-        "allowed": False,
-        "requires_opt_in": False,
+        "operation": RECOVERY_OPERATION,
+        "arguments": {
+            "sessionId": issue["session_id"],
+            "fingerprint": issue["fingerprint"],
+        },
+        "allowed": active_execution_enabled,
+        "requires_opt_in": not active_execution_enabled,
         "unavailable_reason": None,
-        "fallback": RECOVERY_FALLBACK,
+        "fallback": "none" if active_execution_enabled else RECOVERY_FALLBACK,
         "session": None,
         "recovery": {
             "session_id": issue["session_id"],
@@ -119,7 +127,10 @@ def build_agent_plan_projection(
         "incident_id": incident_id,
         "evidence_revision": evidence_revision,
         "active_execution_enabled": active_execution_enabled,
-        "steps": [_recovery_step(issue) for issue in issues],
+        "steps": [
+            _recovery_step(issue, active_execution_enabled=active_execution_enabled)
+            for issue in issues
+        ],
         "summary": summary,
     }
     validate_agent_plan(document)
