@@ -188,6 +188,10 @@ def discover_pending_probe_sessions(
             continue
 
         session_path = session_dir / f"{session_id}.json"
+        # If a missing session was explicitly reconciled, the fail-closed scan above
+        # has already verified the marker against the exact orphan binding bytes.
+        if not session_path.exists():
+            continue
         session = load_probe_session(session_path, concepts)
         if session["session_id"] != session_id:
             raise ValueError(f"probe session id does not match its filename: {session_path}")
