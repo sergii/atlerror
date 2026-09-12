@@ -77,7 +77,7 @@ class DiagnosisMcpServer:
         self.probe_capability_provider = probe_capability_provider
         if probe_session_provider is not None:
             self.probe_session_provider = probe_session_provider
-        elif probe_tools is not None:
+        elif isinstance(probe_tools, RecommendedProbeToolController):
             self.probe_session_provider = lambda: discover_active_probe_sessions(
                 session_dir=probe_tools.session_dir,
                 runtime_evidence_path=probe_tools.runtime_evidence_path,
