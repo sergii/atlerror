@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import copy
 import json
+import re
 from pathlib import Path
 from typing import Any
 
@@ -13,9 +14,12 @@ from causal_projection import ROOT
 
 SCHEMA_PATH = ROOT / "schema" / "agent-plan.schema.json"
 BEGIN_RECOMMENDED_OPERATION = "atlerror.probe.begin_recommended"
+FINISH_OPERATION = "atlerror.probe.finish"
+SESSION_ID_PATTERN = re.compile(r"^probe-session\.[0-9a-f]{16}$")
 
 STATES = (
     "actionable",
+    "probe_in_progress",
     "blocked",
     "no_executor",
     "no_probe_needed",
@@ -40,6 +44,10 @@ def validate_agent_plan(document: dict[str, Any], *, schema_path: Path = SCHEMA_
 
 def _scope_sort_key(scope: dict[str, Any] | None) -> str:
     return json.dumps(scope, sort_keys=True, separators=(",", ":"))
+
+
+def _step_key(scope: dict[str, Any] | None, target: str) -> tuple[str, str]:
+    return (_scope_sort_key(scope), target)
 
 
 def _tool_arguments(target: str, scope: dict[str, Any] | None) -> dict[str, Any]:
@@ -83,6 +91,7 @@ def _no_recommendation_step(
         "requires_opt_in": False,
         "unavailable_reason": None,
         "fallback": fallback,
+        "session": None,
     }
 
 
@@ -129,6 +138,7 @@ def _recommended_step(
         "requires_opt_in": False,
         "unavailable_reason": unavailable_reason,
         "fallback": "none",
+        "session": None,
     }
 
     if registered is False:
@@ -184,10 +194,112 @@ def _recommended_step(
     }
 
 
+def _validated_active_sessions(
+    active_sessions: list[dict[str, Any]] | None,
+    *,
+    incident_id: str,
+    evidence_revision: int,
+) -> list[dict[str, Any]]:
+    if active_sessions is None:
+        return []
+    if not isinstance(active_sessions, list):
+        raise ValueError("active probe sessions must be an array")
+
+    validated: list[dict[str, Any]] = []
+    for item in active_sessions:
+        if not isinstance(item, dict):
+            raise ValueError("active probe session projection must be an object")
+        session_id = item.get("session_id")
+        if not isinstance(session_id, str) or SESSION_ID_PATTERN.fullmatch(session_id) is None:
+            raise ValueError("active probe session has an invalid session_id")
+        if item.get("incident_id") != incident_id:
+            raise ValueError(f"active probe session belongs to another incident: {session_id}")
+        for field in ("target", "probe_id", "executor_id", "started_at"):
+            if not isinstance(item.get(field), str) or not item[field]:
+                raise ValueError(f"active probe session {session_id} has invalid {field}")
+        diagnosis_revision = item.get("diagnosis_revision")
+        if not isinstance(diagnosis_revision, int) or diagnosis_revision < 0:
+            raise ValueError(f"active probe session {session_id} has invalid diagnosis_revision")
+        if diagnosis_revision > evidence_revision:
+            raise ValueError(
+                f"active probe session {session_id} was created from a newer diagnosis revision"
+            )
+        scope = item.get("scope")
+        if scope is not None and not isinstance(scope, dict):
+            raise ValueError(f"active probe session {session_id} has invalid scope")
+        validated.append(copy.deepcopy(item))
+
+    return sorted(
+        validated,
+        key=lambda item: (
+            _scope_sort_key(item.get("scope")),
+            item["target"],
+            item["session_id"],
+        ),
+    )
+
+
+def _session_step(
+    current_step: dict[str, Any] | None,
+    session: dict[str, Any],
+    *,
+    active_execution_enabled: bool,
+) -> dict[str, Any]:
+    target = session["target"]
+    scope = copy.deepcopy(session.get("scope"))
+    current_probe = current_step.get("recommended_probe") if current_step is not None else None
+    matches_current = current_probe == session["probe_id"]
+
+    if current_step is None:
+        base = {
+            "scope": scope,
+            "target": target,
+            "recommended_probe": None,
+            "registered": None,
+            "executable_here": None,
+            "executor_id": None,
+            "unavailable_reason": None,
+        }
+    else:
+        base = {
+            "scope": copy.deepcopy(current_step["scope"]),
+            "target": current_step["target"],
+            "recommended_probe": current_step["recommended_probe"],
+            "registered": current_step["registered"],
+            "executable_here": current_step["executable_here"],
+            "executor_id": current_step["executor_id"],
+            "unavailable_reason": current_step["unavailable_reason"],
+        }
+
+    return {
+        **base,
+        "state": "probe_in_progress",
+        "reason": (
+            "ready_to_finish_probe"
+            if active_execution_enabled
+            else "probe_in_progress_execution_disabled"
+        ),
+        "operation": FINISH_OPERATION,
+        "arguments": {"sessionId": session["session_id"]},
+        "allowed": active_execution_enabled,
+        "requires_opt_in": not active_execution_enabled,
+        "fallback": "none" if active_execution_enabled else "enable_readonly_probe_tools",
+        "session": {
+            "id": session["session_id"],
+            "probe_id": session["probe_id"],
+            "executor_id": session["executor_id"],
+            "started_at": session["started_at"],
+            "diagnosis_revision": session["diagnosis_revision"],
+            "matches_current_recommendation": matches_current,
+        },
+    }
+
+
 def build_agent_plan(
     snapshot: dict[str, Any],
     *,
     active_execution_enabled: bool,
+    active_sessions: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     if snapshot.get("kind") != "diagnosis_snapshot":
         raise ValueError("agent plan requires a diagnosis_snapshot")
@@ -201,6 +313,18 @@ def build_agent_plan(
     partitions = snapshot.get("partitions")
     if not isinstance(partitions, list):
         raise ValueError("diagnosis snapshot partitions must be an array")
+
+    sessions = _validated_active_sessions(
+        active_sessions,
+        incident_id=incident_id,
+        evidence_revision=evidence_revision,
+    )
+    sessions_by_step: dict[tuple[str, str], list[dict[str, Any]]] = {}
+    for session in sessions:
+        sessions_by_step.setdefault(
+            _step_key(session.get("scope"), session["target"]),
+            [],
+        ).append(session)
 
     steps: list[dict[str, Any]] = []
     ordered_partitions = sorted(
@@ -231,7 +355,7 @@ def build_agent_plan(
                 raise ValueError(f"diagnosis {target} must include probe ranking and execution annotation")
 
             if probe_ranking.get("found") is True:
-                step = _recommended_step(
+                current_step = _recommended_step(
                     scope=scope,
                     target=target,
                     probe_ranking=probe_ranking,
@@ -243,12 +367,42 @@ def build_agent_plan(
                     raise ValueError(
                         f"diagnosis {target} has no recommended probe but execution annotation has probe_id"
                     )
-                step = _no_recommendation_step(
+                current_step = _no_recommendation_step(
                     scope=scope,
                     target=target,
                     not_found_reason=probe_ranking.get("not_found_reason"),
                 )
-            steps.append(step)
+
+            active_for_step = sessions_by_step.pop(_step_key(scope, target), [])
+            if active_for_step:
+                steps.extend(
+                    _session_step(
+                        current_step,
+                        session,
+                        active_execution_enabled=active_execution_enabled,
+                    )
+                    for session in active_for_step
+                )
+            else:
+                steps.append(current_step)
+
+    for remaining in sessions_by_step.values():
+        steps.extend(
+            _session_step(
+                None,
+                session,
+                active_execution_enabled=active_execution_enabled,
+            )
+            for session in remaining
+        )
+
+    steps.sort(
+        key=lambda step: (
+            _scope_sort_key(step.get("scope")),
+            step["target"],
+            step["session"]["id"] if isinstance(step.get("session"), dict) else "",
+        )
+    )
 
     summary = {state: 0 for state in STATES}
     for step in steps:

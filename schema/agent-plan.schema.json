@@ -28,6 +28,7 @@
       "additionalProperties": false,
       "required": [
         "actionable",
+        "probe_in_progress",
         "blocked",
         "no_executor",
         "no_probe_needed",
@@ -35,6 +36,7 @@
       ],
       "properties": {
         "actionable": {"type": "integer", "minimum": 0},
+        "probe_in_progress": {"type": "integer", "minimum": 0},
         "blocked": {"type": "integer", "minimum": 0},
         "no_executor": {"type": "integer", "minimum": 0},
         "no_probe_needed": {"type": "integer", "minimum": 0},
@@ -64,13 +66,47 @@
       },
       "minProperties": 1
     },
-    "arguments": {
+    "begin_arguments": {
       "type": "object",
       "additionalProperties": false,
       "required": ["target"],
       "properties": {
         "target": {"type": "string", "minLength": 1},
         "scope": {"$ref": "#/$defs/runtime_scope"}
+      }
+    },
+    "finish_arguments": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sessionId"],
+      "properties": {
+        "sessionId": {
+          "type": "string",
+          "pattern": "^probe-session\\.[0-9a-f]{16}$"
+        }
+      }
+    },
+    "session": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "probe_id",
+        "executor_id",
+        "started_at",
+        "diagnosis_revision",
+        "matches_current_recommendation"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^probe-session\\.[0-9a-f]{16}$"
+        },
+        "probe_id": {"type": "string", "minLength": 1},
+        "executor_id": {"type": "string", "minLength": 1},
+        "started_at": {"type": "string", "format": "date-time"},
+        "diagnosis_revision": {"type": "integer", "minimum": 0},
+        "matches_current_recommendation": {"type": "boolean"}
       }
     },
     "step": {
@@ -90,7 +126,8 @@
         "allowed",
         "requires_opt_in",
         "unavailable_reason",
-        "fallback"
+        "fallback",
+        "session"
       ],
       "properties": {
         "scope": {
@@ -103,6 +140,7 @@
         "state": {
           "enum": [
             "actionable",
+            "probe_in_progress",
             "blocked",
             "no_executor",
             "no_probe_needed",
@@ -112,6 +150,8 @@
         "reason": {
           "enum": [
             "ready_to_begin_recommended",
+            "ready_to_finish_probe",
+            "probe_in_progress_execution_disabled",
             "active_execution_disabled",
             "executor_unavailable",
             "no_registered_executor",
@@ -126,13 +166,15 @@
         "operation": {
           "oneOf": [
             {"type": "null"},
-            {"const": "atlerror.probe.begin_recommended"}
+            {"const": "atlerror.probe.begin_recommended"},
+            {"const": "atlerror.probe.finish"}
           ]
         },
         "arguments": {
           "oneOf": [
             {"type": "null"},
-            {"$ref": "#/$defs/arguments"}
+            {"$ref": "#/$defs/begin_arguments"},
+            {"$ref": "#/$defs/finish_arguments"}
           ]
         },
         "allowed": {"type": "boolean"},
@@ -144,6 +186,12 @@
             "enable_readonly_probe_tools",
             "restore_executor_availability",
             "gather_external_evidence"
+          ]
+        },
+        "session": {
+          "oneOf": [
+            {"type": "null"},
+            {"$ref": "#/$defs/session"}
           ]
         }
       }
