@@ -9,6 +9,7 @@ import sys
 from pathlib import Path
 from typing import Any, Callable, TextIO
 
+from agent_plan import build_agent_plan
 from causal_projection import ROOT, load_concepts, load_edges
 from diagnosis_http_api import DiagnosisSnapshotReader, InvalidSnapshot, SnapshotUnavailable
 from mcp_probe_tools import ProbeToolInvocationError, RecommendedProbeToolController
@@ -23,6 +24,7 @@ LEGACY_PROTOCOL_VERSIONS = (
 )
 LATEST_LEGACY_PROTOCOL_VERSION = LEGACY_PROTOCOL_VERSIONS[0]
 
+AGENT_PLAN_URI = "atlerror://diagnosis/agent-plan"
 CURRENT_DIAGNOSIS_URI = "atlerror://diagnosis/current"
 DIAGNOSIS_STATUS_URI = "atlerror://diagnosis/status"
 PROBE_EXECUTION_CAPABILITIES_URI = "atlerror://probe-execution/capabilities"
@@ -30,7 +32,7 @@ PROBE_EXECUTION_CAPABILITIES_URI = "atlerror://probe-execution/capabilities"
 SERVER_INFO = {
     "name": "atlerror-diagnosis",
     "title": "Atlerror Diagnosis",
-    "version": "0.3.0",
+    "version": "0.4.0",
 }
 SERVER_INFO_META_KEY = "io.modelcontextprotocol/serverInfo"
 PROTOCOL_VERSION_META_KEY = "io.modelcontextprotocol/protocolVersion"
@@ -82,7 +84,8 @@ class DiagnosisMcpServer:
 
     def _instructions(self) -> str:
         instructions = (
-            f"Read {CURRENT_DIAGNOSIS_URI} for the current diagnosis and "
+            f"Read {CURRENT_DIAGNOSIS_URI} for the current diagnosis, "
+            f"{AGENT_PLAN_URI} for compact machine-readable next actions, and "
             f"{DIAGNOSIS_STATUS_URI} for readiness and revision metadata."
         )
         if self.probe_capability_provider is not None:
@@ -101,6 +104,16 @@ class DiagnosisMcpServer:
 
     def _resource_descriptors(self, *, modern: bool) -> list[dict[str, Any]]:
         resources: list[dict[str, Any]] = [
+            {
+                "uri": AGENT_PLAN_URI,
+                "name": "agent_plan",
+                "description": (
+                    "Compact next-action projection derived from the validated diagnosis snapshot, "
+                    "host execution annotation, and current MCP probe-tool opt-in state. It does "
+                    "not rerank hypotheses or probes."
+                ),
+                "mimeType": "application/json",
+            },
             {
                 "uri": CURRENT_DIAGNOSIS_URI,
                 "name": "current_diagnosis",
@@ -135,6 +148,7 @@ class DiagnosisMcpServer:
             )
         if modern:
             titles = {
+                AGENT_PLAN_URI: "Atlerror agent plan",
                 CURRENT_DIAGNOSIS_URI: "Current Atlerror diagnosis",
                 DIAGNOSIS_STATUS_URI: "Atlerror diagnosis status",
                 PROBE_EXECUTION_CAPABILITIES_URI: "Atlerror probe execution capabilities",
@@ -170,17 +184,34 @@ class DiagnosisMcpServer:
     def _json_text(payload: dict[str, Any]) -> str:
         return json.dumps(payload, indent=2, sort_keys=True) + "\n"
 
+    def _read_snapshot(self, uri: str, *, modern: bool) -> dict[str, Any]:
+        try:
+            document, _etag = self.reader.read()
+            return document
+        except SnapshotUnavailable as exc:
+            code = INVALID_PARAMS if modern else LEGACY_RESOURCE_NOT_FOUND
+            raise McpProtocolError(code, str(exc), data={"uri": uri}) from exc
+        except InvalidSnapshot as exc:
+            raise McpProtocolError(INTERNAL_ERROR, str(exc), data={"uri": uri}) from exc
+
     def _read_resource(self, uri: str, *, modern: bool) -> dict[str, Any]:
         if uri == DIAGNOSIS_STATUS_URI:
             document = self.reader.status()
         elif uri == CURRENT_DIAGNOSIS_URI:
+            document = self._read_snapshot(uri, modern=modern)
+        elif uri == AGENT_PLAN_URI:
+            snapshot = self._read_snapshot(uri, modern=modern)
             try:
-                document, _etag = self.reader.read()
-            except SnapshotUnavailable as exc:
-                code = INVALID_PARAMS if modern else LEGACY_RESOURCE_NOT_FOUND
-                raise McpProtocolError(code, str(exc), data={"uri": uri}) from exc
-            except InvalidSnapshot as exc:
-                raise McpProtocolError(INTERNAL_ERROR, str(exc), data={"uri": uri}) from exc
+                document = build_agent_plan(
+                    snapshot,
+                    active_execution_enabled=self.probe_tools is not None,
+                )
+            except (OSError, ValueError) as exc:
+                raise McpProtocolError(
+                    INTERNAL_ERROR,
+                    f"agent plan projection failed: {exc}",
+                    data={"uri": uri},
+                ) from exc
         elif uri == PROBE_EXECUTION_CAPABILITIES_URI and self.probe_capability_provider is not None:
             try:
                 document = self.probe_capability_provider()
@@ -238,10 +269,7 @@ class DiagnosisMcpServer:
 
         requested = meta.get(PROTOCOL_VERSION_META_KEY)
         if not isinstance(requested, str):
-            raise McpProtocolError(
-                INVALID_PARAMS,
-                f"{PROTOCOL_VERSION_META_KEY} must be a string",
-            )
+            raise McpProtocolError(INVALID_PARAMS, f"{PROTOCOL_VERSION_META_KEY} must be a string")
         if requested != MODERN_PROTOCOL_VERSION:
             raise McpProtocolError(
                 UNSUPPORTED_PROTOCOL_VERSION,
@@ -262,7 +290,6 @@ class DiagnosisMcpServer:
         requested = params.get("protocolVersion")
         if not isinstance(requested, str):
             raise McpProtocolError(INVALID_PARAMS, "protocolVersion must be a string")
-
         capabilities = params.get("capabilities")
         if not isinstance(capabilities, dict):
             raise McpProtocolError(INVALID_PARAMS, "capabilities must be an object")
@@ -305,8 +332,7 @@ class DiagnosisMcpServer:
 
     def _resources_list(self, message: dict[str, Any], *, modern: bool) -> dict[str, Any]:
         params = self._request_params(message)
-        cursor = params.get("cursor")
-        if cursor is not None:
+        if params.get("cursor") is not None:
             raise McpProtocolError(INVALID_PARAMS, "this resource list does not use pagination")
         payload = {"resources": self._resource_descriptors(modern=modern)}
         if modern:
@@ -315,8 +341,7 @@ class DiagnosisMcpServer:
 
     def _resource_templates_list(self, message: dict[str, Any], *, modern: bool) -> dict[str, Any]:
         params = self._request_params(message)
-        cursor = params.get("cursor")
-        if cursor is not None:
+        if params.get("cursor") is not None:
             raise McpProtocolError(INVALID_PARAMS, "this resource template list does not use pagination")
         payload: dict[str, Any] = {"resourceTemplates": []}
         if modern:
@@ -488,9 +513,9 @@ def serve_stdio(
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description=(
-            "Expose the current Atlerror diagnosis snapshot and local probe execution capabilities "
-            "as MCP resources over stdio, with optional explicitly enabled registered read-only "
-            "probe tools."
+            "Expose the current Atlerror diagnosis, agent plan, and local probe execution "
+            "capabilities as MCP resources over stdio, with optional explicitly enabled "
+            "registered read-only probe tools."
         )
     )
     parser.add_argument(
