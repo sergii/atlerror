@@ -89,6 +89,21 @@
         }
       }
     },
+    "recovery_arguments": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sessionId", "fingerprint"],
+      "properties": {
+        "sessionId": {
+          "type": "string",
+          "pattern": "^probe-session\\.[0-9a-f]{16}$"
+        },
+        "fingerprint": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      }
+    },
     "session": {
       "type": "object",
       "additionalProperties": false,
@@ -211,14 +226,16 @@
             {"type": "null"},
             {"const": "atlerror.probe.begin_recommended"},
             {"const": "atlerror.probe.finish"},
-            {"const": "atlerror.probe.abandon"}
+            {"const": "atlerror.probe.abandon"},
+            {"const": "atlerror.probe.reconcile_partial"}
           ]
         },
         "arguments": {
           "oneOf": [
             {"type": "null"},
             {"$ref": "#/$defs/begin_arguments"},
-            {"$ref": "#/$defs/session_arguments"}
+            {"$ref": "#/$defs/session_arguments"},
+            {"$ref": "#/$defs/recovery_arguments"}
           ]
         },
         "allowed": {"type": "boolean"},
