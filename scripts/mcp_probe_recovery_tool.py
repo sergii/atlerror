@@ -75,44 +75,57 @@ class RecoveryAwareProbeToolController(RecommendedProbeToolController):
         )
         return sorted(tools, key=lambda tool: tool["name"])
 
-    def _current_recovery_issue(
+    def _inspect_recovery_state(
         self,
         *,
         session_id: str,
         fingerprint: str,
-    ) -> dict[str, Any]:
+    ) -> tuple[dict[str, Any], dict[str, Any] | None]:
         snapshot, _etag = self._load_snapshot()
         try:
-            issues = scan_partial_probe_workflows(
+            current_issues = scan_partial_probe_workflows(
                 self.session_dir,
                 incident_id=snapshot["incident_id"],
             )
+            all_issues = scan_partial_probe_workflows(self.session_dir)
         except (OSError, ValueError) as exc:
             raise ProbeToolInvocationError(
                 f"cannot inspect partial probe workflow state: {exc}"
             ) from exc
 
-        matches = [issue for issue in issues if issue.get("session_id") == session_id]
-        if not matches:
-            raise ProbeToolInvocationError(
-                f"no current partial probe workflow requires reconciliation for {session_id}"
-            )
-        if len(matches) != 1:
+        matches = [issue for issue in current_issues if issue.get("session_id") == session_id]
+        if len(matches) > 1:
             raise ProbeToolInvocationError(
                 f"multiple current partial workflow issues exist for {session_id}"
             )
+        if matches:
+            issue = matches[0]
+            if issue.get("fingerprint") != fingerprint:
+                raise ProbeToolInvocationError(
+                    "partial probe workflow fingerprint changed; refresh the agent plan before reconciling"
+                )
+            return snapshot, issue
 
-        issue = matches[0]
-        if issue.get("fingerprint") != fingerprint:
+        unrelated = [issue for issue in all_issues if issue.get("session_id") == session_id]
+        if unrelated:
             raise ProbeToolInvocationError(
-                "partial probe workflow fingerprint changed; refresh the agent plan before reconciling"
+                "partial probe workflow does not belong to the current diagnosis incident"
             )
-        issue_incident_id = issue.get("incident_id")
-        if issue_incident_id not in (None, snapshot["incident_id"]):
-            raise ProbeToolInvocationError(
-                "partial probe workflow belongs to a different incident than the current diagnosis"
-            )
-        return issue
+        return snapshot, None
+
+    @staticmethod
+    def _result_payload(result: dict[str, Any], *, session_id: str) -> dict[str, Any]:
+        return {
+            "status": "reconciled",
+            "already_reconciled": bool(result.get("already_reconciled")),
+            "session_id": session_id,
+            "incident_id": result.get("incident_id"),
+            "issue_kind": result["issue_kind"],
+            "fingerprint": result["fingerprint"],
+            "resolution": result["resolution"],
+            "reconciled_at": result["reconciled_at"],
+            "files": copy.deepcopy(result["files"]),
+        }
 
     def reconcile_partial(self, arguments: Any) -> dict[str, Any]:
         arguments = self._validate_arguments(_RECONCILE_INPUT_SCHEMA, arguments)
@@ -132,7 +145,7 @@ class RecoveryAwareProbeToolController(RecommendedProbeToolController):
                     identity={"session_id": session_id},
                     acquired_at=self.clock(),
                 ):
-                    issue = self._current_recovery_issue(
+                    snapshot, issue = self._inspect_recovery_state(
                         session_id=session_id,
                         fingerprint=fingerprint,
                     )
@@ -151,21 +164,16 @@ class RecoveryAwareProbeToolController(RecommendedProbeToolController):
             raise ProbeToolInvocationError(
                 "reconciliation result fingerprint does not match the requested partial state"
             )
-        if result.get("issue_kind") != issue.get("issue_kind"):
+        result_incident_id = result.get("incident_id")
+        if result_incident_id not in (None, snapshot["incident_id"]):
+            raise ProbeToolInvocationError(
+                "reconciliation result belongs to a different incident than the current diagnosis"
+            )
+        if issue is not None and result.get("issue_kind") != issue.get("issue_kind"):
             raise ProbeToolInvocationError(
                 "reconciliation result issue kind does not match the current partial state"
             )
-        return {
-            "status": "reconciled",
-            "already_reconciled": bool(result.get("already_reconciled")),
-            "session_id": session_id,
-            "incident_id": result.get("incident_id"),
-            "issue_kind": result["issue_kind"],
-            "fingerprint": result["fingerprint"],
-            "resolution": result["resolution"],
-            "reconciled_at": result["reconciled_at"],
-            "files": copy.deepcopy(result["files"]),
-        }
+        return self._result_payload(result, session_id=session_id)
 
     def call(self, name: str, arguments: Any) -> dict[str, Any]:
         if name == RECONCILE_PARTIAL_TOOL_NAME:
