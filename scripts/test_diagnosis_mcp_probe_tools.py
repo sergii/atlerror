@@ -21,6 +21,7 @@ from diagnosis_mcp_server import (
     DiagnosisMcpServer,
 )
 from mcp_probe_tools import (
+    ABANDON_TOOL_NAME,
     BEGIN_TOOL_NAME,
     FINISH_TOOL_NAME,
     RecommendedProbeToolController,
@@ -118,7 +119,7 @@ class DiagnosisMcpProbeToolsTest(unittest.TestCase):
             self.assertEqual(60_000, listed["ttlMs"])
             self.assertEqual("public", listed["cacheScope"])
             self.assertEqual(
-                [BEGIN_TOOL_NAME, FINISH_TOOL_NAME],
+                [ABANDON_TOOL_NAME, BEGIN_TOOL_NAME, FINISH_TOOL_NAME],
                 [tool["name"] for tool in listed["tools"]],
             )
             self.assertTrue(all(tool["annotations"]["destructiveHint"] is False for tool in listed["tools"]))
@@ -142,6 +143,8 @@ class DiagnosisMcpProbeToolsTest(unittest.TestCase):
             self.assertEqual(EXPECTED_PROBE, payload["probe_id"])
             self.assertEqual(0, payload["baseline"]["value"])
             self.assertEqual(1, payload["diagnosis_revision"])
+            self.assertEqual("active", payload["lifecycle_state"])
+            self.assertTrue(payload["expires_at"])
 
             refused = self.modern_request(
                 server,
@@ -276,7 +279,10 @@ class DiagnosisMcpProbeToolsTest(unittest.TestCase):
                 {"jsonrpc": "2.0", "id": 2, "method": "tools/list", "params": {}}
             )["result"]
             self.assertNotIn("resultType", listed)
-            self.assertEqual([BEGIN_TOOL_NAME, FINISH_TOOL_NAME], [tool["name"] for tool in listed["tools"]])
+            self.assertEqual(
+                [ABANDON_TOOL_NAME, BEGIN_TOOL_NAME, FINISH_TOOL_NAME],
+                [tool["name"] for tool in listed["tools"]],
+            )
 
 
 if __name__ == "__main__":
