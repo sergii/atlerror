@@ -6,8 +6,15 @@ import copy
 import re
 from typing import Any
 
-from mcp_probe_tools import ProbeToolInvocationError, RecommendedProbeToolController
+from mcp_probe_tools import (
+    ABANDON_TOOL_NAME,
+    BEGIN_TOOL_NAME,
+    FINISH_TOOL_NAME,
+    ProbeToolInvocationError,
+    RecommendedProbeToolController,
+)
 from probe_filesystem_claim import ProbeFilesystemClaimError, acquire_probe_filesystem_claim
+from probe_workflow_journal import append_probe_workflow_event
 from probe_workflow_reconciliation import (
     reconcile_partial_probe_workflow,
     scan_partial_probe_workflows,
@@ -17,6 +24,13 @@ RECONCILE_PARTIAL_TOOL_NAME = "atlerror.probe.reconcile_partial"
 WORKFLOW_RECOVERY_CLAIM = "workflow_recovery"
 FINGERPRINT_PATTERN = re.compile(r"^[0-9a-f]{64}$")
 SESSION_ID_PATTERN = re.compile(r"^probe-session\.[0-9a-f]{16}$")
+
+_EVENT_TYPE_BY_TOOL = {
+    BEGIN_TOOL_NAME: "begin",
+    FINISH_TOOL_NAME: "finish",
+    ABANDON_TOOL_NAME: "abandon",
+    RECONCILE_PARTIAL_TOOL_NAME: "reconcile",
+}
 
 _RECONCILE_INPUT_SCHEMA: dict[str, Any] = {
     "type": "object",
@@ -41,7 +55,7 @@ _RECONCILE_INPUT_SCHEMA: dict[str, Any] = {
 
 
 class RecoveryAwareProbeToolController(RecommendedProbeToolController):
-    """Add explicit partial-workflow reconciliation to the opt-in MCP mutation boundary."""
+    """Add recovery and append-only audit journaling to the opt-in MCP mutation boundary."""
 
     @staticmethod
     def tool_names() -> tuple[str, ...]:
@@ -175,7 +189,89 @@ class RecoveryAwareProbeToolController(RecommendedProbeToolController):
             )
         return self._result_payload(result, session_id=session_id)
 
+    def _journal_data(self, name: str, result: dict[str, Any]) -> dict[str, Any]:
+        if name == BEGIN_TOOL_NAME:
+            return {
+                "target": result["target"],
+                "probe_id": result["probe_id"],
+                "scope": copy.deepcopy(result["scope"]),
+                "started_at": result["started_at"],
+                "expires_at": result["expires_at"],
+                "diagnosis_revision": result["diagnosis_revision"],
+                "baseline": copy.deepcopy(result["baseline"]),
+            }
+        if name == FINISH_TOOL_NAME:
+            evidence = self._load_runtime_evidence()
+            matching = [
+                instance
+                for instance in evidence.get("instances", [])
+                if instance.get("id") == result["evidence_instance_id"]
+            ]
+            if len(matching) != 1:
+                raise ProbeToolInvocationError(
+                    "cannot journal completed probe because its evidence instance is unavailable"
+                )
+            instance = matching[0]
+            return {
+                "target": result["target"],
+                "probe_id": result["probe_id"],
+                "scope": copy.deepcopy(result["scope"]),
+                "evidence_instance_id": result["evidence_instance_id"],
+                "observation": {
+                    "id": instance["observation"],
+                    "state": instance["state"],
+                    "observed_at": instance["observed_at"],
+                    "measurement": copy.deepcopy(instance.get("measurement")),
+                },
+            }
+        if name == ABANDON_TOOL_NAME:
+            return {
+                "target": result["target"],
+                "probe_id": result["probe_id"],
+                "scope": copy.deepcopy(result["scope"]),
+                "abandoned_at": result["abandoned_at"],
+            }
+        if name == RECONCILE_PARTIAL_TOOL_NAME:
+            return {
+                "marker_incident_id": result.get("incident_id"),
+                "issue_kind": result["issue_kind"],
+                "fingerprint": result["fingerprint"],
+                "resolution": result["resolution"],
+                "reconciled_at": result["reconciled_at"],
+                "files": copy.deepcopy(result["files"]),
+            }
+        raise KeyError(name)
+
+    def _record_journal_event(self, name: str, result: dict[str, Any]) -> dict[str, Any]:
+        snapshot, _etag = self._load_snapshot()
+        incident_id = result.get("incident_id") or snapshot["incident_id"]
+        try:
+            event = append_probe_workflow_event(
+                self.session_dir,
+                event_type=_EVENT_TYPE_BY_TOOL[name],
+                incident_id=incident_id,
+                session_id=result["session_id"],
+                data=self._journal_data(name, result),
+                recorded_at=self.clock(),
+            )
+        except (OSError, ValueError) as exc:
+            raise ProbeToolInvocationError(
+                "probe workflow transition committed but journal append failed: " + str(exc)
+            ) from exc
+        return {
+            "sequence": event["sequence"],
+            "event_hash": event["event_hash"],
+            "previous_hash": event["previous_hash"],
+            "already_recorded": event["already_recorded"],
+        }
+
     def call(self, name: str, arguments: Any) -> dict[str, Any]:
         if name == RECONCILE_PARTIAL_TOOL_NAME:
-            return self.reconcile_partial(arguments)
-        return super().call(name, arguments)
+            result = self.reconcile_partial(arguments)
+        else:
+            result = super().call(name, arguments)
+        if name not in _EVENT_TYPE_BY_TOOL:
+            return result
+        payload = copy.deepcopy(result)
+        payload["journal_event"] = self._record_journal_event(name, result)
+        return payload

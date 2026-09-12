@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://atlerror.dev/schema/probe-workflow-event.schema.json",
+  "title": "Atlerror probe workflow event",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "kind",
+    "sequence",
+    "event_type",
+    "recorded_at",
+    "incident_id",
+    "session_id",
+    "data",
+    "previous_hash",
+    "event_hash"
+  ],
+  "properties": {
+    "schema_version": {"const": "0.1"},
+    "kind": {"const": "probe_workflow_event"},
+    "sequence": {"type": "integer", "minimum": 1},
+    "event_type": {"enum": ["begin", "finish", "abandon", "reconcile"]},
+    "recorded_at": {"type": "string", "format": "date-time"},
+    "incident_id": {"type": "string", "minLength": 1},
+    "session_id": {"type": "string", "pattern": "^probe-session\\.[0-9a-f]{16}$"},
+    "data": {"type": "object"},
+    "previous_hash": {
+      "oneOf": [
+        {"type": "null"},
+        {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+      ]
+    },
+    "event_hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+  }
+}
