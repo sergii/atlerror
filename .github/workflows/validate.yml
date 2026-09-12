@@ -63,6 +63,9 @@ jobs:
       - name: Validate agent plan projection
         run: python scripts/test_agent_plan.py
 
+      - name: Validate agent plan probe sessions
+        run: python scripts/test_agent_plan_probe_sessions.py
+
       - name: Validate diagnosis HTTP API
         run: python scripts/test_diagnosis_http_api.py
 
