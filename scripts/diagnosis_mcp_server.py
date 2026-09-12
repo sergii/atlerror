@@ -12,6 +12,7 @@ from typing import Any, Callable, TextIO
 from agent_plan_recovery import build_agent_plan_projection
 from causal_projection import ROOT, load_concepts, load_edges
 from diagnosis_http_api import DiagnosisSnapshotReader, InvalidSnapshot, SnapshotUnavailable
+from mcp_probe_recovery_tool import RecoveryAwareProbeToolController
 from mcp_probe_tools import ProbeToolInvocationError, RecommendedProbeToolController
 from probe_executor_runtime import build_probe_execution_capabilities
 from probe_session_state import discover_active_probe_sessions
@@ -34,7 +35,7 @@ PROBE_EXECUTION_CAPABILITIES_URI = "atlerror://probe-execution/capabilities"
 SERVER_INFO = {
     "name": "atlerror-diagnosis",
     "title": "Atlerror Diagnosis",
-    "version": "0.6.0",
+    "version": "0.7.0",
 }
 SERVER_INFO_META_KEY = "io.modelcontextprotocol/serverInfo"
 PROTOCOL_VERSION_META_KEY = "io.modelcontextprotocol/protocolVersion"
@@ -114,7 +115,8 @@ class DiagnosisMcpServer:
             instructions += (
                 " Opt-in read-only probe tools are enabled. Begin only the current top "
                 "recommendation, run the controlled workload externally, then finish the returned "
-                "probe session to append evidence and recompute diagnosis."
+                "probe session to append evidence and recompute diagnosis. Recovery-gated agent "
+                "plans may also reconcile only the exact partial workflow fingerprint they expose."
             )
         return instructions
 
@@ -554,7 +556,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--enable-readonly-probe-tools",
         action="store_true",
-        help="Opt in to MCP tools for registered read-only diagnostic probes",
+        help="Opt in to MCP tools for registered read-only diagnostic probes and local recovery",
     )
     parser.add_argument(
         "--runtime-evidence",
@@ -584,7 +586,7 @@ def main(root: Path = ROOT) -> int:
         concepts = load_concepts(root)
         probe_tools = None
         if args.enable_readonly_probe_tools:
-            probe_tools = RecommendedProbeToolController(
+            probe_tools = RecoveryAwareProbeToolController(
                 reader=reader,
                 runtime_evidence_path=args.runtime_evidence,
                 snapshot_path=args.snapshot,
