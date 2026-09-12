@@ -7,11 +7,12 @@ import copy
 import json
 import sys
 from pathlib import Path
-from typing import Any, TextIO
+from typing import Any, Callable, TextIO
 
 from causal_projection import ROOT, load_concepts, load_edges
 from diagnosis_http_api import DiagnosisSnapshotReader, InvalidSnapshot, SnapshotUnavailable
 from mcp_probe_tools import ProbeToolInvocationError, RecommendedProbeToolController
+from probe_executor_runtime import build_probe_execution_capabilities
 
 MODERN_PROTOCOL_VERSION = "2026-07-28"
 LEGACY_PROTOCOL_VERSIONS = (
@@ -24,11 +25,12 @@ LATEST_LEGACY_PROTOCOL_VERSION = LEGACY_PROTOCOL_VERSIONS[0]
 
 CURRENT_DIAGNOSIS_URI = "atlerror://diagnosis/current"
 DIAGNOSIS_STATUS_URI = "atlerror://diagnosis/status"
+PROBE_EXECUTION_CAPABILITIES_URI = "atlerror://probe-execution/capabilities"
 
 SERVER_INFO = {
     "name": "atlerror-diagnosis",
     "title": "Atlerror Diagnosis",
-    "version": "0.2.0",
+    "version": "0.3.0",
 }
 SERVER_INFO_META_KEY = "io.modelcontextprotocol/serverInfo"
 PROTOCOL_VERSION_META_KEY = "io.modelcontextprotocol/protocolVersion"
@@ -64,9 +66,11 @@ class DiagnosisMcpServer:
         reader: DiagnosisSnapshotReader,
         *,
         probe_tools: RecommendedProbeToolController | None = None,
+        probe_capability_provider: Callable[[], dict[str, Any]] | None = None,
     ) -> None:
         self.reader = reader
         self.probe_tools = probe_tools
+        self.probe_capability_provider = probe_capability_provider
         self._legacy_protocol_version: str | None = None
         self._legacy_initialized = False
 
@@ -81,6 +85,12 @@ class DiagnosisMcpServer:
             f"Read {CURRENT_DIAGNOSIS_URI} for the current diagnosis and "
             f"{DIAGNOSIS_STATUS_URI} for readiness and revision metadata."
         )
+        if self.probe_capability_provider is not None:
+            instructions += (
+                f" Read {PROBE_EXECUTION_CAPABILITIES_URI} to discover which registered "
+                "read-only probe executors exist on this host and whether they are currently "
+                "available."
+            )
         if self.probe_tools is not None:
             instructions += (
                 " Opt-in read-only probe tools are enabled. Begin only the current top "
@@ -89,8 +99,7 @@ class DiagnosisMcpServer:
             )
         return instructions
 
-    @staticmethod
-    def _resource_descriptors(*, modern: bool) -> list[dict[str, Any]]:
+    def _resource_descriptors(self, *, modern: bool) -> list[dict[str, Any]]:
         resources: list[dict[str, Any]] = [
             {
                 "uri": CURRENT_DIAGNOSIS_URI,
@@ -111,9 +120,27 @@ class DiagnosisMcpServer:
                 "mimeType": "application/json",
             },
         ]
+        if self.probe_capability_provider is not None:
+            resources.append(
+                {
+                    "uri": PROBE_EXECUTION_CAPABILITIES_URI,
+                    "name": "probe_execution_capabilities",
+                    "description": (
+                        "Current host-local projection of registered read-only probe executors, "
+                        "their semantic capabilities, explicit policies, source paths, and local "
+                        "availability. Reading this resource never executes a probe."
+                    ),
+                    "mimeType": "application/json",
+                }
+            )
         if modern:
-            resources[0]["title"] = "Current Atlerror diagnosis"
-            resources[1]["title"] = "Atlerror diagnosis status"
+            titles = {
+                CURRENT_DIAGNOSIS_URI: "Current Atlerror diagnosis",
+                DIAGNOSIS_STATUS_URI: "Atlerror diagnosis status",
+                PROBE_EXECUTION_CAPABILITIES_URI: "Atlerror probe execution capabilities",
+            }
+            for resource in resources:
+                resource["title"] = titles[resource["uri"]]
         return sorted(resources, key=lambda resource: resource["uri"])
 
     @staticmethod
@@ -154,6 +181,15 @@ class DiagnosisMcpServer:
                 raise McpProtocolError(code, str(exc), data={"uri": uri}) from exc
             except InvalidSnapshot as exc:
                 raise McpProtocolError(INTERNAL_ERROR, str(exc), data={"uri": uri}) from exc
+        elif uri == PROBE_EXECUTION_CAPABILITIES_URI and self.probe_capability_provider is not None:
+            try:
+                document = self.probe_capability_provider()
+            except (OSError, ValueError) as exc:
+                raise McpProtocolError(
+                    INTERNAL_ERROR,
+                    f"probe execution capability discovery failed: {exc}",
+                    data={"uri": uri},
+                ) from exc
         else:
             code = INVALID_PARAMS if modern else LEGACY_RESOURCE_NOT_FOUND
             raise McpProtocolError(code, "Resource not found", data={"uri": uri})
@@ -452,8 +488,9 @@ def serve_stdio(
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description=(
-            "Expose the current Atlerror diagnosis snapshot as MCP resources over stdio, with "
-            "optional explicitly enabled registered read-only probe tools."
+            "Expose the current Atlerror diagnosis snapshot and local probe execution capabilities "
+            "as MCP resources over stdio, with optional explicitly enabled registered read-only "
+            "probe tools."
         )
     )
     parser.add_argument(
@@ -492,17 +529,22 @@ def main(root: Path = ROOT) -> int:
             args.snapshot,
             schema_path=root / "schema" / "diagnosis-snapshot.schema.json",
         )
+        concepts = load_concepts(root)
         probe_tools = None
         if args.enable_readonly_probe_tools:
             probe_tools = RecommendedProbeToolController(
                 reader=reader,
                 runtime_evidence_path=args.runtime_evidence,
                 snapshot_path=args.snapshot,
-                concepts=load_concepts(root),
+                concepts=concepts,
                 edges=load_edges(root),
                 session_dir=args.probe_session_dir,
             )
-        server = DiagnosisMcpServer(reader, probe_tools=probe_tools)
+        server = DiagnosisMcpServer(
+            reader,
+            probe_tools=probe_tools,
+            probe_capability_provider=lambda: build_probe_execution_capabilities(concepts),
+        )
     except (OSError, ValueError) as exc:
         parser.error(str(exc))
     return serve_stdio(server, verbose=args.verbose)
