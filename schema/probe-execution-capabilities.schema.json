@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://atlerror.dev/schema/probe-execution-capabilities.schema.json",
+  "title": "Atlerror probe execution capabilities",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "kind", "platform", "executors"],
+  "properties": {
+    "schema_version": {"const": "0.1"},
+    "kind": {"const": "probe_execution_capabilities"},
+    "platform": {"type": "string", "minLength": 1},
+    "executors": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/executor"}
+    }
+  },
+  "$defs": {
+    "concept_id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*(\\.[a-z0-9_]+)+$"
+    },
+    "scalar": {
+      "type": ["number", "string", "boolean", "null"]
+    },
+    "executor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "probe",
+        "executor",
+        "capability",
+        "observation",
+        "source",
+        "available",
+        "unavailable_reason",
+        "policy"
+      ],
+      "properties": {
+        "probe": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["id", "title", "risk"],
+          "properties": {
+            "id": {"$ref": "#/$defs/concept_id"},
+            "title": {"type": "string", "minLength": 1},
+            "risk": {"const": "read_only"}
+          }
+        },
+        "executor": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["id", "platform"],
+          "properties": {
+            "id": {"$ref": "#/$defs/concept_id"},
+            "platform": {"type": "string", "minLength": 1}
+          }
+        },
+        "capability": {"$ref": "#/$defs/concept_id"},
+        "observation": {"$ref": "#/$defs/concept_id"},
+        "source": {"type": "string", "minLength": 1},
+        "available": {"type": "boolean"},
+        "unavailable_reason": {
+          "type": ["string", "null"]
+        },
+        "policy": {
+          "type": "object",
+          "additionalProperties": {"$ref": "#/$defs/scalar"}
+        }
+      }
+    }
+  }
+}

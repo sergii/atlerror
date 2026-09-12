@@ -141,9 +141,33 @@ atlerror://diagnosis/status
 
 Resource-only mode remains the default and exposes no MCP mutation tools.
 
+## Executor capability discovery
+
+Before enabling active diagnostics, inspect the built-in executor registry:
+
+```bash
+python scripts/probe_execution.py capabilities --pretty
+```
+
+The capability projection reports canonical probe semantics, executor ID, platform, produced observation, registered source, current local availability, and explicit executor policy.
+
+The current built-ins are:
+
+```text
+probe.network.inspect_tcp_integrity_errors
+  -> executor.linux.proc_net_snmp.tcp_inerrs
+  -> /proc/net/snmp
+
+probe.cpu.inspect_utilization
+  -> executor.linux.proc_stat.cpu_utilization
+  -> /proc/stat
+```
+
+Discovery is read-only. It checks platform and registered source availability but does not run either probe.
+
 ## Optional active read-only extension
 
-The diagnosis recommends `probe.network.inspect_tcp_integrity_errors`. On a Linux host, Atlerror can execute that specific probe through a fixed read-only executor without invoking a shell or arbitrary subprocess.
+The checkout-to-Stripe diagnosis recommends `probe.network.inspect_tcp_integrity_errors`. On a Linux host, Atlerror dispatches that probe through the registered executor rather than a probe-specific branch.
 
 Capture a baseline directly through the CLI:
 
@@ -170,6 +194,29 @@ The result is standard `runtime_evidence`. An increase in Linux `Tcp.InErrs` pro
 
 The integration tests compose that evidence back into the checkout-to-Stripe incident and verify the feedback loop: observed integrity errors move `hypothesis.network.packet_corruption` ahead of packet loss, and the completed integrity probe is no longer recommended.
 
+## Second built-in executor: CPU utilization
+
+The same two-phase runtime can execute the second registered probe:
+
+```bash
+python scripts/probe_execution.py begin \
+  --incident-id incident.cpu.example \
+  --probe probe.cpu.inspect_utilization \
+  --session /tmp/atlerror-cpu-session.json
+```
+
+Run the workload externally, then finish:
+
+```bash
+python scripts/probe_execution.py finish \
+  --session /tmp/atlerror-cpu-session.json \
+  --pretty
+```
+
+This executor samples aggregate Linux CPU counters from `/proc/stat` at begin and finish. It computes utilization from cumulative idle and total deltas and emits `observation.cpu.utilization` as standard runtime evidence.
+
+Its first built-in classification policy uses an 80% observed threshold. That threshold is executor policy, not a universal Atlerror semantic threshold. The exact utilization percentage and threshold are retained in the evidence measurement.
+
 ## Opt-in MCP probe tools
 
 The same safe execution path can be exposed to an MCP host, but only through explicit process-level opt-in:
@@ -189,7 +236,7 @@ atlerror.probe.begin_recommended
 atlerror.probe.finish
 ```
 
-`atlerror.probe.begin_recommended` accepts a diagnosis target, not an arbitrary probe ID. Atlerror reads the current validated diagnosis, selects the current top next-probe recommendation, verifies that it is canonical `risk: read_only`, verifies that a fixed executor exists, and captures the baseline in the exact diagnosis scope.
+`atlerror.probe.begin_recommended` accepts a diagnosis target, not an arbitrary probe ID. Atlerror reads the current validated diagnosis, selects the current top next-probe recommendation, verifies that it is canonical `risk: read_only`, and dispatches it through the registered executor for the exact diagnosis scope.
 
 For the demo target:
 
@@ -240,6 +287,8 @@ python scripts/demo_checkout_stripe.py \
 
 The one-shot fixture demo and default MCP mode remain read-only. Active MCP tools are absent unless `--enable-readonly-probe-tools` is supplied explicitly.
 
-Even when enabled, the active layer supports only explicitly registered canonical `read_only` probes. The first executor reads Linux `/proc/net/snmp`; MCP cannot supply a command string, choose an arbitrary executor, choose an arbitrary counter source path, generate traffic, execute the workload, mutate network state, or perform remediation. `low`, `state_changing`, and `high` risk probes are rejected before executor lookup.
+Even when enabled, the active layer supports only explicitly registered canonical `read_only` probes. The built-in registry currently contains the Linux TCP integrity and aggregate CPU-utilization executors. MCP cannot supply a command string, choose an arbitrary executor, choose an arbitrary local source path, generate traffic, execute the workload, mutate network state, or perform remediation. `low`, `state_changing`, and `high` risk probes are rejected before executor dispatch.
 
-Design details are documented in [RFC 0015](RFC/0015-end-to-end-demo-harness.md), [RFC 0016](RFC/0016-safe-read-only-probe-execution.md), and [RFC 0017](RFC/0017-opt-in-mcp-read-only-probe-tools.md).
+The direct CLI has `--source-path` only for local replay and fixtures. Such sessions are marked `source_mode=explicit_override`; MCP never exposes that parameter.
+
+Design details are documented in [RFC 0015](RFC/0015-end-to-end-demo-harness.md), [RFC 0016](RFC/0016-safe-read-only-probe-execution.md), [RFC 0017](RFC/0017-opt-in-mcp-read-only-probe-tools.md), and [RFC 0018](RFC/0018-probe-executor-registry.md).
