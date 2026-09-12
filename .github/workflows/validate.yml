@@ -69,6 +69,9 @@ jobs:
       - name: Validate probe session lifecycle policy
         run: python scripts/test_probe_session_lifecycle.py
 
+      - name: Validate probe workflow reconciliation
+        run: python scripts/test_probe_workflow_reconciliation.py
+
       - name: Validate cross-process probe claims
         run: python scripts/test_probe_filesystem_claim.py
 
