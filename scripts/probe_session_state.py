@@ -11,6 +11,7 @@ from typing import Any
 
 from live_diagnosis import normalize_scope, scope_key
 from probe_execution import load_probe_session
+from probe_workflow_reconciliation import raise_on_partial_probe_workflows
 from runtime_evidence import (
     format_timestamp,
     load_runtime_evidence,
@@ -166,6 +167,11 @@ def discover_pending_probe_sessions(
     if not session_dir.is_dir():
         raise ValueError(f"probe session path is not a directory: {session_dir}")
 
+    # A baseline session and its MCP binding are a logical pair. A process crash can
+    # leave only one file behind, so discovery must stop rather than silently treating
+    # the target as available for another begin operation.
+    raise_on_partial_probe_workflows(session_dir, incident_id=incident_id)
+
     pending: list[dict[str, Any]] = []
     for binding_path in sorted(session_dir.glob(f"probe-session.*{BINDING_SUFFIX}")):
         filename = binding_path.name
@@ -182,6 +188,10 @@ def discover_pending_probe_sessions(
             continue
 
         session_path = session_dir / f"{session_id}.json"
+        # If a missing session was explicitly reconciled, the fail-closed scan above
+        # has already verified the marker against the exact orphan binding bytes.
+        if not session_path.exists():
+            continue
         session = load_probe_session(session_path, concepts)
         if session["session_id"] != session_id:
             raise ValueError(f"probe session id does not match its filename: {session_path}")
