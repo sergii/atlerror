@@ -1,0 +1,94 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://atlerror.dev/schema/probe-workflow-history.schema.json",
+  "title": "Atlerror probe workflow history",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "kind", "incident_id", "generated_at", "summary", "sessions"],
+  "properties": {
+    "schema_version": {"const": "0.1"},
+    "kind": {"const": "probe_workflow_history"},
+    "incident_id": {"type": "string", "minLength": 1},
+    "generated_at": {"type": "string", "format": "date-time"},
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["active", "expired", "completed", "abandoned", "reconciled_partial", "recovery_required"],
+      "properties": {
+        "active": {"type": "integer", "minimum": 0},
+        "expired": {"type": "integer", "minimum": 0},
+        "completed": {"type": "integer", "minimum": 0},
+        "abandoned": {"type": "integer", "minimum": 0},
+        "reconciled_partial": {"type": "integer", "minimum": 0},
+        "recovery_required": {"type": "integer", "minimum": 0}
+      }
+    },
+    "sessions": {"type": "array", "items": {"$ref": "#/$defs/session"}}
+  },
+  "$defs": {
+    "runtime_scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "entities": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+        "boundaries": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+        "attributes": {"type": "object", "additionalProperties": {"type": "string"}}
+      },
+      "minProperties": 1
+    },
+    "outcome": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["evidence_instance_id", "observation", "state", "observed_at", "measurement"],
+      "properties": {
+        "evidence_instance_id": {"type": "string", "minLength": 1},
+        "observation": {"type": "string", "minLength": 1},
+        "state": {"enum": ["observed", "absent"]},
+        "observed_at": {"type": "string", "format": "date-time"},
+        "measurement": {"type": ["object", "null"]}
+      }
+    },
+    "abandonment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["abandoned_at", "reason"],
+      "properties": {
+        "abandoned_at": {"type": "string", "format": "date-time"},
+        "reason": {"const": "operator_abandoned"}
+      }
+    },
+    "recovery": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["issue_kind", "fingerprint", "resolution", "files", "reconciled_at"],
+      "properties": {
+        "issue_kind": {"enum": ["orphan_session", "orphan_binding"]},
+        "fingerprint": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "resolution": {"const": "discard_partial_state"},
+        "files": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+        "reconciled_at": {"type": ["string", "null"], "format": "date-time"}
+      }
+    },
+    "session": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["session_id", "status", "incident_id", "target", "probe_id", "executor_id", "scope", "started_at", "expires_at", "terminal_at", "diagnosis_revision", "outcome", "abandonment", "recovery"],
+      "properties": {
+        "session_id": {"type": "string", "pattern": "^probe-session\\.[0-9a-f]{16}$"},
+        "status": {"enum": ["active", "expired", "completed", "abandoned", "reconciled_partial", "recovery_required"]},
+        "incident_id": {"type": ["string", "null"]},
+        "target": {"type": ["string", "null"]},
+        "probe_id": {"type": ["string", "null"]},
+        "executor_id": {"type": ["string", "null"]},
+        "scope": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/runtime_scope"}]},
+        "started_at": {"type": ["string", "null"], "format": "date-time"},
+        "expires_at": {"type": ["string", "null"], "format": "date-time"},
+        "terminal_at": {"type": ["string", "null"], "format": "date-time"},
+        "diagnosis_revision": {"type": ["integer", "null"], "minimum": 0},
+        "outcome": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/outcome"}]},
+        "abandonment": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/abandonment"}]},
+        "recovery": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/recovery"}]}
+      }
+    }
+  }
+}
